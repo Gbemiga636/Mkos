@@ -9,6 +9,7 @@ import { EmailSubscribe } from "@/components/ui/EmailSubscribe";
 import { ScrollReveal } from "@/components/experience/ScrollReveal";
 import { useCursorLabel } from "@/hooks/useCursorLabel";
 import { useCms, useContent } from "@/lib/cms/CmsProvider";
+import { BRAND_STORY_BODY, BRAND_TEASER_VALUES } from "@/lib/brand";
 
 export function CollectionCarousel() {
   const ref = useRef<HTMLDivElement>(null);
@@ -108,32 +109,19 @@ export function CategoryGrid() {
 
 export function BrandStory() {
   const section = useContent("brand_story");
-  const paragraphs = (section?.body ?? "").split("\n\n").filter(Boolean);
+  const rawBody = section?.body ?? "";
+  const body = /MASTER|Mastery/i.test(rawBody) ? rawBody : BRAND_STORY_BODY;
+  const paragraphs = body.split("\n\n").filter(Boolean);
+  const cmsValues = section?.extra?.values as { title: string; text: string }[] | undefined;
   const values =
-    (section?.extra?.values as { title: string; text: string }[] | undefined) ??
-    [
-      {
-        title: "Quality",
-        text: "Every piece is made with care, precision, and attention to detail.",
-      },
-      {
-        title: "Elegance",
-        text: "True style is timeless — designed to remain stylish beyond trends.",
-      },
-      {
-        title: "Individuality",
-        text: "We celebrate self-expression. We are everyone’s Kind Of Style.",
-      },
-      {
-        title: "Customer Experience",
-        text: "From first interaction to the moment you wear it — memorable.",
-      },
-    ];
+    cmsValues?.some((v) => /Mastery|Authenticity|Own It/i.test(v.title)) ?
+      cmsValues
+    : BRAND_TEASER_VALUES;
 
   return (
     <section id="story" className="relative overflow-hidden bg-white px-5 py-28 sm:px-8 lg:px-12">
       <div className="mx-auto grid max-w-[1600px] gap-16 lg:grid-cols-[1fr_1.1fr] lg:items-center">
-        <div className="relative aspect-[3/4] overflow-hidden bg-mkos-warm sm:aspect-[4/5]">
+        <ScrollReveal y={40} className="relative aspect-[3/4] overflow-hidden bg-mkos-warm sm:aspect-[4/5]">
           <Image
             src={section?.media_url ?? "/images/products/abeni-boubou.jpg"}
             alt="MKOS brand"
@@ -141,35 +129,48 @@ export function BrandStory() {
             className="object-cover"
             sizes="(max-width: 1024px) 100vw, 45vw"
           />
-        </div>
+        </ScrollReveal>
         <div>
-          <p className="font-display text-[11px] tracking-[0.35em] text-mkos-muted uppercase">
-            {section?.eyebrow ?? "About MKOS"}
-          </p>
-          <h2 className="mt-5 font-display text-4xl leading-[1.05] font-medium tracking-tight sm:text-5xl lg:text-6xl">
-            {section?.title ?? "My Kind of Style."}
-          </h2>
-          {paragraphs.map((p) => (
-            <p
-              key={p.slice(0, 24)}
-              className="mt-4 max-w-xl text-base leading-relaxed text-mkos-muted sm:mt-6 sm:text-lg"
-            >
-              {p}
+          <ScrollReveal y={20}>
+            <p className="font-display text-[11px] tracking-[0.35em] text-mkos-muted uppercase">
+              {section?.eyebrow ?? "About MKOS"}
             </p>
+          </ScrollReveal>
+          <ScrollReveal y={32} delay={60}>
+            <h2 className="mt-5 font-display text-4xl leading-[1.05] font-medium tracking-tight sm:text-5xl lg:text-6xl">
+              {section?.title ?? "My Kind of Style."}
+            </h2>
+          </ScrollReveal>
+          <ScrollReveal y={20} delay={100}>
+            <p className="mt-4 font-display text-sm tracking-[0.12em] text-mkos-accent uppercase">
+              For Those Who Understand STYLE.
+            </p>
+          </ScrollReveal>
+          {paragraphs.slice(0, 2).map((p, i) => (
+            <ScrollReveal key={p.slice(0, 24)} y={24} delay={120 + i * 60}>
+              <p className="mt-4 max-w-xl text-base leading-relaxed text-mkos-muted sm:mt-6 sm:text-lg">
+                {p}
+              </p>
+            </ScrollReveal>
           ))}
           <div className="mt-10 grid gap-6 sm:grid-cols-2">
-            {values.map((v) => (
-              <div key={v.title}>
+            {values.map((v, i) => (
+              <ScrollReveal key={v.title} y={24} delay={i * 70}>
                 <p className="font-display text-[11px] tracking-[0.22em] text-mkos-accent uppercase">
                   {v.title}
                 </p>
                 <p className="mt-2 text-sm leading-relaxed text-mkos-muted">{v.text}</p>
-              </div>
+              </ScrollReveal>
             ))}
           </div>
-          <Button href={section?.cta_href ?? "/shop"} className="mt-10" variant="secondary">
-            {section?.cta_label ?? "Explore the shop"}
-          </Button>
+          <ScrollReveal y={20} delay={200} className="mt-10 flex flex-wrap gap-3">
+            <Button href="/about" variant="secondary">
+              The MASTER Standard
+            </Button>
+            <Button href={section?.cta_href ?? "/shop"} variant="ghost">
+              {section?.cta_label ?? "Explore the shop"}
+            </Button>
+          </ScrollReveal>
         </div>
       </div>
     </section>

@@ -6,14 +6,16 @@ import { useContent } from "@/lib/cms/CmsProvider";
 
 export function EditorialStory() {
   const editorial = useContent("editorial");
-  const lines =
-    (editorial?.extra?.lines as string[] | undefined) ??
-    [
-      "We believe luxury is not louder.",
-      "It is quieter, clearer, closer.",
-      "Every MKOS piece begins with a question:",
-      "What can we remove until only truth remains?",
+  const lines = (() => {
+    const fromCms = editorial?.extra?.lines as string[] | undefined;
+    if (fromCms?.some((l) => /MASTER|Understand STYLE/i.test(l))) return fromCms;
+    return [
+      "For Those Who Understand STYLE.",
+      "MKoS defines who we are.",
+      "MASTER defines how we work.",
+      "Together—the MKoS MASTER Standard.",
     ];
+  })();
 
   return (
     <section className="relative overflow-hidden bg-white px-5 py-28 sm:px-8 lg:px-12">

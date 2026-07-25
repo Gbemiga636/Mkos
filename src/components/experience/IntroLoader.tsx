@@ -21,13 +21,6 @@ export function IntroLoader() {
   const glowY = useSpring(mouseY, { stiffness: 40, damping: 20 });
 
   useEffect(() => {
-    // Show intro once per browser session — skip on later navigations/refreshes in-session
-    if (typeof window !== "undefined" && sessionStorage.getItem("mkos-loader-done") === "1") {
-      setDone(true);
-      setLoaderComplete(true);
-      return;
-    }
-
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduced) {
       setProgress(100);
@@ -36,7 +29,6 @@ export function IntroLoader() {
         setTimeout(() => {
           setDone(true);
           setLoaderComplete(true);
-          sessionStorage.setItem("mkos-loader-done", "1");
         }, 400);
       }, 200);
       return;
@@ -44,13 +36,14 @@ export function IntroLoader() {
 
     let raf = 0;
     const start = performance.now();
-    const duration = 1600;
-    // Hard failsafe so hero never stays stuck at opacity 0
+    // Longer hold so the intro can land before the site reveals
+    const duration = 3200;
+    const holdAtEnd = 700;
+    const exitMs = 1100;
     const failsafe = window.setTimeout(() => {
       setDone(true);
       setLoaderComplete(true);
-      sessionStorage.setItem("mkos-loader-done", "1");
-    }, 4000);
+    }, duration + holdAtEnd + exitMs + 800);
 
     const tick = (now: number) => {
       const t = Math.min(1, (now - start) / duration);
@@ -65,10 +58,9 @@ export function IntroLoader() {
           setTimeout(() => {
             setDone(true);
             setLoaderComplete(true);
-            sessionStorage.setItem("mkos-loader-done", "1");
             window.clearTimeout(failsafe);
-          }, 700);
-        }, 120);
+          }, exitMs);
+        }, holdAtEnd);
       }
     };
 

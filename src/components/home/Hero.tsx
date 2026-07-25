@@ -77,7 +77,7 @@ export function Hero() {
   return (
     <section
       ref={sectionRef}
-      className="relative flex min-h-[100svh] items-end overflow-hidden bg-mkos-ink text-white"
+      className="relative flex min-h-[100svh] flex-col overflow-hidden bg-mkos-ink text-white"
       {...playCursor}
     >
       <motion.div className="absolute inset-0 bg-black" style={{ x: layer1x, y: layer1y, scale: 1.08 }}>
@@ -108,7 +108,10 @@ export function Hero() {
         transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      <div className="relative z-10 mx-auto w-full max-w-[1600px] px-5 pb-16 sm:px-8 sm:pb-20 lg:px-12 lg:pb-24">
+      {/* Keeps copy clear of the fixed header */}
+      <div className="pointer-events-none relative z-10 min-h-[34vh] shrink-0 sm:min-h-[38vh]" aria-hidden />
+
+      <div className="relative z-10 mx-auto mt-auto w-full max-w-[1600px] px-5 pb-14 pt-6 sm:px-8 sm:pb-16 lg:px-12 lg:pb-20">
         <div className="max-w-4xl">
           {/* Eyebrow — slides up from below */}
           <motion.p
@@ -122,7 +125,7 @@ export function Hero() {
 
           {/* Headline — typewriter */}
           <h1
-            className="mt-5 min-h-[1.1em] font-display text-5xl leading-[0.95] font-medium tracking-tight text-balance sm:text-7xl lg:text-8xl xl:text-[7.5rem]"
+            className="mt-5 min-h-[1.1em] font-display text-4xl leading-[0.95] font-medium tracking-tight text-balance sm:text-6xl lg:text-7xl xl:text-[6.75rem]"
             aria-label={fullTitle.replace(/\n/g, " ")}
           >
             {typedLines.map((line, i) => (

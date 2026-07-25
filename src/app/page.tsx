@@ -6,9 +6,9 @@ import { EditorialStory, FeaturedVideo } from "@/components/home/Editorial";
 import {
   CollectionCarousel,
   CategoryGrid,
+  BrandStory,
   Reviews,
   InstagramGallery,
-  Newsletter,
   FAQ,
   Marquee,
 } from "@/components/home/MoreSections";
@@ -40,6 +40,9 @@ export default function HomePage() {
       </EditableSection>
       <EditableSection cmsKey="editorial" label="Editorial">
         <EditorialStory />
+      </EditableSection>
+      <EditableSection cmsKey="brand_story" label="Brand story">
+        <BrandStory />
       </EditableSection>
       <EditableSection cmsKey="featured_video" label="Featured video">
         <FeaturedVideo />

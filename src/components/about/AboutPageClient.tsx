@@ -4,7 +4,16 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import { ContactBox, EmailSubscribe } from "@/components/ui/EmailSubscribe";
+import { ScrollReveal } from "@/components/experience/ScrollReveal";
 import { useContent } from "@/lib/cms/CmsProvider";
+import {
+  BRAND_MISSION,
+  BRAND_PROMISE,
+  BRAND_VISION,
+  MASTER_INTRO,
+  MASTER_PILLARS,
+  MKOS_PILLARS,
+} from "@/lib/brand";
 
 const IG_MAIN = "https://www.instagram.com/shopmykindofstyle";
 const IG_MEN = "https://www.instagram.com/mkosformen";
@@ -20,27 +29,27 @@ const fade = {
 
 export function AboutPageClient() {
   const section = useContent("brand_story");
-  const paragraphs = (section?.body ?? "").split("\n\n").filter(Boolean);
-  const values =
-    (section?.extra?.values as { title: string; text: string }[] | undefined) ??
-    [
-      {
-        title: "Quality",
-        text: "Every piece is made with care, precision, and attention to detail because at MKOS, quality is never an afterthought.",
-      },
-      {
-        title: "Elegance",
-        text: "We believe true style is timeless. Our designs are created to remain stylish beyond seasonal trends.",
-      },
-      {
-        title: "Individuality",
-        text: "Everyone is different, and so is their style. We celebrate self-expression. We are everyone’s Kind Of Style.",
-      },
-      {
-        title: "Customer Experience",
-        text: "From your first interaction to the moment you wear your MKOS piece, every experience should be memorable.",
-      },
-    ];
+  const rawBody = section?.body ?? "";
+  const body = /MASTER|Mastery/i.test(rawBody)
+    ? rawBody
+    : [
+        "MKOS (My Kind of Style) is a Nigerian contemporary fashion brand dedicated to creating timeless luxury fashion for individuals who appreciate exceptional craftsmanship, refined style, and cultural authenticity.",
+        "More than a fashion label, MKOS is a lifestyle brand that seamlessly blends contemporary design with African heritage — elegant, sophisticated, and distinctive.",
+        "The MKoS MASTER Standard defines our core values: MKoS defines who we are; MASTER defines how we work.",
+      ].join("\n\n");
+  const paragraphs = body.split("\n\n").filter(Boolean);
+  const mission = String(section?.extra?.mission ?? BRAND_MISSION);
+  const vision = String(section?.extra?.vision ?? BRAND_VISION);
+  const promise = String(section?.extra?.promise ?? BRAND_PROMISE);
+  const masterIntro = String(section?.extra?.master_intro ?? MASTER_INTRO);
+  const mkosPillars =
+    (section?.extra?.mkos as { letter: string; title: string; text: string }[] | undefined)?.length
+      ? (section?.extra?.mkos as { letter: string; title: string; text: string }[])
+      : [...MKOS_PILLARS];
+  const masterPillars =
+    (section?.extra?.master as { letter: string; title: string; text: string }[] | undefined)?.length
+      ? (section?.extra?.master as { letter: string; title: string; text: string }[])
+      : [...MASTER_PILLARS];
 
   return (
     <main className="bg-white">
@@ -55,26 +64,32 @@ export function AboutPageClient() {
           sizes="100vw"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-mkos-ink via-mkos-ink/55 to-mkos-ink/25" />
-        <div className="relative mx-auto flex min-h-[70vh] max-w-[1600px] flex-col justify-end px-5 pb-16 pt-32 sm:px-8 lg:px-12 lg:pb-24">
+        <div className="relative mx-auto flex min-h-[70vh] max-w-[1600px] flex-col justify-end px-5 pb-16 pt-36 sm:px-8 lg:px-12 lg:pb-24">
           <motion.p
             {...fade}
             className="font-display text-[11px] tracking-[0.4em] text-white/65 uppercase"
           >
-            About MKOS
+            Our Brand Promise
           </motion.p>
           <motion.h1
             {...fade}
             transition={{ delay: 0.05 }}
             className="mt-5 max-w-4xl font-display text-5xl leading-[0.95] font-medium tracking-tight sm:text-6xl lg:text-8xl"
           >
-            My Kind of Style.
+            {promise.includes("STYLE") ? (
+              <>
+                For Those Who Understand <span className="italic">STYLE</span>.
+              </>
+            ) : (
+              promise
+            )}
           </motion.h1>
           <motion.p
             {...fade}
             transition={{ delay: 0.1 }}
             className="mt-6 max-w-xl text-base text-white/75 sm:text-lg"
           >
-            For Those Who Understand STYLE.
+            My Kind of Style — Nigerian contemporary fashion with cultural authenticity.
           </motion.p>
         </div>
       </section>
@@ -99,7 +114,7 @@ export function AboutPageClient() {
               Who we are
             </p>
             <h2 className="mt-4 font-display text-3xl leading-tight font-medium tracking-tight sm:text-5xl">
-              Nigerian contemporary fashion with cultural authenticity.
+              {section?.title ?? "My Kind of Style."}
             </h2>
             {paragraphs.map((p) => (
               <p
@@ -116,84 +131,106 @@ export function AboutPageClient() {
       {/* Mission / Vision */}
       <section className="border-y border-mkos-border bg-mkos-warm px-5 py-24 sm:px-8 lg:px-12">
         <div className="mx-auto grid max-w-[1600px] gap-12 md:grid-cols-2 md:gap-20">
-          <motion.div {...fade}>
+          <ScrollReveal y={32}>
             <p className="font-display text-[11px] tracking-[0.35em] text-mkos-accent uppercase">
-              Our Mission
+              Mission
             </p>
-            <p className="mt-5 font-display text-2xl leading-snug tracking-tight sm:text-3xl">
-              Create elegant, high-quality fashion that empowers everyone to express their
-              individuality through timeless style, exceptional craftsmanship, and confidence.
+            <p className="mt-5 font-display text-xl leading-snug tracking-tight sm:text-2xl lg:text-[1.65rem]">
+              {mission}
             </p>
-          </motion.div>
-          <motion.div {...fade} transition={{ delay: 0.08 }}>
+          </ScrollReveal>
+          <ScrollReveal y={32} delay={80}>
             <p className="font-display text-[11px] tracking-[0.35em] text-mkos-accent uppercase">
-              Our Vision
+              Vision
             </p>
-            <p className="mt-5 font-display text-2xl leading-snug tracking-tight sm:text-3xl">
-              Become a leading, trusted sophisticated fashion brand recognized for excellence,
-              creativity, and designs that empower men and women with everyday elegance and
-              authenticity.
+            <p className="mt-5 font-display text-xl leading-snug tracking-tight sm:text-2xl lg:text-[1.65rem]">
+              {vision}
             </p>
-          </motion.div>
+          </ScrollReveal>
         </div>
       </section>
 
-      {/* Values */}
-      <section className="px-5 py-24 sm:px-8 lg:px-12 lg:py-32">
+      {/* MASTER Standard intro */}
+      <section className="px-5 py-24 sm:px-8 lg:px-12 lg:py-28">
         <div className="mx-auto max-w-[1600px]">
-          <p className="font-display text-[11px] tracking-[0.35em] text-mkos-muted uppercase">
-            Our Values
-          </p>
-          <h2 className="mt-4 max-w-2xl font-display text-3xl font-medium tracking-tight sm:text-5xl">
-            What we stand for.
-          </h2>
-          <div className="mt-14 grid gap-x-10 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
-            {values.map((v, i) => (
-              <motion.div key={v.title} {...fade} transition={{ delay: i * 0.06 }}>
-                <span className="font-display text-sm text-mkos-accent">0{i + 1}</span>
-                <h3 className="mt-3 font-display text-xl tracking-tight">{v.title}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-mkos-muted">{v.text}</p>
-              </motion.div>
+          <ScrollReveal y={24}>
+            <p className="font-display text-[11px] tracking-[0.35em] text-mkos-muted uppercase">
+              Our Core Values
+            </p>
+          </ScrollReveal>
+          <ScrollReveal y={36} delay={60}>
+            <h2 className="mt-4 max-w-3xl font-display text-3xl font-medium tracking-tight sm:text-5xl lg:text-6xl">
+              The MKoS MASTER Standard
+            </h2>
+          </ScrollReveal>
+          <ScrollReveal y={28} delay={100}>
+            <p className="mt-8 max-w-3xl text-base leading-relaxed text-mkos-muted sm:text-lg">
+              {masterIntro}
+            </p>
+          </ScrollReveal>
+        </div>
+      </section>
+
+      {/* MKoS pillars */}
+      <section className="border-t border-mkos-border bg-mkos-ink px-5 py-24 text-white sm:px-8 lg:px-12 lg:py-28">
+        <div className="mx-auto max-w-[1600px]">
+          <ScrollReveal y={20}>
+            <p className="font-display text-[11px] tracking-[0.35em] text-white/50 uppercase">
+              MKoS
+            </p>
+            <h2 className="mt-4 max-w-2xl font-display text-3xl font-medium tracking-tight sm:text-4xl">
+              Defines who we are.
+            </h2>
+          </ScrollReveal>
+          <div className="mt-14 grid gap-x-10 gap-y-12 sm:grid-cols-2">
+            {mkosPillars.map((v, i) => (
+              <ScrollReveal key={v.title} y={32} delay={i * 70}>
+                <div className="border-t border-white/15 pt-6">
+                  <p className="font-display text-sm tracking-[0.28em] text-orange-300/90 uppercase">
+                    {v.letter} — {v.title}
+                  </p>
+                  <p className="mt-4 text-sm leading-relaxed text-white/70 sm:text-base">{v.text}</p>
+                </div>
+              </ScrollReveal>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Difference + audience */}
-      <section className="bg-mkos-ink px-5 py-24 text-white sm:px-8 lg:px-12 lg:py-28">
-        <div className="mx-auto grid max-w-[1600px] gap-16 lg:grid-cols-2">
-          <div>
-            <p className="font-display text-[11px] tracking-[0.35em] text-white/50 uppercase">
-              What makes MKOS different
+      {/* MASTER pillars */}
+      <section className="px-5 py-24 sm:px-8 lg:px-12 lg:py-32">
+        <div className="mx-auto max-w-[1600px]">
+          <ScrollReveal y={20}>
+            <p className="font-display text-[11px] tracking-[0.35em] text-mkos-muted uppercase">
+              MASTER
             </p>
-            <h2 className="mt-4 font-display text-3xl font-medium tracking-tight sm:text-4xl">
-              Style should be personal.
+            <h2 className="mt-4 max-w-2xl font-display text-3xl font-medium tracking-tight sm:text-4xl">
+              Defines how we work.
             </h2>
-            <p className="mt-6 text-base leading-relaxed text-white/70 sm:text-lg">
-              Our name, My Kind of Style, reflects our philosophy that fashion isn’t about fitting
-              into someone else’s idea of style — it’s about embracing your own. Every collection
-              is designed to inspire confidence, celebrate individuality, and help you express
-              yourself authentically.
+            <p className="mt-5 max-w-2xl text-mkos-muted">
+              The MKoS MASTER Standard defines our core values—guiding every decision, every design,
+              every relationship, and every client experience.
             </p>
-          </div>
-          <div>
-            <p className="font-display text-[11px] tracking-[0.35em] text-white/50 uppercase">
-              Who we dress
-            </p>
-            <h2 className="mt-4 font-display text-3xl font-medium tracking-tight sm:text-4xl">
-              Quality over quantity.
-            </h2>
-            <p className="mt-6 text-base leading-relaxed text-white/70 sm:text-lg">
-              Professionals, entrepreneurs, executives, brides, wedding guests, celebrants, and
-              style-conscious individuals who seek exclusivity rather than mass-produced fashion —
-              whether bold, classic, or effortlessly understated.
-            </p>
+          </ScrollReveal>
+          <div className="mt-14 grid gap-x-10 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+            {masterPillars.map((v, i) => (
+              <ScrollReveal key={v.title} y={32} delay={i * 50}>
+                <div>
+                  <span className="font-display text-sm text-mkos-accent">
+                    {v.letter} — {v.title}
+                  </span>
+                  <p className="mt-3 text-sm leading-relaxed text-mkos-muted sm:text-[0.95rem]">
+                    {v.text}
+                  </p>
+                </div>
+              </ScrollReveal>
+            ))}
           </div>
         </div>
       </section>
 
       {/* Contact + email */}
-      <section id="contact" className="px-5 py-24 sm:px-8 lg:px-12 lg:py-32">
+      <section id="contact" className="border-t border-mkos-border bg-mkos-warm px-5 py-24 sm:px-8 lg:px-12 lg:py-32">
         <div className="mx-auto max-w-[1600px]">
           <div className="max-w-2xl">
             <p className="font-display text-[11px] tracking-[0.35em] text-mkos-muted uppercase">
