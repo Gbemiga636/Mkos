@@ -5,7 +5,7 @@ import Link from "next/link";
 import { AnimatePresence, motion, useSpring, useTransform } from "framer-motion";
 import { useEffect } from "react";
 import { useCartStore, cartItemKey } from "@/store/cart";
-import { formatPrice, products } from "@/data/products";
+import { useCms, useFormatPrice } from "@/lib/cms/CmsProvider";
 import { Button } from "@/components/ui/Button";
 
 export function CartDrawer() {
@@ -14,6 +14,8 @@ export function CartDrawer() {
   const items = useCartStore((s) => s.items);
   const updateQuantity = useCartStore((s) => s.updateQuantity);
   const removeItem = useCartStore((s) => s.removeItem);
+  const { products } = useCms();
+  const formatPrice = useFormatPrice();
   const subtotalValue = items.reduce((n, i) => n + i.price * i.quantity, 0);
   const spring = useSpring(subtotalValue, { stiffness: 80, damping: 20 });
   const display = useTransform(spring, (v) => formatPrice(Math.round(v)));
@@ -182,8 +184,9 @@ export function CartDrawer() {
                   <motion.span className="font-display text-xl tabular-nums">{display}</motion.span>
                 </div>
                 <p className="mt-2 text-xs text-mkos-muted">Shipping calculated at checkout</p>
-                <Button href="/checkout" size="lg" className="mt-5 w-full" onClick={close}>
-                  Checkout
+                <Button href="/checkout" size="lg" variant="checkout" className="mt-5 w-full" onClick={close}>
+                  <span>Checkout</span>
+                  <span className="font-body tracking-normal normal-case opacity-90">→</span>
                 </Button>
               </div>
             )}

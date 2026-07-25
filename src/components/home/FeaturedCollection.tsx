@@ -5,15 +5,17 @@ import Image from "next/image";
 import Link from "next/link";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { collections } from "@/data/products";
 import { SectionHeading } from "@/components/ui/Button";
 import { useCursorLabel } from "@/hooks/useCursorLabel";
+import { useCms, useContent } from "@/lib/cms/CmsProvider";
 
 gsap.registerPlugin(ScrollTrigger);
 
 export function FeaturedCollection() {
   const ref = useRef<HTMLElement>(null);
   const cursor = useCursorLabel("EXPLORE");
+  const { collections } = useCms();
+  const section = useContent("featured_collections");
 
   useEffect(() => {
     const el = ref.current;
@@ -56,9 +58,9 @@ export function FeaturedCollection() {
     <section ref={ref} className="relative bg-white px-5 py-28 sm:px-8 lg:px-12">
       <div className="mx-auto max-w-[1600px]">
         <SectionHeading
-          eyebrow="Featured Collections"
-          title="Three chapters. One language."
-          subtitle="Each edit is a complete thought — proportion, fabric, and atmosphere distilled into a wearable narrative."
+          eyebrow={section?.eyebrow ?? "Featured Collections"}
+          title={section?.title ?? "Three chapters. One language."}
+          subtitle={section?.subtitle ?? undefined}
         />
 
         <div className="mt-16 grid gap-6 md:grid-cols-3">
@@ -72,12 +74,13 @@ export function FeaturedCollection() {
             >
               <div className="relative aspect-[3/4] overflow-hidden bg-mkos-warm">
                 <div className="fc-media absolute inset-0 scale-110">
-                  {"video" in c && c.video ? (
+                  {c.video ? (
                     <video
                       autoPlay
                       muted
                       loop
                       playsInline
+                      preload="metadata"
                       className="h-full w-full object-cover transition-transform duration-1000 group-hover:scale-105"
                     >
                       <source src={c.video} type="video/mp4" />

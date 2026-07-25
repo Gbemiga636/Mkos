@@ -5,9 +5,11 @@ import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import { useCursorLabel } from "@/hooks/useCursorLabel";
 import { useUIStore } from "@/store/ui";
+import { useContent } from "@/lib/cms/CmsProvider";
 
 export function Hero() {
   const ready = useUIStore((s) => s.loaderComplete);
+  const hero = useContent("hero");
   const sectionRef = useRef<HTMLElement>(null);
   const mx = useMotionValue(0);
   const my = useMotionValue(0);
@@ -18,6 +20,11 @@ export function Hero() {
   const layer2x = useTransform(sx, (v) => v * -0.03);
   const layer2y = useTransform(sy, (v) => v * -0.025);
   const playCursor = useCursorLabel("EXPLORE");
+
+  const titleLines = (hero?.title ?? "Silence,\ntailored.").split("\n");
+  const secondaryLabel = String(hero?.extra?.secondary_cta_label ?? "Watch campaign");
+  const secondaryHref = String(hero?.extra?.secondary_cta_href ?? "/about");
+  const videoSrc = hero?.media_url ?? "/videos/hero-bg.mp4";
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
@@ -34,23 +41,22 @@ export function Hero() {
       className="relative flex min-h-[100svh] items-end overflow-hidden bg-mkos-ink text-white"
       {...playCursor}
     >
-      <motion.div className="absolute inset-0" style={{ x: layer1x, y: layer1y, scale: 1.08 }}>
+      <motion.div className="absolute inset-0 bg-black" style={{ x: layer1x, y: layer1y, scale: 1.08 }}>
         <video
           autoPlay
           muted
           loop
           playsInline
-          poster="/images/products/product-1.jpg"
+          preload="metadata"
           className="h-full w-full object-cover opacity-80"
         >
-          <source src="/videos/hero-bg.mp4" type="video/mp4" />
+          <source src={videoSrc} type="video/mp4" />
         </video>
       </motion.div>
 
       <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-black/40" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,rgba(0,0,0,0.45)_100%)]" />
 
-      {/* floating shapes */}
       <motion.div
         className="pointer-events-none absolute top-[18%] right-[12%] h-40 w-40 rounded-full border border-white/10"
         style={{ x: layer2x, y: layer2y }}
@@ -58,7 +64,7 @@ export function Hero() {
         transition={{ duration: 48, repeat: Infinity, ease: "linear" }}
       />
       <motion.div
-        className="pointer-events-none absolute bottom-[30%] left-[8%] h-24 w-24 rounded-full bg-violet-600/20 blur-2xl"
+        className="pointer-events-none absolute bottom-[30%] left-[8%] h-24 w-24 rounded-full bg-orange-600/20 blur-2xl"
         animate={{ y: [0, -18, 0], opacity: [0.4, 0.7, 0.4] }}
         transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
       />
@@ -71,7 +77,7 @@ export function Hero() {
             transition={{ duration: 0.8, delay: 0.15 }}
             className="font-display text-[11px] tracking-[0.4em] text-white/60 uppercase"
           >
-            Atelier Collection 2025
+            {hero?.eyebrow}
           </motion.p>
 
           <div className="mt-5 overflow-hidden">
@@ -81,9 +87,12 @@ export function Hero() {
               transition={{ duration: 1, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
               className="font-display text-5xl leading-[0.95] font-medium tracking-tight text-balance sm:text-7xl lg:text-8xl xl:text-[7.5rem]"
             >
-              Silence,
-              <br />
-              tailored.
+              {titleLines.map((line, i) => (
+                <span key={line}>
+                  {i > 0 && <br />}
+                  {line}
+                </span>
+              ))}
             </motion.h1>
           </div>
 
@@ -93,7 +102,7 @@ export function Hero() {
             transition={{ duration: 0.8, delay: 0.55 }}
             className="mt-6 max-w-md text-base leading-relaxed text-white/70 sm:text-lg"
           >
-            A private house of essential luxury — pieces designed to feel inevitable the moment you put them on.
+            {hero?.subtitle}
           </motion.p>
 
           <motion.div
@@ -102,11 +111,17 @@ export function Hero() {
             transition={{ duration: 0.7, delay: 0.75 }}
             className="mt-10 flex flex-wrap items-center gap-4"
           >
-            <Button href="/shop" variant="outline" size="lg" cursor="SHOP">
-              Enter the shop
+            <Button href={hero?.cta_href ?? "/shop"} variant="outline" size="lg" cursor="SHOP">
+              {hero?.cta_label ?? "Enter the shop"}
             </Button>
-            <Button href="/#campaign" variant="ghost" size="lg" className="text-white hover:bg-white/10" cursor="EXPLORE">
-              Watch campaign
+            <Button
+              href={secondaryHref}
+              variant="ghost"
+              size="lg"
+              className="text-white hover:bg-white/10"
+              cursor="EXPLORE"
+            >
+              {secondaryLabel}
             </Button>
           </motion.div>
         </div>

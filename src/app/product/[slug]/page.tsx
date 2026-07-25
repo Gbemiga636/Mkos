@@ -1,4 +1,5 @@
 import { products } from "@/data/products";
+import { getProductBySlug } from "@/lib/cms/getCms";
 import ProductClient from "./ProductClient";
 import { notFound } from "next/navigation";
 
@@ -12,7 +13,7 @@ export default async function ProductPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const product = products.find((p) => p.slug === slug);
+  const product = await getProductBySlug(slug);
   if (!product) notFound();
-  return <ProductClient slug={slug} />;
+  return <ProductClient product={product} />;
 }

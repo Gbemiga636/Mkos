@@ -4,14 +4,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { products, formatPrice, categories } from "@/data/products";
 import { useUIStore } from "@/store/ui";
+import { useCms, useFormatPrice } from "@/lib/cms/CmsProvider";
 
 const trending = ["Wool Coat", "Cashmere", "Silk", "White Shirt", "Leather Tote"];
 
 export function SearchOverlay() {
   const open = useUIStore((s) => s.searchOpen);
   const setOpen = useUIStore((s) => s.setSearchOpen);
+  const { products, categories } = useCms();
+  const formatPrice = useFormatPrice();
   const [query, setQuery] = useState("");
   const [recent, setRecent] = useState<string[]>([]);
 
@@ -139,7 +141,7 @@ export function SearchOverlay() {
                         key={c.slug}
                         href={`/shop?category=${c.slug}`}
                         onClick={() => setOpen(false)}
-                        className="text-sm hover:text-violet-800"
+                        className="text-sm hover:text-orange-800"
                       >
                         {c.name}
                       </Link>

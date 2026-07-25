@@ -4,8 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import type { Product } from "@/data/products";
-import { formatPrice } from "@/data/products";
+import type { Product } from "@/lib/cms/types";
+import { useFormatPrice } from "@/lib/cms/CmsProvider";
 import { useWishlistStore } from "@/store/wishlist";
 import { useCursorLabel } from "@/hooks/useCursorLabel";
 import { cn } from "@/lib/utils";
@@ -19,6 +19,7 @@ export function ProductCard({
   index?: number;
   variant?: "default" | "editorial" | "compact";
 }) {
+  const formatPrice = useFormatPrice();
   const [hovered, setHovered] = useState(false);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const toggle = useWishlistStore((s) => s.toggle);
@@ -117,7 +118,7 @@ export function ProductCard({
                 stroke="currentColor"
                 strokeWidth="1.5"
                 animate={wished ? { scale: [1, 1.35, 1] } : { scale: 1 }}
-                className={wished ? "text-violet-700" : "text-mkos-ink"}
+                className={wished ? "text-orange-700" : "text-mkos-ink"}
               >
                 <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z" />
               </motion.svg>
@@ -161,7 +162,7 @@ export function ProductCard({
           </div>
           <motion.p
             className="font-display text-sm tabular-nums"
-            animate={{ y: hovered ? -2 : 0, color: hovered ? "#5b21b6" : "#111111" }}
+            animate={{ y: hovered ? -2 : 0, color: hovered ? "#c45c26" : "#111111" }}
           >
             {formatPrice(product.price)}
           </motion.p>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, Inter } from "next/font/google";
 import { Providers } from "@/components/experience/Providers";
+import { getCmsSnapshot } from "@/lib/cms/getCms";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -18,19 +19,24 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL("https://mkos.studio"),
   title: {
-    default: "MKOS — Quiet Luxury Atelier",
+    default: "MKOS — For Those Who Understand STYLE",
     template: "%s · MKOS",
   },
   description:
-    "MKOS is a luxury atelier of essential clothing — cinematic shopping, refined materials, and pieces designed to feel inevitable.",
+    "MKOS (My Kind of Style) is a Nigerian contemporary fashion brand creating timeless Ready-to-Wear, Custom, Couture, and Aso Ebi for women and men.",
   openGraph: {
-    title: "MKOS — Quiet Luxury Atelier",
-    description: "Enter a handcrafted luxury shopping experience.",
+    title: "MKOS — For Those Who Understand STYLE",
+    description:
+      "Elegant, sophisticated fashion blending contemporary design with African heritage.",
     images: ["/logo/mkos-logo.png"],
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export const revalidate = 300;
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const cms = await getCmsSnapshot();
+
   return (
     <html lang="en" className={`${spaceGrotesk.variable} ${inter.variable}`}>
       <body>
@@ -40,7 +46,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         >
           Skip to content
         </a>
-        <Providers>{children}</Providers>
+        <Providers cms={cms}>{children}</Providers>
       </body>
     </html>
   );

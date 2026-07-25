@@ -4,9 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence, useMotionValue, useSpring } from "framer-motion";
 import Image from "next/image";
 import { useUIStore } from "@/store/ui";
+import { useCmsOptional } from "@/lib/cms/CmsProvider";
 
 export function IntroLoader() {
   const setLoaderComplete = useUIStore((s) => s.setLoaderComplete);
+  const cms = useCmsOptional();
+  const logoSrc = cms?.settings.logo_url ?? "/logo/mkos-logo.png";
+  const brand = cms?.settings.brand_name ?? "MKOS";
   const [progress, setProgress] = useState(0);
   const [exiting, setExiting] = useState(false);
   const [done, setDone] = useState(false);
@@ -17,6 +21,13 @@ export function IntroLoader() {
   const glowY = useSpring(mouseY, { stiffness: 40, damping: 20 });
 
   useEffect(() => {
+    // Show intro once per browser session — skip on later navigations/refreshes in-session
+    if (typeof window !== "undefined" && sessionStorage.getItem("mkos-loader-done") === "1") {
+      setDone(true);
+      setLoaderComplete(true);
+      return;
+    }
+
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduced) {
       setProgress(100);
@@ -25,6 +36,7 @@ export function IntroLoader() {
         setTimeout(() => {
           setDone(true);
           setLoaderComplete(true);
+          sessionStorage.setItem("mkos-loader-done", "1");
         }, 400);
       }, 200);
       return;
@@ -32,11 +44,10 @@ export function IntroLoader() {
 
     let raf = 0;
     const start = performance.now();
-    const duration = 2800;
+    const duration = 1600;
 
     const tick = (now: number) => {
       const t = Math.min(1, (now - start) / duration);
-      // Ease out cubic with slight hold near end
       const eased = 1 - Math.pow(1 - t, 3);
       const value = Math.floor(eased * 100);
       setProgress(value);
@@ -48,8 +59,9 @@ export function IntroLoader() {
           setTimeout(() => {
             setDone(true);
             setLoaderComplete(true);
-          }, 1100);
-        }, 200);
+            sessionStorage.setItem("mkos-loader-done", "1");
+          }, 700);
+        }, 120);
       }
     };
 
@@ -146,8 +158,8 @@ export function IntroLoader() {
               className="relative"
             >
               <Image
-                src="/logo/mkos-logo.png"
-                alt="MKOS"
+                src={logoSrc}
+                alt={brand}
                 width={180}
                 height={72}
                 priority
@@ -158,7 +170,7 @@ export function IntroLoader() {
             <div className="mt-14 w-[220px] sm:w-[280px]">
               <div className="h-px w-full overflow-hidden bg-white/10">
                 <motion.div
-                  className="h-full origin-left bg-gradient-to-r from-white/40 via-violet-300 to-white"
+                  className="h-full origin-left bg-gradient-to-r from-white/40 via-orange-300 to-white"
                   style={{ width: `${progress}%` }}
                   transition={{ ease: "linear" }}
                 />

@@ -8,18 +8,17 @@ import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-
 import { useCartStore } from "@/store/cart";
 import { useUIStore } from "@/store/ui";
 import { useMagnetic } from "@/hooks/useMagnetic";
+import { useCms } from "@/lib/cms/CmsProvider";
+import { useAuth } from "@/lib/auth/AuthProvider";
 import { cn } from "@/lib/utils";
-
-const links = [
-  { href: "/shop", label: "Shop" },
-  { href: "/shop?collection=noir-edit", label: "Collections" },
-  { href: "/#story", label: "Story" },
-  { href: "/account", label: "Account" },
-];
 
 export function Header() {
   const pathname = usePathname();
   const isHome = pathname === "/";
+  const { navigation, settings } = useCms();
+  const { user, loading: authLoading } = useAuth();
+  const openAuth = useUIStore((s) => s.openAuth);
+  const links = navigation.filter((l) => l.location === "header" && !l.href.includes("/account"));
   const [pastHero, setPastHero] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -65,15 +64,16 @@ export function Header() {
       >
         <div className="mx-auto flex h-20 max-w-[1600px] items-center justify-between px-5 sm:px-8 lg:px-12">
           <nav className="hidden items-center gap-8 md:flex">
-            {links.slice(0, 3).map((l) => (
+            {links.map((l) => (
               <Link
-                key={l.href}
+                key={`${l.label}-${l.href}`}
                 href={l.href}
                 className={cn(
                   "font-display text-[11px] tracking-[0.22em] uppercase transition-colors duration-500",
                   onHero
                     ? "text-white/85 hover:text-white"
-                    : "text-mkos-ink/80 hover:text-mkos-ink"
+                    : "text-mkos-ink/80 hover:text-mkos-ink",
+                  pathname === l.href && (onHero ? "text-white" : "text-mkos-ink")
                 )}
               >
                 {l.label}
@@ -114,8 +114,8 @@ export function Header() {
               className="relative"
             >
               <Image
-                src="/logo/mkos-logo.png"
-                alt="MKOS"
+                src={settings.logo_url ?? "/logo/mkos-logo.png"}
+                alt={settings.brand_name}
                 width={120}
                 height={48}
                 priority
@@ -147,6 +147,29 @@ export function Header() {
             >
               Search
             </button>
+            {!authLoading &&
+              (user ? (
+                <Link
+                  href="/account"
+                  className={cn(
+                    "font-display text-[11px] tracking-[0.22em] uppercase transition-colors duration-500",
+                    onHero ? "text-white/85 hover:text-white" : "text-mkos-ink"
+                  )}
+                >
+                  Account
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => openAuth("signin")}
+                  className={cn(
+                    "font-display text-[11px] tracking-[0.22em] uppercase transition-colors duration-500",
+                    onHero ? "text-white/85 hover:text-white" : "text-mkos-ink"
+                  )}
+                >
+                  Sign in
+                </button>
+              ))}
             <button
               type="button"
               onClick={openCart}
@@ -188,8 +211,8 @@ export function Header() {
           >
             <div className="flex h-20 items-center justify-between px-5">
               <Image
-                src="/logo/mkos-logo.png"
-                alt="MKOS"
+                src={settings.logo_url ?? "/logo/mkos-logo.png"}
+                alt={settings.brand_name}
                 width={100}
                 height={40}
                 className="h-8 w-auto brightness-0 invert"
@@ -203,20 +226,39 @@ export function Header() {
               </button>
             </div>
             <nav className="flex flex-col gap-6 px-5 pt-16">
-              {[...links, { href: "/checkout", label: "Checkout" }].map((l, i) => (
+              {[
+                ...links,
+                user
+                  ? { href: "/account", label: "Account", location: "header" }
+                  : { href: "#signin", label: "Sign in", location: "header" },
+                { href: "/checkout", label: "Checkout", location: "header" },
+              ].map((l, i) => (
                 <motion.div
                   key={l.href}
                   initial={{ opacity: 0, y: 24 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.15 + i * 0.06 }}
                 >
-                  <Link
-                    href={l.href}
-                    onClick={() => setMenuOpen(false)}
-                    className="font-display text-4xl font-medium tracking-tight"
-                  >
-                    {l.label}
-                  </Link>
+                  {l.href === "#signin" ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        openAuth("signin");
+                      }}
+                      className="font-display text-4xl font-medium tracking-tight"
+                    >
+                      {l.label}
+                    </button>
+                  ) : (
+                    <Link
+                      href={l.href}
+                      onClick={() => setMenuOpen(false)}
+                      className="font-display text-4xl font-medium tracking-tight"
+                    >
+                      {l.label}
+                    </Link>
+                  )}
                 </motion.div>
               ))}
             </nav>

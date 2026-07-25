@@ -1,44 +1,65 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  getProductBySlug,
-  getRelatedProducts,
-  formatPrice,
-  products,
-} from "@/data/products";
+import type { Product } from "@/lib/cms/types";
 import { ProductCard } from "@/components/product/ProductCard";
 import { Button } from "@/components/ui/Button";
 import { useCartStore, productToCartItem } from "@/store/cart";
 import { useWishlistStore } from "@/store/wishlist";
 import { useUIStore } from "@/store/ui";
+import { useCms, useFormatPrice } from "@/lib/cms/CmsProvider";
 import { cn } from "@/lib/utils";
 
-export default function ProductClient({ slug }: { slug: string }) {
-  const product = getProductBySlug(slug)!;
+export default function ProductClient({ product: initial }: { product: Product }) {
+  const { products } = useCms();
+  const formatPrice = useFormatPrice();
+  const product = products.find((p) => p.id === initial.id) ?? initial;
+
   const [active, setActive] = useState(0);
   const [fullscreen, setFullscreen] = useState(false);
-  const [color, setColor] = useState(product.colors[0].name);
-  const [size, setSize] = useState(product.sizes[1] ?? product.sizes[0]);
+  const [color, setColor] = useState(product.colors[0]?.name ?? "");
+  const [size, setSize] = useState(product.sizes[1] ?? product.sizes[0] ?? "");
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
   const addItem = useCartStore((s) => s.addItem);
+  const openCart = useCartStore((s) => s.open);
   const toggleWish = useWishlistStore((s) => s.toggle);
   const wished = useWishlistStore((s) => s.ids.includes(product.id));
   const addRecentlyViewed = useUIStore((s) => s.addRecentlyViewed);
   const recentlyViewed = useUIStore((s) => s.recentlyViewed);
-  const related = getRelatedProducts(product);
-  const fbt = products.filter((p) => p.id !== product.id).slice(0, 2);
+
+  const related = useMemo(() => {
+    if (!product) return [];
+    return products
+      .filter(
+        (p) =>
+          p.id !== product.id &&
+          (p.collection === product.collection || p.category === product.category)
+      )
+      .slice(0, 4);
+  }, [product, products]);
+
+  const fbt = useMemo(() => {
+    if (!product) return [];
+    return products.filter((p) => p.id !== product.id).slice(0, 2);
+  }, [product, products]);
+
   const recentProducts = recentlyViewed
     .filter((id) => id !== product.id)
     .map((id) => products.find((p) => p.id === id))
-    .filter(Boolean);
+    .filter(Boolean) as Product[];
 
   useEffect(() => {
     addRecentlyViewed(product.id);
   }, [product.id, addRecentlyViewed]);
+
+  useEffect(() => {
+    setColor(product.colors[0]?.name ?? "");
+    setSize(product.sizes[1] ?? product.sizes[0] ?? "");
+    setActive(0);
+  }, [product]);
 
   const delivery = new Date();
   delivery.setDate(delivery.getDate() + 4);
@@ -164,7 +185,7 @@ export default function ProductClient({ slug }: { slug: string }) {
               </button>
             </div>
             <div className="text-sm">
-              <p className={product.stock < 10 ? "text-violet-800" : "text-mkos-muted"}>
+              <p className={product.stock < 10 ? "text-orange-800" : "text-mkos-muted"}>
                 {product.stock < 10 ? `Only ${product.stock} left` : "In stock"}
               </p>
               <p className="text-mkos-muted">
@@ -174,22 +195,75 @@ export default function ProductClient({ slug }: { slug: string }) {
             </div>
           </div>
 
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-10 space-y-3">
             <Button
-              size="lg"
-              className="flex-1"
+              size="xl"
+              variant="bag"
               cursor="ADD"
               onClick={() => {
                 addItem(productToCartItem(product, { color, size, quantity: qty }));
                 setAdded(true);
-                setTimeout(() => setAdded(false), 1600);
+                openCart();
+                setTimeout(() => setAdded(false), 1800);
               }}
             >
-              {added ? "Added" : "Add to bag"}
+              {added ? (
+                <>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+                    <path
+                      d="M5 13l4 4L19 7"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  Added to bag
+                </>
+              ) : (
+                <>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+                    <path
+                      d="M6 8h12l-1 12H7L6 8z"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M9 8V7a3 3 0 016 0v1"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  Add to bag
+                </>
+              )}
             </Button>
-            <Button size="lg" variant="secondary" onClick={() => toggleWish(product.id)} cursor="">
-              {wished ? "Saved" : "Wishlist"}
-            </Button>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto]">
+              <Button
+                href="/checkout"
+                size="lg"
+                variant="checkout"
+                className="w-full"
+                cursor="SHOP"
+                onClick={() => {
+                  addItem(productToCartItem(product, { color, size, quantity: qty }));
+                }}
+              >
+                Buy now · Checkout
+              </Button>
+              <Button
+                size="lg"
+                variant="secondary"
+                className="w-full sm:min-w-[9.5rem]"
+                onClick={() => toggleWish(product.id)}
+                cursor=""
+              >
+                {wished ? "Saved" : "Wishlist"}
+              </Button>
+            </div>
           </div>
 
           <div className="mt-12 space-y-6 border-t border-mkos-border pt-8">

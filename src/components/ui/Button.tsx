@@ -10,8 +10,8 @@ type Props = {
   children: React.ReactNode;
   href?: string;
   onClick?: () => void;
-  variant?: "primary" | "secondary" | "ghost" | "outline";
-  size?: "sm" | "md" | "lg";
+  variant?: "primary" | "secondary" | "ghost" | "outline" | "bag" | "checkout";
+  size?: "sm" | "md" | "lg" | "xl";
   className?: string;
   cursor?: "SHOP" | "VIEW" | "EXPLORE" | "ADD" | "";
   type?: "button" | "submit";
@@ -33,30 +33,45 @@ export function Button({
   const cursorProps = useCursorLabel(cursor || "");
 
   const classes = cn(
-    "group relative inline-flex items-center justify-center overflow-hidden font-display tracking-[0.12em] uppercase transition-all duration-500 ease-out will-change-transform",
+    "group relative inline-flex items-center justify-center overflow-hidden font-display tracking-[0.14em] uppercase transition-all duration-500 ease-out will-change-transform",
     size === "sm" && "h-10 px-5 text-[10px]",
     size === "md" && "h-12 px-7 text-[11px]",
     size === "lg" && "h-14 px-9 text-xs",
+    size === "xl" && "h-[4.25rem] px-10 text-[13px] tracking-[0.22em]",
     variant === "primary" &&
-      "bg-mkos-ink text-white hover:shadow-[0_0_0_1px_rgba(139,92,246,0.35),0_0_40px_rgba(91,33,182,0.35)]",
-    variant === "secondary" && "bg-white text-mkos-ink border border-mkos-border hover:border-mkos-ink/30",
+      "bg-mkos-ink text-white hover:shadow-[0_0_0_1px_rgba(196,92,38,0.35),0_0_40px_rgba(196,92,38,0.28)]",
+    variant === "secondary" &&
+      "bg-white text-mkos-ink border border-mkos-border hover:border-mkos-ink/30",
     variant === "ghost" && "bg-transparent text-mkos-ink hover:bg-mkos-warm",
     variant === "outline" &&
       "bg-transparent text-white border border-white/30 hover:border-white hover:bg-white/10",
+    variant === "bag" &&
+      "w-full bg-black text-white border border-black hover:bg-[#0a0a0a] hover:shadow-[0_18px_40px_-18px_rgba(0,0,0,0.55)] active:scale-[0.985]",
+    variant === "checkout" &&
+      "bg-mkos-accent text-white shadow-[0_10px_30px_-12px_rgba(196,92,38,0.65)] hover:bg-mkos-accent-deep hover:shadow-[0_14px_36px_-10px_rgba(196,92,38,0.75)]",
     disabled && "pointer-events-none opacity-40",
     className
   );
 
   const inner = (
     <>
-      <span className="relative z-10 transition-transform duration-500 group-hover:-translate-y-[120%] group-active:scale-95">
+      <span className="relative z-10 flex items-center justify-center gap-3 transition-transform duration-500 group-hover:-translate-y-[120%] group-active:scale-95">
         {children}
       </span>
-      <span className="absolute inset-0 z-10 flex translate-y-[120%] items-center justify-center transition-transform duration-500 group-hover:translate-y-0">
+      <span className="absolute inset-0 z-10 flex translate-y-[120%] items-center justify-center gap-3 transition-transform duration-500 group-hover:translate-y-0">
         {children}
       </span>
       {variant === "primary" && (
-        <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-violet-500/30 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+        <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-orange-500/25 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+      )}
+      {variant === "bag" && (
+        <>
+          <span className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,transparent_40%)]" />
+          <span className="absolute inset-x-0 bottom-0 h-[3px] origin-left scale-x-0 bg-[#c45c26] transition-transform duration-500 group-hover:scale-x-100" />
+        </>
+      )}
+      {variant === "checkout" && (
+        <span className="absolute inset-x-0 bottom-0 h-[2px] origin-left scale-x-0 bg-white/70 transition-transform duration-500 group-hover:scale-x-100" />
       )}
     </>
   );

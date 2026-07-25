@@ -4,11 +4,13 @@ import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Button } from "@/components/ui/Button";
+import { useContent } from "@/lib/cms/CmsProvider";
 
 gsap.registerPlugin(ScrollTrigger);
 
 export function CampaignSection() {
   const ref = useRef<HTMLElement>(null);
+  const campaign = useContent("campaign");
 
   useEffect(() => {
     const el = ref.current;
@@ -66,25 +68,30 @@ export function CampaignSection() {
           muted
           loop
           playsInline
-          poster="/images/products/product-6.jpg"
+          preload="metadata"
         >
-          <source src="/videos/cloth-1.mp4" type="video/mp4" />
+          <source src={campaign?.media_url ?? "/videos/cloth-1.mp4"} type="video/mp4" />
         </video>
         <div className="absolute inset-0 bg-black/45" />
       </div>
 
       <div className="campaign-copy relative z-10 flex min-h-[100svh] flex-col items-center justify-center px-5 text-center text-white">
         <p className="font-display text-[11px] tracking-[0.4em] text-white/60 uppercase">
-          Luxury Campaign
+          {campaign?.eyebrow}
         </p>
         <h2 className="mt-6 max-w-4xl font-display text-5xl leading-[0.95] font-medium tracking-tight sm:text-7xl lg:text-8xl">
-          Cloth as cinema.
+          {campaign?.title}
         </h2>
         <p className="mt-6 max-w-lg text-base text-white/70 sm:text-lg">
-          An intimate film of fabric, light, and motion — the MKOS silhouette in its purest form.
+          {campaign?.subtitle}
         </p>
-        <Button href="/shop?collection=noir-edit" variant="outline" size="lg" className="mt-10">
-          Shop the film
+        <Button
+          href={campaign?.cta_href ?? "/shop"}
+          variant="outline"
+          size="lg"
+          className="mt-10"
+        >
+          {campaign?.cta_label ?? "Shop the film"}
         </Button>
       </div>
     </section>

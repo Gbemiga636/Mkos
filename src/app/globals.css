@@ -7,9 +7,13 @@
   --color-mkos-muted: #6b6b6b;
   --color-mkos-silver: #c8c8c8;
   --color-mkos-border: rgba(17, 17, 17, 0.08);
-  --color-mkos-purple: #5b21b6;
-  --color-mkos-purple-light: #8b5cf6;
-  --color-mkos-purple-deep: #2e1065;
+  --color-mkos-accent: #c45c26;
+  --color-mkos-accent-light: #e07a45;
+  --color-mkos-accent-deep: #8a3a12;
+  /* Legacy aliases → burnt orange */
+  --color-mkos-purple: #c45c26;
+  --color-mkos-purple-light: #e07a45;
+  --color-mkos-purple-deep: #8a3a12;
   --font-display: var(--font-space-grotesk), "Space Grotesk", sans-serif;
   --font-body: var(--font-inter), "Inter", sans-serif;
 }
@@ -85,11 +89,11 @@ video {
 }
 
 .gradient-purple {
-  background: linear-gradient(135deg, #2e1065 0%, #5b21b6 45%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #8a3a12 0%, #c45c26 45%, #e07a45 100%);
 }
 
 .gradient-purple-text {
-  background: linear-gradient(135deg, #2e1065 0%, #5b21b6 45%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #8a3a12 0%, #c45c26 45%, #e07a45 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;

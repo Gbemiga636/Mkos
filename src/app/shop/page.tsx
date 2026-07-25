@@ -3,11 +3,17 @@
 import { useMemo, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { products, categories, collections } from "@/data/products";
 import { ProductCard } from "@/components/product/ProductCard";
+import { EditableSection } from "@/components/cms/EditableSection";
 import { cn } from "@/lib/utils";
+import { useCms, useContent } from "@/lib/cms/CmsProvider";
 
 function ShopContent() {
+  const cms = useCms();
+  const shop = useContent("shop");
+  const products = cms.products;
+  const categories = cms.categories;
+  const collections = cms.collections;
   const params = useSearchParams();
   const initialCollection = params.get("collection") ?? "";
   const initialCategory = params.get("category") ?? "";
@@ -42,19 +48,22 @@ function ShopContent() {
   return (
     <div className="min-h-screen bg-white pt-28 pb-24">
       <div className="mx-auto max-w-[1600px] px-5 sm:px-8 lg:px-12">
+        <EditableSection cmsKey="shop" label="Shop header">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
         >
-          <p className="font-display text-[11px] tracking-[0.35em] text-mkos-muted uppercase">Shop</p>
+          <p className="font-display text-[11px] tracking-[0.35em] text-mkos-muted uppercase">{shop?.eyebrow ?? "Shop"}</p>
           <h1 className="mt-4 font-display text-5xl font-medium tracking-tight sm:text-6xl lg:text-7xl">
-            The full archive.
+            {shop?.title ?? "The full archive."}
           </h1>
           <p className="mt-4 max-w-xl text-mkos-muted">
-            Filter by instinct. Every piece is finished by hand and ready for the wardrobe.
+            {shop?.subtitle ??
+              "Filter by instinct. Every piece is finished by hand and ready for the wardrobe."}
           </p>
         </motion.div>
+        </EditableSection>
 
         <div className="mt-12 flex flex-wrap items-center justify-between gap-4 border-y border-mkos-border py-4">
           <button
@@ -134,7 +143,7 @@ function ShopContent() {
                     step={10000}
                     value={priceMax}
                     onChange={(e) => setPriceMax(Number(e.target.value))}
-                    className="w-full accent-violet-700"
+                    className="w-full accent-orange-700"
                   />
                   <p className="mt-2 text-sm text-mkos-muted">Up to ₦{priceMax.toLocaleString("en-NG")}</p>
                 </FilterGroup>

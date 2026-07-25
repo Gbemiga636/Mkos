@@ -1,36 +1,46 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCartStore, cartItemKey } from "@/store/cart";
-import { formatPrice } from "@/data/products";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
+import { useCms, useFormatPrice } from "@/lib/cms/CmsProvider";
+import { useAuth } from "@/lib/auth/AuthProvider";
+import { useUIStore } from "@/store/ui";
 
-const steps = ["Shipping", "Payment", "Review", "Confirmed"] as const;
+const steps = ["Shipping", "Review", "Pay"] as const;
 
 export default function CheckoutPage() {
   const items = useCartStore((s) => s.items);
+  const { settings } = useCms();
+  const formatPrice = useFormatPrice();
+  const { user } = useAuth();
+  const openAuth = useUIStore((s) => s.openAuth);
   const subtotal = items.reduce((n, i) => n + i.price * i.quantity, 0);
-  const shipping = subtotal > 300000 || subtotal === 0 ? 0 : 28000;
+  const shipping =
+    subtotal > settings.free_shipping_threshold || subtotal === 0 ? 0 : settings.shipping_fee;
   const total = subtotal + shipping;
   const [step, setStep] = useState(0);
+  const [placing, setPlacing] = useState(false);
+  const [error, setError] = useState("");
   const [form, setForm] = useState({
     email: "",
     first: "",
     last: "",
+    phone: "",
     address: "",
     city: "",
+    state: "Lagos",
     zip: "",
-    country: "United States",
-    card: "",
-    expiry: "",
-    cvc: "",
+    country: "Nigeria",
   });
 
-  if (items.length === 0 && step < 3) {
+  const hasPricedItems = useMemo(() => items.every((i) => i.price > 0), [items]);
+
+  if (items.length === 0) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center px-5 pt-20 text-center">
         <h1 className="font-display text-4xl font-medium">Your bag is empty</h1>
@@ -39,6 +49,46 @@ export default function CheckoutPage() {
         </Button>
       </div>
     );
+  }
+
+  async function payWithPaystack() {
+    setError("");
+    if (!hasPricedItems) {
+      setError("One or more pieces are price-on-request. Message the studio to complete this order.");
+      return;
+    }
+    setPlacing(true);
+    try {
+      const res = await fetch("/api/checkout/initialize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...form,
+          userId: user?.id ?? null,
+          items: items.map((i) => ({
+            productId: i.productId,
+            slug: i.slug,
+            name: i.name,
+            price: i.price,
+            image: i.image,
+            color: i.color,
+            size: i.size,
+            quantity: i.quantity,
+          })),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Could not start payment");
+        return;
+      }
+      // Hand off to Paystack — success URL returns to /checkout/success
+      window.location.href = data.authorization_url as string;
+    } catch {
+      setError("Network error starting payment. Please try again.");
+    } finally {
+      setPlacing(false);
+    }
   }
 
   return (
@@ -51,7 +101,6 @@ export default function CheckoutPage() {
           Complete your order
         </h1>
 
-        {/* Progress */}
         <div className="mt-10 flex items-center gap-2 sm:gap-4">
           {steps.map((s, i) => (
             <div key={s} className="flex flex-1 items-center gap-2 sm:gap-4">
@@ -91,15 +140,33 @@ export default function CheckoutPage() {
                   exit={{ opacity: 0, x: -20 }}
                 >
                   <h2 className="font-display text-2xl">Shipping</h2>
+                  <p className="mt-2 text-sm text-mkos-muted">
+                    We’ll use this for delivery and your confirmation email.
+                  </p>
                   <div className="mt-6 grid gap-4 sm:grid-cols-2">
                     <Field
                       label="Email"
+                      type="email"
                       value={form.email}
                       onChange={(v) => setForm({ ...form, email: v })}
                       className="sm:col-span-2"
                     />
-                    <Field label="First name" value={form.first} onChange={(v) => setForm({ ...form, first: v })} />
-                    <Field label="Last name" value={form.last} onChange={(v) => setForm({ ...form, last: v })} />
+                    <Field
+                      label="First name"
+                      value={form.first}
+                      onChange={(v) => setForm({ ...form, first: v })}
+                    />
+                    <Field
+                      label="Last name"
+                      value={form.last}
+                      onChange={(v) => setForm({ ...form, last: v })}
+                    />
+                    <Field
+                      label="WhatsApp / phone"
+                      value={form.phone}
+                      onChange={(v) => setForm({ ...form, phone: v })}
+                      className="sm:col-span-2"
+                    />
                     <Field
                       label="Address"
                       value={form.address}
@@ -107,46 +174,37 @@ export default function CheckoutPage() {
                       className="sm:col-span-2"
                     />
                     <Field label="City" value={form.city} onChange={(v) => setForm({ ...form, city: v })} />
-                    <Field label="ZIP" value={form.zip} onChange={(v) => setForm({ ...form, zip: v })} />
+                    <Field
+                      label="State"
+                      value={form.state}
+                      onChange={(v) => setForm({ ...form, state: v })}
+                    />
+                    <Field label="ZIP / postal" value={form.zip} onChange={(v) => setForm({ ...form, zip: v })} />
+                    <Field
+                      label="Country"
+                      value={form.country}
+                      onChange={(v) => setForm({ ...form, country: v })}
+                    />
                   </div>
-                  <Button className="mt-8" size="lg" onClick={() => setStep(1)}>
-                    Continue to payment
+                  <Button
+                    className="mt-8"
+                    size="lg"
+                    onClick={() => {
+                      if (!form.email || !form.first || !form.last || !form.phone || !form.address || !form.city) {
+                        setError("Please fill email, name, phone, address, and city.");
+                        return;
+                      }
+                      setError("");
+                      setStep(1);
+                    }}
+                  >
+                    Continue to review
                   </Button>
+                  {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
                 </motion.div>
               )}
 
               {step === 1 && (
-                <motion.div
-                  key="pay"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                >
-                  <h2 className="font-display text-2xl">Payment</h2>
-                  <div className="mt-6 grid gap-4">
-                    <Field label="Card number" value={form.card} onChange={(v) => setForm({ ...form, card: v })} />
-                    <div className="grid grid-cols-2 gap-4">
-                      <Field label="Expiry" value={form.expiry} onChange={(v) => setForm({ ...form, expiry: v })} />
-                      <Field label="CVC" value={form.cvc} onChange={(v) => setForm({ ...form, cvc: v })} />
-                    </div>
-                  </div>
-                  <div className="mt-6 flex flex-wrap gap-3 text-[10px] tracking-wider text-mkos-muted uppercase">
-                    <span className="border border-mkos-border px-3 py-1">Secure SSL</span>
-                    <span className="border border-mkos-border px-3 py-1">Encrypted</span>
-                    <span className="border border-mkos-border px-3 py-1">Buyer protection</span>
-                  </div>
-                  <div className="mt-8 flex gap-3">
-                    <Button variant="secondary" onClick={() => setStep(0)}>
-                      Back
-                    </Button>
-                    <Button size="lg" onClick={() => setStep(2)}>
-                      Review order
-                    </Button>
-                  </div>
-                </motion.div>
-              )}
-
-              {step === 2 && (
                 <motion.div
                   key="rev"
                   initial={{ opacity: 0, x: 20 }}
@@ -154,10 +212,25 @@ export default function CheckoutPage() {
                   exit={{ opacity: 0, x: -20 }}
                 >
                   <h2 className="font-display text-2xl">Review</h2>
-                  <p className="mt-3 text-sm text-mkos-muted">
-                    {form.first} {form.last} · {form.email}
+                  {!user && (
+                    <p className="mt-3 text-sm text-mkos-muted">
+                      <button
+                        type="button"
+                        className="underline underline-offset-2"
+                        onClick={() => openAuth("signin")}
+                      >
+                        Sign in
+                      </button>{" "}
+                      to save this order to your account (optional).
+                    </p>
+                  )}
+                  <p className="mt-4 text-sm leading-relaxed text-mkos-muted">
+                    {form.first} {form.last} · {form.email} · {form.phone}
                     <br />
-                    {form.address}, {form.city} {form.zip}
+                    {form.address}, {form.city}
+                    {form.state ? `, ${form.state}` : ""} {form.zip}
+                    <br />
+                    {form.country}
                   </p>
                   <ul className="mt-6 space-y-4">
                     {items.map((item) => (
@@ -169,45 +242,25 @@ export default function CheckoutPage() {
                       </li>
                     ))}
                   </ul>
-                  <div className="mt-8 flex gap-3">
-                    <Button variant="secondary" onClick={() => setStep(1)}>
+                  <div className="mt-6 rounded-none border border-mkos-border bg-mkos-warm/50 p-4 text-sm text-mkos-muted">
+                    You’ll pay securely with <strong className="text-mkos-ink">Paystack</strong> —
+                    cards, bank transfer, and USSD. After payment you’ll land on your order
+                    confirmation page and receive email receipts.
+                  </div>
+                  <div className="mt-8 flex flex-wrap gap-3">
+                    <Button variant="secondary" onClick={() => setStep(0)}>
                       Back
                     </Button>
                     <Button
                       size="lg"
-                      onClick={() => {
-                        useCartStore.getState().clear();
-                        setStep(3);
-                      }}
+                      variant="checkout"
+                      disabled={placing}
+                      onClick={payWithPaystack}
                     >
-                      Place order · {formatPrice(total)}
+                      {placing ? "Redirecting…" : `Pay with Paystack · ${formatPrice(total)}`}
                     </Button>
                   </div>
-                </motion.div>
-              )}
-
-              {step === 3 && (
-                <motion.div
-                  key="done"
-                  initial={{ opacity: 0, scale: 0.96 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="py-10 text-center"
-                >
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 200, damping: 14 }}
-                    className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-mkos-ink text-white"
-                  >
-                    ✓
-                  </motion.div>
-                  <h2 className="mt-8 font-display text-3xl font-medium">Order confirmed</h2>
-                  <p className="mt-3 text-mkos-muted">
-                    A quiet confirmation is on its way to your inbox.
-                  </p>
-                  <Button href="/" className="mt-8">
-                    Return home
-                  </Button>
+                  {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -238,7 +291,9 @@ export default function CheckoutPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-mkos-muted">Shipping</span>
-                <span className="tabular-nums">{shipping === 0 ? "Complimentary" : formatPrice(shipping)}</span>
+                <span className="tabular-nums">
+                  {shipping === 0 ? "Complimentary" : formatPrice(shipping)}
+                </span>
               </div>
               <div className="flex justify-between pt-2 font-display text-lg">
                 <span>Total</span>
@@ -246,7 +301,10 @@ export default function CheckoutPage() {
               </div>
             </div>
             <p className="mt-6 text-xs text-mkos-muted">
-              Need help? <Link href="/#faq" className="underline">Visit FAQ</Link>
+              Need help?{" "}
+              <Link href="/about#contact" className="underline">
+                Contact the studio
+              </Link>
             </p>
           </aside>
         </div>
@@ -260,11 +318,13 @@ function Field({
   value,
   onChange,
   className,
+  type = "text",
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   className?: string;
+  type?: string;
 }) {
   return (
     <label className={cn("block", className)}>
@@ -272,9 +332,10 @@ function Field({
         {label}
       </span>
       <input
+        type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-2 h-12 w-full border border-mkos-border bg-mkos-warm/50 px-4 text-sm outline-none transition-shadow focus:shadow-[0_0_0_3px_rgba(91,33,182,0.12)]"
+        className="mt-2 h-12 w-full border border-mkos-border bg-mkos-warm/50 px-4 text-sm outline-none transition-shadow focus:border-mkos-accent focus:shadow-[0_0_0_3px_rgba(196,92,38,0.12)]"
       />
     </label>
   );

@@ -1,35 +1,35 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { categories, products, reviews, faqs } from "@/data/products";
 import { SectionHeading, Button } from "@/components/ui/Button";
+import { EmailSubscribe } from "@/components/ui/EmailSubscribe";
 import { useCursorLabel } from "@/hooks/useCursorLabel";
-import { useState } from "react";
+import { useCms, useContent } from "@/lib/cms/CmsProvider";
 
 export function CollectionCarousel() {
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
   const x = useTransform(scrollYProgress, [0, 1], ["0%", "-35%"]);
   const cursor = useCursorLabel("DRAG");
+  const { carousel } = useCms();
+  const section = useContent("carousel");
 
-  const slides = [
-    { src: "/images/products/wa-1.jpg", name: "Atelier '25", href: "/shop?collection=atelier-25" },
-    { src: "/images/products/wa-2.jpg", name: "Noir Edit", href: "/shop?collection=noir-edit" },
-    { src: "/images/products/wa-3.jpg", name: "White Space", href: "/shop?collection=white-space" },
-    { src: "/images/products/wa-4.jpg", name: "Evening", href: "/shop?filter=new" },
-    { src: "/images/products/wa-5.jpg", name: "Essentials", href: "/shop?category=essentials" },
-  ];
+  const slides = carousel.map((s) => ({
+    src: s.image_url,
+    name: s.name,
+    href: s.href ?? "/shop",
+  }));
 
   return (
     <section ref={ref} className="overflow-hidden bg-white py-28">
       <div className="px-5 sm:px-8 lg:px-12">
         <SectionHeading
-          eyebrow="Collection Carousel"
-          title="Move through the house."
-          subtitle="A horizontal procession of edits — scroll to wander the season."
+          eyebrow={section?.eyebrow ?? "Collection Carousel"}
+          title={section?.title ?? "Move through the house."}
+          subtitle={section?.subtitle ?? undefined}
         />
       </div>
       <motion.div style={{ x }} className="mt-14 flex w-max gap-6 px-5 sm:px-8" {...cursor}>
@@ -53,18 +53,21 @@ export function CollectionCarousel() {
 
 export function CategoryGrid() {
   const cursor = useCursorLabel("VIEW");
+  const { categories, products } = useCms();
+  const section = useContent("categories");
 
   return (
     <section className="bg-mkos-warm px-5 py-28 sm:px-8 lg:px-12">
       <div className="mx-auto max-w-[1600px]">
         <SectionHeading
-          eyebrow="Categories"
-          title="Find your silhouette."
-          subtitle="Four paths into the archive. Choose by instinct."
+          eyebrow={section?.eyebrow ?? "Categories"}
+          title={section?.title ?? "Find your silhouette."}
+          subtitle={section?.subtitle ?? undefined}
         />
         <div className="mt-14 grid gap-4 md:grid-cols-2">
           {categories.map((cat, i) => {
-            const img = products[i * 2]?.images[0] ?? products[0].images[0];
+            const img =
+              cat.image_url || products[i * 2]?.images[0] || products[0]?.images[0] || "";
             return (
               <Link
                 key={cat.slug}
@@ -72,13 +75,15 @@ export function CategoryGrid() {
                 className="group relative flex min-h-[280px] items-end overflow-hidden bg-white p-8 sm:min-h-[340px]"
                 {...cursor}
               >
-                <Image
-                  src={img}
-                  alt=""
-                  fill
-                  className="object-cover opacity-40 transition-transform duration-1000 group-hover:scale-105"
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                />
+                {img && (
+                  <Image
+                    src={img}
+                    alt=""
+                    fill
+                    className="object-cover opacity-40 transition-transform duration-1000 group-hover:scale-105"
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                  />
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-white via-white/70 to-white/20" />
                 <div className="relative z-10">
                   <p className="font-display text-[10px] tracking-[0.3em] text-mkos-muted uppercase">
@@ -99,12 +104,35 @@ export function CategoryGrid() {
 }
 
 export function BrandStory() {
+  const section = useContent("brand_story");
+  const paragraphs = (section?.body ?? "").split("\n\n").filter(Boolean);
+  const values =
+    (section?.extra?.values as { title: string; text: string }[] | undefined) ??
+    [
+      {
+        title: "Quality",
+        text: "Every piece is made with care, precision, and attention to detail.",
+      },
+      {
+        title: "Elegance",
+        text: "True style is timeless — designed to remain stylish beyond trends.",
+      },
+      {
+        title: "Individuality",
+        text: "We celebrate self-expression. We are everyone’s Kind Of Style.",
+      },
+      {
+        title: "Customer Experience",
+        text: "From first interaction to the moment you wear it — memorable.",
+      },
+    ];
+
   return (
     <section id="story" className="relative overflow-hidden bg-white px-5 py-28 sm:px-8 lg:px-12">
       <div className="mx-auto grid max-w-[1600px] gap-16 lg:grid-cols-[1fr_1.1fr] lg:items-center">
         <div className="relative aspect-[3/4] overflow-hidden bg-mkos-warm sm:aspect-[4/5]">
           <Image
-            src="/images/products/wa-2.jpg"
+            src={section?.media_url ?? "/images/products/abeni-boubou.jpg"}
             alt="MKOS brand"
             fill
             className="object-cover"
@@ -113,21 +141,31 @@ export function BrandStory() {
         </div>
         <div>
           <p className="font-display text-[11px] tracking-[0.35em] text-mkos-muted uppercase">
-            Brand Story
+            {section?.eyebrow ?? "About MKOS"}
           </p>
           <h2 className="mt-5 font-display text-4xl leading-[1.05] font-medium tracking-tight sm:text-5xl lg:text-6xl">
-            Built for those who notice everything.
+            {section?.title ?? "My Kind of Style."}
           </h2>
-          <p className="mt-6 max-w-xl text-base leading-relaxed text-mkos-muted sm:text-lg">
-            MKOS was founded on a simple obsession: clothing that feels inevitable. We work with
-            small ateliers, rare mills, and a design language that privileges silence over spectacle.
-          </p>
-          <p className="mt-4 max-w-xl text-base leading-relaxed text-mkos-muted sm:text-lg">
-            Every seam is a decision. Every fabric is a conversation. The result is a wardrobe that
-            doesn&apos;t ask for attention — it earns it.
-          </p>
-          <Button href="/shop" className="mt-10" variant="secondary">
-            Discover the house
+          {paragraphs.map((p) => (
+            <p
+              key={p.slice(0, 24)}
+              className="mt-4 max-w-xl text-base leading-relaxed text-mkos-muted sm:mt-6 sm:text-lg"
+            >
+              {p}
+            </p>
+          ))}
+          <div className="mt-10 grid gap-6 sm:grid-cols-2">
+            {values.map((v) => (
+              <div key={v.title}>
+                <p className="font-display text-[11px] tracking-[0.22em] text-mkos-accent uppercase">
+                  {v.title}
+                </p>
+                <p className="mt-2 text-sm leading-relaxed text-mkos-muted">{v.text}</p>
+              </div>
+            ))}
+          </div>
+          <Button href={section?.cta_href ?? "/shop"} className="mt-10" variant="secondary">
+            {section?.cta_label ?? "Explore the shop"}
           </Button>
         </div>
       </div>
@@ -136,12 +174,15 @@ export function BrandStory() {
 }
 
 export function Reviews() {
+  const { reviews } = useCms();
+  const section = useContent("reviews");
+
   return (
     <section className="bg-mkos-ink px-5 py-28 text-white sm:px-8 lg:px-12">
       <div className="mx-auto max-w-[1600px]">
         <SectionHeading
-          eyebrow="Client Voices"
-          title="Whispers from the wardrobe."
+          eyebrow={section?.eyebrow ?? "Client Voices"}
+          title={section?.title ?? "Whispers from the wardrobe."}
         />
         <div className="mt-14 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {reviews.map((r, i) => (
@@ -153,7 +194,7 @@ export function Reviews() {
               transition={{ delay: i * 0.08 }}
               className="border border-white/10 bg-white/5 p-6 backdrop-blur-sm"
             >
-              <div className="flex gap-1 text-violet-300">
+              <div className="flex gap-1 text-orange-300">
                 {Array.from({ length: r.rating }).map((_, j) => (
                   <span key={j}>★</span>
                 ))}
@@ -174,7 +215,16 @@ export function Reviews() {
 }
 
 export function InstagramGallery() {
-  const images = products.slice(0, 6).map((p) => p.images[0]);
+  const { products } = useCms();
+  const section = useContent("instagram");
+  const gallery = (section?.extra?.gallery as string[] | undefined)?.filter(Boolean);
+  const images =
+    gallery && gallery.length > 0
+      ? gallery
+      : products
+          .slice(0, 6)
+          .map((p) => p.images[0])
+          .filter(Boolean);
   const cursor = useCursorLabel("VIEW");
 
   return (
@@ -182,19 +232,24 @@ export function InstagramGallery() {
       <div className="mx-auto max-w-[1600px]">
         <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <SectionHeading
-            eyebrow="@mkos"
-            title="Life in the edit."
-            subtitle="A living gallery of clients, campaigns, and atelier moments."
+            eyebrow={section?.eyebrow ?? "@mkos"}
+            title={section?.title ?? "Life in the edit."}
+            subtitle={section?.subtitle ?? undefined}
           />
-          <Button href="#" variant="secondary">
-            Follow
+          <Button
+            href={section?.cta_href ?? "https://www.instagram.com/shopmykindofstyle"}
+            variant="secondary"
+          >
+            {section?.cta_label ?? "Follow"}
           </Button>
         </div>
         <div className="mt-14 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
           {images.map((src, i) => (
             <motion.a
               key={src}
-              href="#"
+              href={section?.cta_href ?? "https://www.instagram.com/shopmykindofstyle"}
+              target="_blank"
+              rel="noopener noreferrer"
               className="group relative aspect-square overflow-hidden bg-mkos-warm"
               initial={{ opacity: 0, scale: 0.96 }}
               whileInView={{ opacity: 1, scale: 1 }}
@@ -209,7 +264,7 @@ export function InstagramGallery() {
                 className="object-cover transition-transform duration-700 group-hover:scale-110"
                 sizes="(max-width: 768px) 50vw, 33vw"
               />
-              <div className="absolute inset-0 bg-violet-950/0 transition-colors duration-500 group-hover:bg-violet-950/25" />
+              <div className="absolute inset-0 bg-orange-950/0 transition-colors duration-500 group-hover:bg-orange-950/25" />
             </motion.a>
           ))}
         </div>
@@ -219,57 +274,44 @@ export function InstagramGallery() {
 }
 
 export function Newsletter() {
-  const [email, setEmail] = useState("");
-  const [done, setDone] = useState(false);
+  const { newsletter } = useCms();
 
   return (
     <section className="relative overflow-hidden px-5 py-28 sm:px-8 lg:px-12">
       <div className="absolute inset-0 gradient-purple opacity-95" />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.2),transparent_45%)]" />
-      <div className="relative mx-auto max-w-3xl text-center text-white">
+      <div className="relative mx-auto max-w-xl text-center text-white">
         <p className="font-display text-[11px] tracking-[0.35em] text-white/60 uppercase">
-          Newsletter
+          {newsletter.eyebrow}
         </p>
         <h2 className="mt-5 font-display text-4xl font-medium tracking-tight sm:text-5xl lg:text-6xl">
-          Early access. Private drops.
+          {newsletter.title}
         </h2>
-        <p className="mt-4 text-white/70">
-          Join a restrained list for atelier releases, fittings, and first looks.
-        </p>
-        <form
-          className="mx-auto mt-10 flex max-w-lg flex-col gap-3 sm:flex-row"
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (email) setDone(true);
-          }}
-        >
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email address"
-            className="h-14 flex-1 border border-white/25 bg-white/10 px-5 text-white outline-none backdrop-blur-sm placeholder:text-white/50 focus:border-white/60"
+        <p className="mt-4 text-white/70">{newsletter.subtitle}</p>
+        <div className="mt-10 text-left">
+          <EmailSubscribe
+            variant="dark"
+            buttonLabel={newsletter.button_label}
+            successLabel="Welcome"
           />
-          <Button type="submit" size="lg" variant="secondary" className="bg-white text-mkos-ink">
-            {done ? "Welcome" : "Subscribe"}
-          </Button>
-        </form>
+        </div>
       </div>
     </section>
   );
 }
 
 export function FAQ() {
+  const { faqs } = useCms();
+  const section = useContent("faq");
   const [open, setOpen] = useState<number | null>(0);
 
   return (
     <section id="faq" className="bg-mkos-warm px-5 py-28 sm:px-8 lg:px-12">
       <div className="mx-auto grid max-w-[1600px] gap-12 lg:grid-cols-[0.8fr_1.2fr]">
         <SectionHeading
-          eyebrow="FAQ"
-          title="Answers, quietly delivered."
-          subtitle="Everything you need before — and after — you join the house."
+          eyebrow={section?.eyebrow ?? "FAQ"}
+          title={section?.title ?? "Answers, quietly delivered."}
+          subtitle={section?.subtitle ?? undefined}
         />
         <div className="divide-y divide-mkos-border border-y border-mkos-border">
           {faqs.map((item, i) => {
@@ -309,7 +351,8 @@ export function FAQ() {
 }
 
 export function Marquee() {
-  const text = "MKOS · QUIET LUXURY · ATELIER · ESSENTIAL · ";
+  const section = useContent("marquee");
+  const text = section?.body ?? "MKOS · QUIET LUXURY · ATELIER · ESSENTIAL · ";
   return (
     <div className="overflow-hidden border-y border-mkos-border bg-white py-4">
       <motion.div
