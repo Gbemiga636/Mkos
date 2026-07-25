@@ -2,6 +2,7 @@
 
 import { ProductCard } from "@/components/product/ProductCard";
 import { SectionHeading, Button } from "@/components/ui/Button";
+import { ScrollReveal } from "@/components/experience/ScrollReveal";
 import { useCms, useContent } from "@/lib/cms/CmsProvider";
 
 export function NewArrivals() {
@@ -18,9 +19,11 @@ export function NewArrivals() {
             title={section?.title ?? "Just arrived from the atelier."}
             subtitle={section?.subtitle ?? undefined}
           />
-          <Button href="/shop?filter=new" variant="secondary">
-            View all
-          </Button>
+          <ScrollReveal y={20} delay={120}>
+            <Button href="/shop?filter=new" variant="secondary">
+              View all
+            </Button>
+          </ScrollReveal>
         </div>
         <div className="mt-14 grid grid-cols-2 gap-4 md:gap-6 lg:grid-cols-4">
           {items.map((p, i) => (
@@ -66,16 +69,22 @@ export function BestSellers() {
       <div className="mx-auto max-w-[1600px]">
         <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="font-display text-[11px] tracking-[0.35em] text-white/50 uppercase">
-              {section?.eyebrow ?? "Best Sellers"}
-            </p>
-            <h2 className="mt-4 max-w-2xl font-display text-4xl leading-[1.05] font-medium tracking-tight sm:text-5xl lg:text-6xl">
-              {section?.title ?? "The pieces that never leave."}
-            </h2>
+            <ScrollReveal y={20}>
+              <p className="font-display text-[11px] tracking-[0.35em] text-white/50 uppercase">
+                {section?.eyebrow ?? "Best Sellers"}
+              </p>
+            </ScrollReveal>
+            <ScrollReveal y={36} delay={80}>
+              <h2 className="mt-4 max-w-2xl font-display text-4xl leading-[1.05] font-medium tracking-tight sm:text-5xl lg:text-6xl">
+                {section?.title ?? "The pieces that never leave."}
+              </h2>
+            </ScrollReveal>
           </div>
-          <Button href="/shop?filter=bestsellers" variant="outline">
-            Shop bestsellers
-          </Button>
+          <ScrollReveal y={20} delay={120}>
+            <Button href="/shop?filter=bestsellers" variant="outline">
+              Shop bestsellers
+            </Button>
+          </ScrollReveal>
         </div>
         <div className="mt-14 grid grid-cols-2 gap-4 md:gap-6 lg:grid-cols-4">
           {items.map((p, i) => (

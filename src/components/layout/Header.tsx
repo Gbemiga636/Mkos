@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faBagShopping, faMagnifyingGlass, faUser } from "@fortawesome/free-solid-svg-icons";
 import { useCartStore } from "@/store/cart";
 import { useUIStore } from "@/store/ui";
 import { useMagnetic } from "@/hooks/useMagnetic";
@@ -28,8 +30,11 @@ export function Header() {
   const setSearchOpen = useUIStore((s) => s.setSearchOpen);
   const logoRef = useMagnetic<HTMLAnchorElement>(0.2);
 
-  // White only over the homepage hero; everywhere else (or after scroll) = dark/normal
   const onHero = isHome && !pastHero;
+  const iconBtn = cn(
+    "grid h-10 w-10 place-items-center transition-colors duration-500",
+    onHero ? "text-white/90 hover:text-white" : "text-mkos-ink/85 hover:text-mkos-ink"
+  );
 
   useMotionValueEvent(scrollY, "change", (latest) => {
     const prev = scrollY.getPrevious() ?? 0;
@@ -64,20 +69,26 @@ export function Header() {
       >
         <div className="mx-auto flex h-20 max-w-[1600px] items-center justify-between px-5 sm:px-8 lg:px-12">
           <nav className="hidden items-center gap-8 md:flex">
-            {links.map((l) => (
-              <Link
+            {links.map((l, i) => (
+              <motion.div
                 key={`${l.label}-${l.href}`}
-                href={l.href}
-                className={cn(
-                  "font-display text-[11px] tracking-[0.22em] uppercase transition-colors duration-500",
-                  onHero
-                    ? "text-white/85 hover:text-white"
-                    : "text-mkos-ink/80 hover:text-mkos-ink",
-                  pathname === l.href && (onHero ? "text-white" : "text-mkos-ink")
-                )}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.08 + i * 0.05, duration: 0.55 }}
               >
-                {l.label}
-              </Link>
+                <Link
+                  href={l.href}
+                  className={cn(
+                    "font-display text-[11px] tracking-[0.22em] uppercase transition-colors duration-500",
+                    onHero
+                      ? "text-white/85 hover:text-white"
+                      : "text-mkos-ink/80 hover:text-mkos-ink",
+                    pathname === l.href && (onHero ? "text-white" : "text-mkos-ink")
+                  )}
+                >
+                  {l.label}
+                </Link>
+              </motion.div>
             ))}
           </nav>
 
@@ -108,9 +119,9 @@ export function Header() {
             aria-label="MKOS home"
           >
             <motion.div
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.8 }}
+              initial={{ opacity: 0, y: -8, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ delay: 0.15, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
               className="relative"
             >
               <Image
@@ -129,73 +140,68 @@ export function Header() {
                   "pointer-events-none absolute inset-0 -z-10 rounded-full blur-xl transition-opacity duration-500",
                   onHero
                     ? "bg-[radial-gradient(circle,rgba(255,255,255,0.25),transparent_70%)]"
-                    : "bg-[radial-gradient(circle,rgba(91,33,182,0.18),transparent_70%)]"
+                    : "bg-[radial-gradient(circle,rgba(196,92,38,0.18),transparent_70%)]"
                 )}
               />
             </motion.div>
           </Link>
 
-          <div className="flex items-center gap-4 sm:gap-6">
-            <button
+          <div className="flex items-center gap-1 sm:gap-2">
+            <motion.button
               type="button"
               onClick={() => setSearchOpen(true)}
-              className={cn(
-                "font-display text-[11px] tracking-[0.22em] uppercase transition-colors duration-500",
-                onHero ? "text-white/85 hover:text-white" : "text-mkos-ink"
-              )}
+              className={iconBtn}
               aria-label="Search"
+              whileHover={{ scale: 1.08 }}
+              whileTap={{ scale: 0.94 }}
             >
-              Search
-            </button>
+              <FontAwesomeIcon icon={faMagnifyingGlass} className="h-[15px] w-[15px]" />
+            </motion.button>
             {!authLoading &&
               (user ? (
-                <Link
-                  href="/account"
-                  className={cn(
-                    "font-display text-[11px] tracking-[0.22em] uppercase transition-colors duration-500",
-                    onHero ? "text-white/85 hover:text-white" : "text-mkos-ink"
-                  )}
-                >
-                  Account
-                </Link>
+                <motion.div whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.94 }}>
+                  <Link href="/account" className={iconBtn} aria-label="Account">
+                    <FontAwesomeIcon icon={faUser} className="h-[15px] w-[15px]" />
+                  </Link>
+                </motion.div>
               ) : (
-                <button
+                <motion.button
                   type="button"
                   onClick={() => openAuth("signin")}
-                  className={cn(
-                    "font-display text-[11px] tracking-[0.22em] uppercase transition-colors duration-500",
-                    onHero ? "text-white/85 hover:text-white" : "text-mkos-ink"
-                  )}
+                  className={iconBtn}
+                  aria-label="Sign in"
+                  whileHover={{ scale: 1.08 }}
+                  whileTap={{ scale: 0.94 }}
                 >
-                  Sign in
-                </button>
+                  <FontAwesomeIcon icon={faUser} className="h-[15px] w-[15px]" />
+                </motion.button>
               ))}
-            <button
+            <motion.button
               type="button"
               onClick={openCart}
-              className={cn(
-                "relative font-display text-[11px] tracking-[0.22em] uppercase transition-colors duration-500",
-                onHero ? "text-white/85 hover:text-white" : "text-mkos-ink"
-              )}
-              aria-label={`Cart, ${itemCount} items`}
+              className={cn(iconBtn, "relative")}
+              aria-label={`Bag, ${itemCount} items`}
+              whileHover={{ scale: 1.08 }}
+              whileTap={{ scale: 0.94 }}
             >
-              Bag
+              <FontAwesomeIcon icon={faBagShopping} className="h-[15px] w-[15px]" />
               <AnimatePresence>
                 {itemCount > 0 && (
                   <motion.span
                     key={itemCount}
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
+                    exit={{ scale: 0 }}
                     className={cn(
-                      "absolute -top-2 -right-3 flex h-4 min-w-4 items-center justify-center rounded-full px-1 font-body text-[9px]",
-                      onHero ? "bg-white text-mkos-ink" : "bg-mkos-ink text-white"
+                      "absolute top-1 right-1 flex h-4 min-w-4 items-center justify-center rounded-full px-1 font-body text-[9px]",
+                      onHero ? "bg-white text-mkos-ink" : "bg-mkos-accent text-white"
                     )}
                   >
                     {itemCount}
                   </motion.span>
                 )}
               </AnimatePresence>
-            </button>
+            </motion.button>
           </div>
         </div>
       </motion.header>

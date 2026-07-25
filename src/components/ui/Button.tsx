@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { useMagnetic } from "@/hooks/useMagnetic";
 import { useCursorLabel } from "@/hooks/useCursorLabel";
+import { ScrollReveal } from "@/components/experience/ScrollReveal";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -118,36 +119,27 @@ export function SectionHeading({
   return (
     <div className={cn("max-w-3xl", align === "center" && "mx-auto text-center")}>
       {eyebrow && (
-        <motion.p
-          initial={{ opacity: 0, y: 12 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-10%" }}
-          transition={{ duration: 0.6 }}
+        <ScrollReveal
+          y={16}
           className="mb-4 font-display text-[11px] tracking-[0.35em] text-mkos-muted uppercase"
         >
           {eyebrow}
-        </motion.p>
+        </ScrollReveal>
       )}
-      <motion.h2
-        initial={{ opacity: 0, y: 24 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-10%" }}
-        transition={{ duration: 0.7, delay: 0.05 }}
-        className="font-display text-4xl leading-[1.05] font-medium tracking-tight text-balance sm:text-5xl lg:text-6xl"
-      >
-        {title}
-      </motion.h2>
+      <ScrollReveal y={32} delay={60}>
+        <h2 className="font-display text-4xl leading-[1.05] font-medium tracking-tight text-balance sm:text-5xl lg:text-6xl">
+          {title}
+        </h2>
+      </ScrollReveal>
       {subtitle && (
-        <motion.p
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-10%" }}
-          transition={{ duration: 0.7, delay: 0.12 }}
+        <ScrollReveal
+          y={20}
+          delay={120}
           className="mt-5 max-w-xl text-base leading-relaxed text-mkos-muted sm:text-lg"
           style={align === "center" ? { marginInline: "auto" } : undefined}
         >
           {subtitle}
-        </motion.p>
+        </ScrollReveal>
       )}
     </div>
   );

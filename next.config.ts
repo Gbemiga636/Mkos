@@ -19,7 +19,14 @@ const nextConfig: NextConfig = {
     ],
   },
   experimental: {
-    optimizePackageImports: ["framer-motion", "gsap", "recharts"],
+    optimizePackageImports: [
+      "framer-motion",
+      "gsap",
+      "recharts",
+      "@fortawesome/fontawesome-svg-core",
+      "@fortawesome/free-solid-svg-icons",
+      "@fortawesome/react-fontawesome",
+    ],
   },
   async headers() {
     return [

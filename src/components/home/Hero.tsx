@@ -1,11 +1,47 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import { useCursorLabel } from "@/hooks/useCursorLabel";
 import { useUIStore } from "@/store/ui";
 import { useContent } from "@/lib/cms/CmsProvider";
+
+function useTypewriter(text: string, active: boolean, msPerChar = 55) {
+  const [count, setCount] = useState(0);
+  const [done, setDone] = useState(false);
+
+  useEffect(() => {
+    if (!active) {
+      setCount(0);
+      setDone(false);
+      return;
+    }
+
+    setCount(0);
+    setDone(false);
+    let i = 0;
+    let timer = 0;
+
+    const tick = () => {
+      i += 1;
+      setCount(i);
+      if (i >= text.length) {
+        setDone(true);
+        return;
+      }
+      // Slight pause after punctuation / line breaks
+      const ch = text[i - 1];
+      const pause = ch === "\n" ? 280 : /[,.—–-]/.test(ch) ? 140 : msPerChar;
+      timer = window.setTimeout(tick, pause);
+    };
+
+    timer = window.setTimeout(tick, 220);
+    return () => window.clearTimeout(timer);
+  }, [active, text, msPerChar]);
+
+  return { typed: text.slice(0, count), done, count };
+}
 
 export function Hero() {
   const ready = useUIStore((s) => s.loaderComplete);
@@ -21,7 +57,10 @@ export function Hero() {
   const layer2y = useTransform(sy, (v) => v * -0.025);
   const playCursor = useCursorLabel("EXPLORE");
 
-  const titleLines = (hero?.title ?? "Silence,\ntailored.").split("\n");
+  const fullTitle = hero?.title ?? "Silence,\ntailored.";
+  const { typed, done: typedDone } = useTypewriter(fullTitle, ready, 58);
+  const typedLines = useMemo(() => typed.split("\n"), [typed]);
+
   const secondaryLabel = String(hero?.extra?.secondary_cta_label ?? "Watch campaign");
   const secondaryHref = String(hero?.extra?.secondary_cta_href ?? "/about");
   const videoSrc = hero?.media_url ?? "/videos/hero-bg.mp4";
@@ -71,44 +110,61 @@ export function Hero() {
 
       <div className="relative z-10 mx-auto w-full max-w-[1600px] px-5 pb-16 sm:px-8 sm:pb-20 lg:px-12 lg:pb-24">
         <div className="max-w-4xl">
+          {/* Eyebrow — slides up from below */}
           <motion.p
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 36 }}
             animate={ready ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.8, delay: 0.15 }}
+            transition={{ duration: 0.9, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
             className="font-display text-[11px] tracking-[0.4em] text-white/60 uppercase"
           >
             {hero?.eyebrow}
           </motion.p>
 
-          <div className="mt-5 overflow-hidden">
-            <motion.h1
-              initial={{ y: "110%" }}
-              animate={ready ? { y: 0 } : {}}
-              transition={{ duration: 1, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
-              className="font-display text-5xl leading-[0.95] font-medium tracking-tight text-balance sm:text-7xl lg:text-8xl xl:text-[7.5rem]"
-            >
-              {titleLines.map((line, i) => (
-                <span key={line}>
-                  {i > 0 && <br />}
-                  {line}
-                </span>
-              ))}
-            </motion.h1>
-          </div>
+          {/* Headline — typewriter */}
+          <h1
+            className="mt-5 min-h-[1.1em] font-display text-5xl leading-[0.95] font-medium tracking-tight text-balance sm:text-7xl lg:text-8xl xl:text-[7.5rem]"
+            aria-label={fullTitle.replace(/\n/g, " ")}
+          >
+            {typedLines.map((line, i) => (
+              <span key={`line-${i}`}>
+                {i > 0 && <br />}
+                {line}
+              </span>
+            ))}
+            <motion.span
+              aria-hidden
+              className="ml-1 inline-block h-[0.85em] w-[3px] translate-y-[0.08em] bg-white align-baseline"
+              initial={{ opacity: 0 }}
+              animate={
+                !ready
+                  ? { opacity: 0 }
+                  : typedDone
+                    ? { opacity: 0 }
+                    : { opacity: [1, 0.12, 1] }
+              }
+              transition={
+                typedDone
+                  ? { duration: 0.35, ease: "easeOut" }
+                  : { duration: 0.55, repeat: Infinity, ease: "easeInOut" }
+              }
+            />
+          </h1>
 
+          {/* Subtitle — slides up after type finishes */}
           <motion.p
-            initial={{ opacity: 0, y: 24 }}
-            animate={ready ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.8, delay: 0.55 }}
+            initial={{ opacity: 0, y: 40 }}
+            animate={typedDone ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
+            transition={{ duration: 0.95, ease: [0.22, 1, 0.36, 1] }}
             className="mt-6 max-w-md text-base leading-relaxed text-white/70 sm:text-lg"
           >
             {hero?.subtitle}
           </motion.p>
 
+          {/* CTAs — slide up shortly after subtitle */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={ready ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.7, delay: 0.75 }}
+            initial={{ opacity: 0, y: 36 }}
+            animate={typedDone ? { opacity: 1, y: 0 } : { opacity: 0, y: 36 }}
+            transition={{ duration: 0.9, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}
             className="mt-10 flex flex-wrap items-center gap-4"
           >
             <Button href={hero?.cta_href ?? "/shop"} variant="outline" size="lg" cursor="SHOP">
@@ -127,15 +183,15 @@ export function Hero() {
         </div>
 
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={ready ? { opacity: 1 } : {}}
-          transition={{ delay: 1.1 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={typedDone ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+          transition={{ delay: 0.45, duration: 0.8 }}
           className="mt-16 flex items-center gap-3 font-display text-[10px] tracking-[0.35em] text-white/50 uppercase"
         >
           <span className="relative flex h-8 w-5 items-start justify-center rounded-full border border-white/30 pt-1.5">
             <motion.span
               className="h-1.5 w-px bg-white"
-              animate={{ y: [0, 10, 0], opacity: [1, 0.2, 1] }}
+              animate={typedDone ? { y: [0, 10, 0], opacity: [1, 0.2, 1] } : {}}
               transition={{ duration: 1.6, repeat: Infinity }}
             />
           </span>

@@ -45,6 +45,12 @@ export function IntroLoader() {
     let raf = 0;
     const start = performance.now();
     const duration = 1600;
+    // Hard failsafe so hero never stays stuck at opacity 0
+    const failsafe = window.setTimeout(() => {
+      setDone(true);
+      setLoaderComplete(true);
+      sessionStorage.setItem("mkos-loader-done", "1");
+    }, 4000);
 
     const tick = (now: number) => {
       const t = Math.min(1, (now - start) / duration);
@@ -60,13 +66,17 @@ export function IntroLoader() {
             setDone(true);
             setLoaderComplete(true);
             sessionStorage.setItem("mkos-loader-done", "1");
+            window.clearTimeout(failsafe);
           }, 700);
         }, 120);
       }
     };
 
     raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.clearTimeout(failsafe);
+    };
   }, [setLoaderComplete]);
 
   useEffect(() => {

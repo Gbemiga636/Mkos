@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { EmailSubscribe } from "@/components/ui/EmailSubscribe";
 import { EditableSection } from "@/components/cms/EditableSection";
+import { ScrollReveal } from "@/components/experience/ScrollReveal";
 import { useCms, useContent } from "@/lib/cms/CmsProvider";
 
 const IG_MAIN = "https://www.instagram.com/shopmykindofstyle";
@@ -54,23 +54,14 @@ export function Footer() {
       <div className="mx-auto max-w-[1600px] px-5 pt-24 pb-10 sm:px-8 lg:px-12">
         <div className="grid gap-16 lg:grid-cols-[1.15fr_1fr]">
           <div>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="font-display text-[11px] tracking-[0.35em] text-mkos-muted uppercase"
-            >
+            <ScrollReveal y={16} className="font-display text-[11px] tracking-[0.35em] text-mkos-muted uppercase">
               {footer?.eyebrow ?? "Stay close"}
-            </motion.p>
-            <motion.h2
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.05 }}
-              className="mt-4 max-w-xl font-display text-4xl leading-[1.05] font-medium tracking-tight sm:text-5xl lg:text-6xl"
-            >
-              {footer?.title ?? "For Those Who Understand STYLE."}
-            </motion.h2>
+            </ScrollReveal>
+            <ScrollReveal y={24} delay={60} className="mt-4 max-w-xl">
+              <h2 className="font-display text-4xl leading-[1.05] font-medium tracking-tight sm:text-5xl lg:text-6xl">
+                {footer?.title ?? "For Those Who Understand STYLE."}
+              </h2>
+            </ScrollReveal>
             <div className="mt-10 max-w-lg">
               <EmailSubscribe buttonLabel="Join" successLabel="Joined" />
             </div>

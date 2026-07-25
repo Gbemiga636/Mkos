@@ -60,6 +60,9 @@ export default function AdminProductsPage() {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [msg, setMsg] = useState("");
+  const [selected, setSelected] = useState<string[]>([]);
+  const [bulkCategory, setBulkCategory] = useState("ready-to-wear");
+  const [bulkCollection, setBulkCollection] = useState("women");
 
   async function load() {
     setLoading(true);
@@ -72,6 +75,96 @@ export default function AdminProductsPage() {
   useEffect(() => {
     load();
   }, []);
+
+  const filtered = products.filter((p) => p.name.toLowerCase().includes(q.toLowerCase()));
+  const allFilteredSelected =
+    filtered.length > 0 && filtered.every((p) => selected.includes(p.id));
+
+  function toggleOne(id: string) {
+    setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  }
+
+  function toggleAllFiltered() {
+    if (allFilteredSelected) {
+      const ids = new Set(filtered.map((p) => p.id));
+      setSelected((prev) => prev.filter((id) => !ids.has(id)));
+    } else {
+      setSelected((prev) => Array.from(new Set([...prev, ...filtered.map((p) => p.id)])));
+    }
+  }
+
+  async function bulkAction(
+    action: "sold_out" | "restock" | "category" | "collection" | "publish" | "unpublish" | "delete",
+    value?: string
+  ) {
+    if (!selected.length) return;
+    if (action === "delete") {
+      if (
+        !confirm(
+          `Delete ${selected.length} product${selected.length === 1 ? "" : "s"} from the live catalogue?`
+        )
+      ) {
+        return;
+      }
+      await withBusy(async () => {
+        const res = await fetch("/api/admin/products", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ids: selected }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setMsg(data.error || "Delete failed");
+          return;
+        }
+        setSelected([]);
+        setMsg(`Deleted ${data.deleted ?? selected.length} product(s)`);
+        await load();
+      }, "Deleting…");
+      return;
+    }
+
+    await withBusy(async () => {
+      const res = await fetch("/api/admin/products", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: selected, action, value }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setMsg(data.error || "Update failed");
+        return;
+      }
+      const labels: Record<string, string> = {
+        sold_out: "Marked sold out",
+        restock: "Restocked",
+        category: "Category updated",
+        collection: "Collection updated",
+        publish: "Published",
+        unpublish: "Unpublished",
+      };
+      setMsg(`${labels[action] || "Updated"} · ${data.updated ?? selected.length} product(s)`);
+      setSelected([]);
+      await load();
+    }, "Updating products…");
+  }
+
+  async function markSoldOut(id: string) {
+    await withBusy(async () => {
+      const res = await fetch("/api/admin/products", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: [id], action: "sold_out" }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setMsg(data.error || "Failed");
+        return;
+      }
+      setMsg("Marked sold out");
+      await load();
+    }, "Marking sold out…");
+  }
 
   function openCreate() {
     setForm(emptyForm);
@@ -225,8 +318,6 @@ export default function AdminProductsPage() {
     }, labels[field]);
   }
 
-  const filtered = products.filter((p) => p.name.toLowerCase().includes(q.toLowerCase()));
-
   return (
     <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -238,16 +329,23 @@ export default function AdminProductsPage() {
             Products
           </h1>
           <p className="mt-2 text-sm text-mkos-muted">
-            Edit price, stock, images, and copy — changes go live on the site.
+            Select products to bulk mark sold out, change category, or delete.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search products"
             className="h-11 w-48 border border-mkos-border bg-white px-3 text-sm outline-none focus:border-mkos-accent sm:w-56"
           />
+          <button
+            type="button"
+            onClick={toggleAllFiltered}
+            className="h-11 border border-mkos-border px-4 font-display text-[10px] tracking-[0.16em] uppercase"
+          >
+            {allFilteredSelected ? "Clear selection" : "Select all"}
+          </button>
           <button
             type="button"
             onClick={openCreate}
@@ -258,63 +356,195 @@ export default function AdminProductsPage() {
         </div>
       </div>
 
+      {msg && <p className="text-sm text-mkos-accent">{msg}</p>}
+
+      {selected.length > 0 && (
+        <div className="sticky top-2 z-20 flex flex-col gap-3 border border-mkos-border bg-white p-4 shadow-lg sm:flex-row sm:flex-wrap sm:items-center">
+          <p className="font-display text-[11px] tracking-[0.16em] text-mkos-ink uppercase">
+            {selected.length} selected
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => bulkAction("sold_out")}
+              className="h-9 bg-mkos-ink px-3 font-display text-[9px] tracking-[0.14em] text-white uppercase"
+            >
+              Mark sold out
+            </button>
+            <button
+              type="button"
+              onClick={() => bulkAction("restock", "10")}
+              className="h-9 border border-mkos-border px-3 font-display text-[9px] tracking-[0.14em] uppercase"
+            >
+              Restock (10)
+            </button>
+            <button
+              type="button"
+              onClick={() => bulkAction("publish")}
+              className="h-9 border border-mkos-border px-3 font-display text-[9px] tracking-[0.14em] uppercase"
+            >
+              Publish
+            </button>
+            <button
+              type="button"
+              onClick={() => bulkAction("unpublish")}
+              className="h-9 border border-mkos-border px-3 font-display text-[9px] tracking-[0.14em] uppercase"
+            >
+              Unpublish
+            </button>
+            <button
+              type="button"
+              onClick={() => bulkAction("delete")}
+              className="h-9 px-3 font-display text-[9px] tracking-[0.14em] text-red-600 uppercase"
+            >
+              Delete
+            </button>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
+            <select
+              value={bulkCategory}
+              onChange={(e) => setBulkCategory(e.target.value)}
+              className="h-9 border border-mkos-border bg-white px-2 text-xs"
+            >
+              <option value="ready-to-wear">Ready-to-Wear</option>
+              <option value="aso-ebi">Aso Ebi</option>
+              <option value="custom">Custom</option>
+              <option value="men">Men</option>
+              <option value="bridal">Bridal</option>
+            </select>
+            <button
+              type="button"
+              onClick={() => bulkAction("category", bulkCategory)}
+              className="h-9 border border-mkos-border px-3 font-display text-[9px] tracking-[0.14em] uppercase"
+            >
+              Set category
+            </button>
+            <select
+              value={bulkCollection}
+              onChange={(e) => setBulkCollection(e.target.value)}
+              className="h-9 border border-mkos-border bg-white px-2 text-xs"
+            >
+              <option value="women">Women</option>
+              <option value="men">Men</option>
+              <option value="bridal">Bridal</option>
+            </select>
+            <button
+              type="button"
+              onClick={() => bulkAction("collection", bulkCollection)}
+              className="h-9 border border-mkos-border px-3 font-display text-[9px] tracking-[0.14em] uppercase"
+            >
+              Set collection
+            </button>
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <p className="text-sm text-mkos-muted">Loading catalogue…</p>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {filtered.map((p) => (
-            <div key={p.id} className="border border-mkos-border bg-white">
-              <div className="relative aspect-[4/5] bg-mkos-warm">
-                {p.images?.[0] ? (
-                  <Image src={p.images[0]} alt={p.name} fill className="object-cover" sizes="400px" />
-                ) : (
-                  <div className="grid h-full place-items-center text-xs text-mkos-muted">No image</div>
+          {filtered.map((p) => {
+            const isSelected = selected.includes(p.id);
+            const soldOut = Number(p.stock) <= 0;
+            return (
+              <div
+                key={p.id}
+                className={cn(
+                  "border bg-white transition-shadow",
+                  isSelected ? "border-mkos-accent shadow-[0_0_0_1px_#c45c26]" : "border-mkos-border"
                 )}
-              </div>
-              <div className="space-y-2 p-4">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <p className="font-display text-lg tracking-tight">{p.name}</p>
-                    <p className="text-xs text-mkos-muted">{p.slug}</p>
+              >
+                <div className="relative aspect-[4/5] bg-mkos-warm">
+                  {p.images?.[0] ? (
+                    <Image
+                      src={p.images[0]}
+                      alt={p.name}
+                      fill
+                      className="object-cover"
+                      sizes="400px"
+                    />
+                  ) : (
+                    <div className="grid h-full place-items-center text-xs text-mkos-muted">
+                      No image
+                    </div>
+                  )}
+                  <label className="absolute top-3 left-3 z-10 flex h-8 w-8 cursor-pointer items-center justify-center bg-white/95 shadow">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => toggleOne(p.id)}
+                      className="h-4 w-4 accent-mkos-accent"
+                      aria-label={`Select ${p.name}`}
+                    />
+                  </label>
+                  {soldOut && (
+                    <span className="absolute top-3 right-3 z-10 bg-mkos-ink px-2 py-1 font-display text-[9px] tracking-[0.14em] text-white uppercase">
+                      Sold out
+                    </span>
+                  )}
+                </div>
+                <div className="space-y-2 p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="font-display text-lg tracking-tight">{p.name}</p>
+                      <p className="text-xs text-mkos-muted">
+                        {p.slug}
+                        {p.category_slug ? ` · ${p.category_slug}` : ""}
+                      </p>
+                    </div>
+                    <span
+                      className={cn(
+                        "font-display text-[9px] tracking-[0.16em] uppercase",
+                        p.is_published ? "text-emerald-700" : "text-mkos-muted"
+                      )}
+                    >
+                      {p.is_published ? "Live" : "Draft"}
+                    </span>
                   </div>
-                  <span
-                    className={cn(
-                      "font-display text-[9px] tracking-[0.16em] uppercase",
-                      p.is_published ? "text-emerald-700" : "text-mkos-muted"
+                  <p className="text-sm tabular-nums text-mkos-muted">
+                    {formatPrice(Number(p.price))} ·{" "}
+                    {soldOut ? (
+                      <span className="text-mkos-accent">Sold out</span>
+                    ) : (
+                      <>Stock {p.stock}</>
                     )}
-                  >
-                    {p.is_published ? "Live" : "Draft"}
-                  </span>
-                </div>
-                <p className="text-sm tabular-nums text-mkos-muted">
-                  {formatPrice(Number(p.price))} · Stock {p.stock}
-                </p>
-                <div className="flex flex-wrap gap-2 pt-1">
-                  <button
-                    type="button"
-                    onClick={() => openEdit(p)}
-                    className="h-9 bg-mkos-ink px-3 font-display text-[9px] tracking-[0.16em] text-white uppercase"
-                  >
-                    Edit
-                  </button>
-                  <Link
-                    href={`/product/${p.slug}`}
-                    target="_blank"
-                    className="inline-flex h-9 items-center border border-mkos-border px-3 font-display text-[9px] tracking-[0.16em] uppercase"
-                  >
-                    View
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={() => remove(p.id)}
-                    className="h-9 px-3 font-display text-[9px] tracking-[0.16em] text-red-600 uppercase"
-                  >
-                    Delete
-                  </button>
+                  </p>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => openEdit(p)}
+                      className="h-9 bg-mkos-ink px-3 font-display text-[9px] tracking-[0.16em] text-white uppercase"
+                    >
+                      Edit
+                    </button>
+                    {!soldOut && (
+                      <button
+                        type="button"
+                        onClick={() => markSoldOut(p.id)}
+                        className="h-9 border border-mkos-border px-3 font-display text-[9px] tracking-[0.16em] uppercase"
+                      >
+                        Sold out
+                      </button>
+                    )}
+                    <Link
+                      href={`/product/${p.slug}`}
+                      target="_blank"
+                      className="inline-flex h-9 items-center border border-mkos-border px-3 font-display text-[9px] tracking-[0.16em] uppercase"
+                    >
+                      View
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => remove(p.id)}
+                      className="h-9 px-3 font-display text-[9px] tracking-[0.16em] text-red-600 uppercase"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -375,10 +605,29 @@ export default function AdminProductsPage() {
                 </span>
                 <input
                   type="number"
+                  min={0}
                   value={form.stock}
                   onChange={(e) => setForm({ ...form, stock: e.target.value })}
                   className="mt-1.5 h-11 w-full border border-mkos-border px-3 text-sm outline-none focus:border-mkos-accent"
                 />
+                <div className="mt-2 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, stock: "0" })}
+                    className="h-8 border border-mkos-border px-3 font-display text-[9px] tracking-[0.14em] uppercase"
+                  >
+                    Mark sold out
+                  </button>
+                  {Number(form.stock) <= 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setForm({ ...form, stock: "10" })}
+                      className="h-8 border border-mkos-border px-3 font-display text-[9px] tracking-[0.14em] uppercase"
+                    >
+                      Restock 10
+                    </button>
+                  )}
+                </div>
               </label>
               <label className="block">
                 <span className="font-display text-[10px] tracking-[0.18em] text-mkos-muted uppercase">

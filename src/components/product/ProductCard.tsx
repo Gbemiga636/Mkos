@@ -8,6 +8,7 @@ import type { Product } from "@/lib/cms/types";
 import { useFormatPrice } from "@/lib/cms/CmsProvider";
 import { useWishlistStore } from "@/store/wishlist";
 import { useCursorLabel } from "@/hooks/useCursorLabel";
+import { ScrollReveal } from "@/components/experience/ScrollReveal";
 import { cn } from "@/lib/utils";
 
 export function ProductCard({
@@ -34,12 +35,13 @@ export function ProductCard({
   };
 
   return (
-    <motion.article
-      initial={{ opacity: 0, y: 40 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-8%" }}
-      transition={{ duration: 0.7, delay: index * 0.06, ease: [0.22, 1, 0.36, 1] }}
+    <ScrollReveal
+      as="article"
+      y={40}
+      delay={index * 70}
       className={cn("group relative", variant === "editorial" && "md:pt-12")}
+    >
+    <div
       onMouseEnter={() => {
         setHovered(true);
         cursor.onMouseEnter();
@@ -57,15 +59,15 @@ export function ProductCard({
           animate={{
             rotateX: tilt.x,
             rotateY: tilt.y,
-            y: hovered ? -8 : 0,
+            y: hovered ? -12 : 0,
           }}
-          transition={{ type: "spring", stiffness: 260, damping: 22 }}
+          transition={{ type: "spring", stiffness: 220, damping: 18 }}
           style={{ transformPerspective: 900, transformStyle: "preserve-3d" }}
         >
           <motion.div
             className="absolute inset-0"
-            animate={{ scale: hovered ? 1.08 : 1 }}
-            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+            animate={{ scale: hovered ? 1.1 : 1 }}
+            transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
           >
             <Image
               src={product.images[0]}
@@ -141,11 +143,17 @@ export function ProductCard({
             )}
           </AnimatePresence>
 
-          {(product.newArrival || product.bestSeller) && (
-            <div className="absolute top-3 left-3 z-10">
-              <span className="glass rounded-full px-3 py-1 font-display text-[9px] tracking-[0.2em] uppercase">
-                {product.newArrival ? "New" : "Best"}
-              </span>
+          {(product.newArrival || product.bestSeller || product.stock <= 0) && (
+            <div className="absolute top-3 left-3 z-10 flex flex-col gap-1">
+              {product.stock <= 0 ? (
+                <span className="bg-mkos-ink px-3 py-1 font-display text-[9px] tracking-[0.2em] text-white uppercase">
+                  Sold out
+                </span>
+              ) : (
+                <span className="glass rounded-full px-3 py-1 font-display text-[9px] tracking-[0.2em] uppercase">
+                  {product.newArrival ? "New" : "Best"}
+                </span>
+              )}
             </div>
           )}
         </motion.div>
@@ -168,6 +176,7 @@ export function ProductCard({
           </motion.p>
         </div>
       </Link>
-    </motion.article>
+    </div>
+    </ScrollReveal>
   );
 }

@@ -61,9 +61,6 @@ export default function ProductClient({ product: initial }: { product: Product }
     setActive(0);
   }, [product]);
 
-  const delivery = new Date();
-  delivery.setDate(delivery.getDate() + 4);
-
   return (
     <div className="bg-white pt-24 pb-24">
       <div className="mx-auto grid max-w-[1600px] gap-10 px-5 lg:grid-cols-[1.15fr_0.85fr] lg:gap-16 lg:px-12">
@@ -185,12 +182,20 @@ export default function ProductClient({ product: initial }: { product: Product }
               </button>
             </div>
             <div className="text-sm">
-              <p className={product.stock < 10 ? "text-orange-800" : "text-mkos-muted"}>
-                {product.stock < 10 ? `Only ${product.stock} left` : "In stock"}
-              </p>
-              <p className="text-mkos-muted">
-                Deliver by{" "}
-                {delivery.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+              <p
+                className={
+                  product.stock <= 0
+                    ? "text-mkos-accent"
+                    : product.stock < 10
+                      ? "text-orange-800"
+                      : "text-mkos-muted"
+                }
+              >
+                {product.stock <= 0
+                  ? "Sold out"
+                  : product.stock < 10
+                    ? `Only ${product.stock} left`
+                    : "In stock"}
               </p>
             </div>
           </div>
@@ -200,14 +205,18 @@ export default function ProductClient({ product: initial }: { product: Product }
               size="xl"
               variant="bag"
               cursor="ADD"
+              disabled={product.stock <= 0}
               onClick={() => {
+                if (product.stock <= 0) return;
                 addItem(productToCartItem(product, { color, size, quantity: qty }));
                 setAdded(true);
                 openCart();
                 setTimeout(() => setAdded(false), 1800);
               }}
             >
-              {added ? (
+              {product.stock <= 0 ? (
+                "Sold out"
+              ) : added ? (
                 <>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
                     <path
@@ -243,16 +252,18 @@ export default function ProductClient({ product: initial }: { product: Product }
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto]">
               <Button
-                href="/checkout"
+                href={product.stock <= 0 ? undefined : "/checkout"}
                 size="lg"
                 variant="checkout"
                 className="w-full"
                 cursor="SHOP"
+                disabled={product.stock <= 0}
                 onClick={() => {
+                  if (product.stock <= 0) return;
                   addItem(productToCartItem(product, { color, size, quantity: qty }));
                 }}
               >
-                Buy now · Checkout
+                {product.stock <= 0 ? "Sold out" : "Buy now · Checkout"}
               </Button>
               <Button
                 size="lg"

@@ -1,11 +1,13 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { MotionConfig } from "framer-motion";
 import { IntroLoader } from "./IntroLoader";
 import { CustomCursor } from "./CustomCursor";
 import { SmoothScroll } from "./SmoothScroll";
 import { PageTransition } from "./PageTransition";
 import { GlobalSpinner } from "./GlobalSpinner";
+import { BackToTop } from "./BackToTop";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { SearchOverlay } from "@/components/layout/SearchOverlay";
@@ -22,21 +24,24 @@ function StorefrontChrome({ children }: { children: React.ReactNode }) {
   const editMode = useEditMode();
 
   return (
-    <SmoothScroll>
-      {!editMode && <IntroLoader />}
-      {!editMode && <CustomCursor />}
-      <GlobalSpinner />
-      {!editMode && <AnalyticsTracker />}
-      <Header />
-      {!editMode && <SearchOverlay />}
-      {!editMode && <CartDrawer />}
-      {!editMode && <AuthModal />}
-      {!editMode && <SiteAssistant />}
-      <PageTransition>
-        <main id="main">{children}</main>
-      </PageTransition>
-      <Footer />
-    </SmoothScroll>
+    <MotionConfig reducedMotion="never">
+      <SmoothScroll>
+        {!editMode && <IntroLoader />}
+        {!editMode && <CustomCursor />}
+        <GlobalSpinner />
+        {!editMode && <AnalyticsTracker />}
+        <Header />
+        {!editMode && <SearchOverlay />}
+        {!editMode && <CartDrawer />}
+        {!editMode && <AuthModal />}
+        {!editMode && <SiteAssistant />}
+        {!editMode && <BackToTop />}
+        <PageTransition>
+          <main id="main">{children}</main>
+        </PageTransition>
+        <Footer />
+      </SmoothScroll>
+    </MotionConfig>
   );
 }
 

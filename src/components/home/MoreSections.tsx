@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { SectionHeading, Button } from "@/components/ui/Button";
 import { EmailSubscribe } from "@/components/ui/EmailSubscribe";
+import { ScrollReveal } from "@/components/experience/ScrollReveal";
 import { useCursorLabel } from "@/hooks/useCursorLabel";
 import { useCms, useContent } from "@/lib/cms/CmsProvider";
 
@@ -34,17 +35,18 @@ export function CollectionCarousel() {
       </div>
       <motion.div style={{ x }} className="mt-14 flex w-max gap-6 px-5 sm:px-8" {...cursor}>
         {[...slides, ...slides].map((c, i) => (
-          <Link
-            key={`${c.name}-${i}`}
-            href={c.href}
-            className="relative block h-[420px] w-[320px] overflow-hidden sm:h-[520px] sm:w-[400px]"
-          >
-            <Image src={c.src} alt={c.name} fill className="object-cover" sizes="400px" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-            <div className="absolute bottom-0 p-6 text-white">
-              <p className="font-display text-2xl">{c.name}</p>
-            </div>
-          </Link>
+          <ScrollReveal key={`${c.name}-${i}`} y={40} delay={(slides.length ? i % slides.length : 0) * 40}>
+            <Link
+              href={c.href}
+              className="relative block h-[420px] w-[320px] overflow-hidden sm:h-[520px] sm:w-[400px]"
+            >
+              <Image src={c.src} alt={c.name} fill className="object-cover" sizes="400px" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+              <div className="absolute bottom-0 p-6 text-white">
+                <p className="font-display text-2xl">{c.name}</p>
+              </div>
+            </Link>
+          </ScrollReveal>
         ))}
       </motion.div>
     </section>
@@ -69,32 +71,33 @@ export function CategoryGrid() {
             const img =
               cat.image_url || products[i * 2]?.images[0] || products[0]?.images[0] || "";
             return (
-              <Link
-                key={cat.slug}
-                href={`/shop?category=${cat.slug}`}
-                className="group relative flex min-h-[280px] items-end overflow-hidden bg-white p-8 sm:min-h-[340px]"
-                {...cursor}
-              >
-                {img && (
-                  <Image
-                    src={img}
-                    alt=""
-                    fill
-                    className="object-cover opacity-40 transition-transform duration-1000 group-hover:scale-105"
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                  />
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-white via-white/70 to-white/20" />
-                <div className="relative z-10">
-                  <p className="font-display text-[10px] tracking-[0.3em] text-mkos-muted uppercase">
-                    0{i + 1}
-                  </p>
-                  <h3 className="mt-2 font-display text-3xl font-medium tracking-tight sm:text-4xl">
-                    {cat.name}
-                  </h3>
-                  <p className="mt-2 max-w-sm text-sm text-mkos-muted">{cat.description}</p>
-                </div>
-              </Link>
+              <ScrollReveal key={cat.slug} y={48} delay={i * 80}>
+                <Link
+                  href={`/shop?category=${cat.slug}`}
+                  className="group relative flex min-h-[280px] items-end overflow-hidden bg-white p-8 sm:min-h-[340px]"
+                  {...cursor}
+                >
+                  {img && (
+                    <Image
+                      src={img}
+                      alt=""
+                      fill
+                      className="object-cover opacity-40 transition-transform duration-1000 group-hover:scale-105"
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-white via-white/70 to-white/20" />
+                  <div className="relative z-10">
+                    <p className="font-display text-[10px] tracking-[0.3em] text-mkos-muted uppercase">
+                      0{i + 1}
+                    </p>
+                    <h3 className="mt-2 font-display text-3xl font-medium tracking-tight sm:text-4xl">
+                      {cat.name}
+                    </h3>
+                    <p className="mt-2 max-w-sm text-sm text-mkos-muted">{cat.description}</p>
+                  </div>
+                </Link>
+              </ScrollReveal>
             );
           })}
         </div>
@@ -186,27 +189,22 @@ export function Reviews() {
         />
         <div className="mt-14 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {reviews.map((r, i) => (
-            <motion.blockquote
-              key={r.id}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.08 }}
-              className="border border-white/10 bg-white/5 p-6 backdrop-blur-sm"
-            >
-              <div className="flex gap-1 text-orange-300">
-                {Array.from({ length: r.rating }).map((_, j) => (
-                  <span key={j}>★</span>
-                ))}
-              </div>
-              <p className="mt-4 text-sm leading-relaxed text-white/80">&ldquo;{r.text}&rdquo;</p>
-              <footer className="mt-6">
-                <p className="font-display text-sm">{r.name}</p>
-                <p className="mt-1 text-xs text-white/40">
-                  {r.location} · {r.product}
-                </p>
-              </footer>
-            </motion.blockquote>
+            <ScrollReveal key={r.id} y={28} delay={i * 70} as="div">
+              <blockquote className="border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
+                <div className="flex gap-1 text-orange-300">
+                  {Array.from({ length: r.rating }).map((_, j) => (
+                    <span key={j}>★</span>
+                  ))}
+                </div>
+                <p className="mt-4 text-sm leading-relaxed text-white/80">&ldquo;{r.text}&rdquo;</p>
+                <footer className="mt-6">
+                  <p className="font-display text-sm">{r.name}</p>
+                  <p className="mt-1 text-xs text-white/40">
+                    {r.location} · {r.product}
+                  </p>
+                </footer>
+              </blockquote>
+            </ScrollReveal>
           ))}
         </div>
       </div>
@@ -245,18 +243,14 @@ export function InstagramGallery() {
         </div>
         <div className="mt-14 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
           {images.map((src, i) => (
-            <motion.a
-              key={src}
-              href={section?.cta_href ?? "https://www.instagram.com/shopmykindofstyle"}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group relative aspect-square overflow-hidden bg-mkos-warm"
-              initial={{ opacity: 0, scale: 0.96 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.05 }}
-              {...cursor}
-            >
+            <ScrollReveal key={src} y={24} delay={i * 50}>
+              <a
+                href={section?.cta_href ?? "https://www.instagram.com/shopmykindofstyle"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative block aspect-square overflow-hidden bg-mkos-warm"
+                {...cursor}
+              >
               <Image
                 src={src}
                 alt=""
@@ -265,7 +259,8 @@ export function InstagramGallery() {
                 sizes="(max-width: 768px) 50vw, 33vw"
               />
               <div className="absolute inset-0 bg-orange-950/0 transition-colors duration-500 group-hover:bg-orange-950/25" />
-            </motion.a>
+              </a>
+            </ScrollReveal>
           ))}
         </div>
       </div>
@@ -281,20 +276,26 @@ export function Newsletter() {
       <div className="absolute inset-0 gradient-purple opacity-95" />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.2),transparent_45%)]" />
       <div className="relative mx-auto max-w-xl text-center text-white">
-        <p className="font-display text-[11px] tracking-[0.35em] text-white/60 uppercase">
-          {newsletter.eyebrow}
-        </p>
-        <h2 className="mt-5 font-display text-4xl font-medium tracking-tight sm:text-5xl lg:text-6xl">
-          {newsletter.title}
-        </h2>
-        <p className="mt-4 text-white/70">{newsletter.subtitle}</p>
-        <div className="mt-10 text-left">
+        <ScrollReveal y={28}>
+          <p className="font-display text-[11px] tracking-[0.35em] text-white/60 uppercase">
+            {newsletter.eyebrow}
+          </p>
+        </ScrollReveal>
+        <ScrollReveal y={40} delay={80}>
+          <h2 className="mt-5 font-display text-4xl font-medium tracking-tight sm:text-5xl lg:text-6xl">
+            {newsletter.title}
+          </h2>
+        </ScrollReveal>
+        <ScrollReveal y={28} delay={140}>
+          <p className="mt-4 text-white/70">{newsletter.subtitle}</p>
+        </ScrollReveal>
+        <ScrollReveal y={24} delay={200} className="mt-10 text-left">
           <EmailSubscribe
             variant="dark"
             buttonLabel={newsletter.button_label}
             successLabel="Welcome"
           />
-        </div>
+        </ScrollReveal>
       </div>
     </section>
   );
@@ -317,31 +318,33 @@ export function FAQ() {
           {faqs.map((item, i) => {
             const isOpen = open === i;
             return (
-              <div key={item.q}>
-                <button
-                  type="button"
-                  className="flex w-full items-center justify-between gap-4 py-6 text-left"
-                  onClick={() => setOpen(isOpen ? null : i)}
-                  aria-expanded={isOpen}
-                >
-                  <span className="font-display text-lg sm:text-xl">{item.q}</span>
-                  <motion.span
-                    animate={{ rotate: isOpen ? 45 : 0 }}
-                    className="text-2xl leading-none"
+              <ScrollReveal key={item.q} y={24} delay={i * 60}>
+                <div>
+                  <button
+                    type="button"
+                    className="flex w-full items-center justify-between gap-4 py-6 text-left"
+                    onClick={() => setOpen(isOpen ? null : i)}
+                    aria-expanded={isOpen}
                   >
-                    +
-                  </motion.span>
-                </button>
-                <motion.div
-                  initial={false}
-                  animate={{ height: isOpen ? "auto" : 0, opacity: isOpen ? 1 : 0 }}
-                  className="overflow-hidden"
-                >
-                  <p className="pb-6 text-sm leading-relaxed text-mkos-muted sm:text-base">
-                    {item.a}
-                  </p>
-                </motion.div>
-              </div>
+                    <span className="font-display text-lg sm:text-xl">{item.q}</span>
+                    <motion.span
+                      animate={{ rotate: isOpen ? 45 : 0 }}
+                      className="text-2xl leading-none"
+                    >
+                      +
+                    </motion.span>
+                  </button>
+                  <motion.div
+                    initial={false}
+                    animate={{ height: isOpen ? "auto" : 0, opacity: isOpen ? 1 : 0 }}
+                    className="overflow-hidden"
+                  >
+                    <p className="pb-6 text-sm leading-relaxed text-mkos-muted sm:text-base">
+                      {item.a}
+                    </p>
+                  </motion.div>
+                </div>
+              </ScrollReveal>
             );
           })}
         </div>
