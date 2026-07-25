@@ -25,6 +25,18 @@ export function GlobalSpinner() {
       const target = e.target as HTMLElement | null;
       if (!target) return;
 
+      // Hearts / in-card controls inside links — never treat as navigation
+      if (target.closest("button, [data-no-nav]")) {
+        const interactive = target.closest("button, [data-no-nav]") as HTMLElement;
+        if (interactive.tagName === "BUTTON" || interactive.hasAttribute("data-no-nav")) {
+          // Still pulse busy for submit buttons outside links
+          if (!target.closest("a") && interactive.matches("button, [type='submit'], [data-busy]")) {
+            if (!(interactive as HTMLButtonElement).disabled) pulse();
+          }
+          return;
+        }
+      }
+
       const anchor = target.closest("a");
       if (anchor) {
         const href = anchor.getAttribute("href");
@@ -32,7 +44,11 @@ export function GlobalSpinner() {
         if (anchor.target === "_blank" || e.metaKey || e.ctrlKey || e.shiftKey) return;
         try {
           const url = new URL(href, window.location.origin);
-          if (url.origin === window.location.origin) setRouteLoading(true);
+          if (url.origin !== window.location.origin) return;
+          if (url.pathname === window.location.pathname && url.search === window.location.search) return;
+          setRouteLoading(true);
+          // Clear if navigation was cancelled (e.g. prevented default)
+          window.setTimeout(() => setRouteLoading(false), 2800);
         } catch {
           /* ignore */
         }

@@ -22,56 +22,76 @@ export async function POST(req: Request) {
   const body = await req.json();
   const sb = createServiceClient();
 
-  const existingId = body.id ? String(body.id) : "";
-  let existing: Record<string, unknown> | null = null;
-  if (existingId) {
-    const { data } = await sb.from("products").select("*").eq("id", existingId).maybeSingle();
-    existing = data;
+  const batch = Array.isArray(body.products) ? body.products : null;
+  const inputs = batch ?? [body];
+
+  const saved: Record<string, unknown>[] = [];
+  const paths: string[] = [];
+
+  for (let i = 0; i < inputs.length; i++) {
+    const item = inputs[i] as Record<string, unknown>;
+    const existingId = item.id ? String(item.id) : "";
+    let existing: Record<string, unknown> | null = null;
+    if (existingId) {
+      const { data } = await sb.from("products").select("*").eq("id", existingId).maybeSingle();
+      existing = data;
+    }
+
+    const id = existingId || `mk-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 7)}`;
+    const name = String(item.name || existing?.name || "Untitled");
+    const slug =
+      String(item.slug || existing?.slug || name)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "") || id;
+
+    const row = {
+      id,
+      slug,
+      name,
+      tagline: item.tagline ?? existing?.tagline ?? "",
+      description: item.description ?? existing?.description ?? "",
+      story: item.story ?? existing?.story ?? "",
+      price: Number(item.price ?? existing?.price ?? 0),
+      compare_at:
+        item.compareAt != null
+          ? Number(item.compareAt)
+          : existing?.compare_at != null
+            ? Number(existing.compare_at)
+            : null,
+      images: item.images ?? existing?.images ?? [],
+      category_slug: item.category ?? existing?.category_slug ?? null,
+      collection_slug: item.collection ?? existing?.collection_slug ?? null,
+      colors: item.colors ?? existing?.colors ?? [],
+      sizes: item.sizes ?? existing?.sizes ?? [],
+      material: item.material ?? existing?.material ?? "",
+      stock: Number(item.stock ?? existing?.stock ?? 0),
+      tags: item.tags ?? existing?.tags ?? [],
+      featured: item.featured ?? existing?.featured ?? false,
+      new_arrival: item.newArrival ?? existing?.new_arrival ?? false,
+      best_seller: item.bestSeller ?? existing?.best_seller ?? false,
+      trending: item.trending ?? existing?.trending ?? false,
+      is_published: item.isPublished ?? existing?.is_published ?? true,
+      updated_at: new Date().toISOString(),
+    };
+
+    const { data, error } = await sb.from("products").upsert(row).select("*").single();
+    if (error) {
+      return NextResponse.json(
+        { error: error.message, savedCount: saved.length },
+        { status: 500 }
+      );
+    }
+    saved.push(data);
+    paths.push(`/product/${slug}`);
+    await writeAudit(session.admin.id, "product_upsert", "products", id, { name, slug });
   }
 
-  const id = existingId || `mk-${Date.now()}`;
-  const name = String(body.name || existing?.name || "Untitled");
-  const slug =
-    String(body.slug || existing?.slug || name)
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "") || id;
-
-  const row = {
-    id,
-    slug,
-    name,
-    tagline: body.tagline ?? existing?.tagline ?? "",
-    description: body.description ?? existing?.description ?? "",
-    story: body.story ?? existing?.story ?? "",
-    price: Number(body.price ?? existing?.price ?? 0),
-    compare_at:
-      body.compareAt != null
-        ? Number(body.compareAt)
-        : existing?.compare_at != null
-          ? Number(existing.compare_at)
-          : null,
-    images: body.images ?? existing?.images ?? [],
-    category_slug: body.category ?? existing?.category_slug ?? null,
-    collection_slug: body.collection ?? existing?.collection_slug ?? null,
-    colors: body.colors ?? existing?.colors ?? [],
-    sizes: body.sizes ?? existing?.sizes ?? [],
-    material: body.material ?? existing?.material ?? "",
-    stock: Number(body.stock ?? existing?.stock ?? 0),
-    tags: body.tags ?? existing?.tags ?? [],
-    featured: body.featured ?? existing?.featured ?? false,
-    new_arrival: body.newArrival ?? existing?.new_arrival ?? false,
-    best_seller: body.bestSeller ?? existing?.best_seller ?? false,
-    trending: body.trending ?? existing?.trending ?? false,
-    is_published: body.isPublished ?? existing?.is_published ?? true,
-    updated_at: new Date().toISOString(),
-  };
-
-  const { data, error } = await sb.from("products").upsert(row).select("*").single();
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  await writeAudit(session.admin.id, "product_upsert", "products", id, { name, slug });
-  revalidateStorefront([`/product/${slug}`, "/admin/products"]);
-  return NextResponse.json({ product: data });
+  revalidateStorefront(["/admin/products", "/shop", ...paths]);
+  if (batch) {
+    return NextResponse.json({ products: saved, count: saved.length });
+  }
+  return NextResponse.json({ product: saved[0] });
 }
 
 export async function DELETE(req: Request) {

@@ -51,6 +51,37 @@ export async function POST(req: Request) {
 
     const sb = createServiceClient();
 
+    // Live stock check — reject sold-out / oversell before Paystack
+    for (const item of items) {
+      if (!item.productId) continue;
+      const { data: prod } = await sb
+        .from("products")
+        .select("id, name, stock, is_published")
+        .eq("id", item.productId)
+        .maybeSingle();
+      if (!prod || prod.is_published === false) {
+        return NextResponse.json(
+          { error: `${item.name || "An item"} is no longer available` },
+          { status: 400 }
+        );
+      }
+      const available = Number(prod.stock ?? 0);
+      if (available <= 0) {
+        return NextResponse.json(
+          { error: `${prod.name} is sold out` },
+          { status: 400 }
+        );
+      }
+      if (Number(item.quantity) > available) {
+        return NextResponse.json(
+          {
+            error: `Only ${available} left of ${prod.name} — reduce quantity and try again`,
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     // Prefer live CMS shipping settings
     const { data: settings } = await sb
       .from("site_settings")

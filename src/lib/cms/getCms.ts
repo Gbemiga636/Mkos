@@ -319,6 +319,7 @@ function fallbackSnapshot(): CmsSnapshot {
       { label: "Women", href: "/shop?collection=women", location: "header" },
       { label: "Men", href: "/shop?collection=men", location: "header" },
       { label: "Story", href: "/about", location: "header" },
+      { label: "Journal", href: "/blog", location: "header" },
       { label: "Account", href: "/account", location: "header" },
     ],
     carousel: [

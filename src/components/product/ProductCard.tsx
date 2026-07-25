@@ -105,9 +105,11 @@ export function ProductCard({
           <div className="absolute top-3 right-3 z-10 flex flex-col gap-2">
             <button
               type="button"
+              data-no-nav
               aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}
               onClick={(e) => {
                 e.preventDefault();
+                e.stopPropagation();
                 toggle(product.id);
               }}
               className="glass flex h-10 w-10 items-center justify-center rounded-full transition-transform active:scale-90"

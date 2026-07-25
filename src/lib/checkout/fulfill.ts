@@ -1,6 +1,7 @@
 import { createServiceClient } from "@/lib/supabase/client";
 import type { OrderEmailPayload } from "@/lib/email/orderEmails";
 import { sendOrderEmails } from "@/lib/email/send";
+import { revalidateStorefront } from "@/lib/cms/revalidate";
 
 export type CheckoutItem = {
   productId: string;
@@ -12,6 +13,34 @@ export type CheckoutItem = {
   size: string;
   quantity: number;
 };
+
+async function decrementStock(
+  sb: ReturnType<typeof createServiceClient>,
+  productId: string,
+  qty: number
+) {
+  const { data: rpcStock, error: rpcErr } = await sb.rpc("decrement_product_stock", {
+    p_id: productId,
+    p_qty: qty,
+  });
+
+  if (!rpcErr && rpcStock != null) {
+    return Number(rpcStock);
+  }
+
+  const { data: prod } = await sb
+    .from("products")
+    .select("id, stock, slug")
+    .eq("id", productId)
+    .maybeSingle();
+  if (!prod) return null;
+  const next = Math.max(0, Number(prod.stock ?? 0) - qty);
+  await sb
+    .from("products")
+    .update({ stock: next, updated_at: new Date().toISOString() })
+    .eq("id", productId);
+  return next;
+}
 
 export async function fulfillPaidOrder(opts: {
   reference: string;
@@ -28,14 +57,12 @@ export async function fulfillPaidOrder(opts: {
   if (error) throw new Error(error.message);
   if (!order) throw new Error("Order not found for this payment reference");
 
-  // Idempotent — already fulfilled
   if (order.payment_status === "paid") {
     return { order, alreadyPaid: true as const };
   }
 
   if (opts.amountKobo != null) {
     const expected = Math.round(Number(order.total) * 100);
-    // Allow 1 kobo rounding tolerance
     if (Math.abs(opts.amountKobo - expected) > 1) {
       throw new Error(
         `Amount mismatch: paid ${opts.amountKobo} kobo, order expects ${expected}`
@@ -56,6 +83,8 @@ export async function fulfillPaidOrder(opts: {
   if (upErr) throw new Error(upErr.message);
 
   const items = (order.order_items || []) as {
+    product_id: string | null;
+    slug: string | null;
     name: string;
     quantity: number;
     price: number;
@@ -63,6 +92,22 @@ export async function fulfillPaidOrder(opts: {
     size: string | null;
     image: string | null;
   }[];
+
+  // Auto sold-out: decrement stock; 0 hides buy CTAs on storefront
+  const paths: string[] = [];
+  for (const item of items) {
+    const qty = Number(item.quantity) || 0;
+    if (!item.product_id || qty <= 0) continue;
+    try {
+      await decrementStock(sb, item.product_id, qty);
+      if (item.slug) paths.push(`/product/${item.slug}`);
+    } catch {
+      /* don't block order emails if stock update fails */
+    }
+  }
+  if (paths.length) {
+    revalidateStorefront(["/shop", ...paths]);
+  }
 
   const payload: OrderEmailPayload = {
     orderId: order.id,
@@ -94,7 +139,6 @@ export async function fulfillPaidOrder(opts: {
     await sendOrderEmails(payload);
   }
 
-  // Notify admin inbox in-app
   try {
     await sb.from("admin_notifications").insert({
       kind: "order",
@@ -102,10 +146,9 @@ export async function fulfillPaidOrder(opts: {
       body: `${payload.customerName} · ₦${payload.total.toLocaleString()} · ${payload.items.length} item(s)`,
     });
   } catch {
-    /* optional table */
+    /* optional */
   }
 
-  // Reward points for logged-in customers
   if (order.user_id) {
     const points = Math.floor(Number(order.total) / 1000);
     if (points > 0) {
