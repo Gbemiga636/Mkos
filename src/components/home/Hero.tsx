@@ -1,0 +1,132 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { Button } from "@/components/ui/Button";
+import { useCursorLabel } from "@/hooks/useCursorLabel";
+import { useUIStore } from "@/store/ui";
+
+export function Hero() {
+  const ready = useUIStore((s) => s.loaderComplete);
+  const sectionRef = useRef<HTMLElement>(null);
+  const mx = useMotionValue(0);
+  const my = useMotionValue(0);
+  const sx = useSpring(mx, { stiffness: 40, damping: 20 });
+  const sy = useSpring(my, { stiffness: 40, damping: 20 });
+  const layer1x = useTransform(sx, (v) => v * 0.02);
+  const layer1y = useTransform(sy, (v) => v * 0.02);
+  const layer2x = useTransform(sx, (v) => v * -0.03);
+  const layer2y = useTransform(sy, (v) => v * -0.025);
+  const playCursor = useCursorLabel("EXPLORE");
+
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      mx.set(e.clientX - window.innerWidth / 2);
+      my.set(e.clientY - window.innerHeight / 2);
+    };
+    window.addEventListener("mousemove", onMove);
+    return () => window.removeEventListener("mousemove", onMove);
+  }, [mx, my]);
+
+  return (
+    <section
+      ref={sectionRef}
+      className="relative flex min-h-[100svh] items-end overflow-hidden bg-mkos-ink text-white"
+      {...playCursor}
+    >
+      <motion.div className="absolute inset-0" style={{ x: layer1x, y: layer1y, scale: 1.08 }}>
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          poster="/images/products/product-1.jpg"
+          className="h-full w-full object-cover opacity-80"
+        >
+          <source src="/videos/hero-bg.mp4" type="video/mp4" />
+        </video>
+      </motion.div>
+
+      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-black/40" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,rgba(0,0,0,0.45)_100%)]" />
+
+      {/* floating shapes */}
+      <motion.div
+        className="pointer-events-none absolute top-[18%] right-[12%] h-40 w-40 rounded-full border border-white/10"
+        style={{ x: layer2x, y: layer2y }}
+        animate={{ rotate: 360 }}
+        transition={{ duration: 48, repeat: Infinity, ease: "linear" }}
+      />
+      <motion.div
+        className="pointer-events-none absolute bottom-[30%] left-[8%] h-24 w-24 rounded-full bg-violet-600/20 blur-2xl"
+        animate={{ y: [0, -18, 0], opacity: [0.4, 0.7, 0.4] }}
+        transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+      />
+
+      <div className="relative z-10 mx-auto w-full max-w-[1600px] px-5 pb-16 sm:px-8 sm:pb-20 lg:px-12 lg:pb-24">
+        <div className="max-w-4xl">
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={ready ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8, delay: 0.15 }}
+            className="font-display text-[11px] tracking-[0.4em] text-white/60 uppercase"
+          >
+            Atelier Collection 2025
+          </motion.p>
+
+          <div className="mt-5 overflow-hidden">
+            <motion.h1
+              initial={{ y: "110%" }}
+              animate={ready ? { y: 0 } : {}}
+              transition={{ duration: 1, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
+              className="font-display text-5xl leading-[0.95] font-medium tracking-tight text-balance sm:text-7xl lg:text-8xl xl:text-[7.5rem]"
+            >
+              Silence,
+              <br />
+              tailored.
+            </motion.h1>
+          </div>
+
+          <motion.p
+            initial={{ opacity: 0, y: 24 }}
+            animate={ready ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8, delay: 0.55 }}
+            className="mt-6 max-w-md text-base leading-relaxed text-white/70 sm:text-lg"
+          >
+            A private house of essential luxury — pieces designed to feel inevitable the moment you put them on.
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={ready ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.7, delay: 0.75 }}
+            className="mt-10 flex flex-wrap items-center gap-4"
+          >
+            <Button href="/shop" variant="outline" size="lg" cursor="SHOP">
+              Enter the shop
+            </Button>
+            <Button href="/#campaign" variant="ghost" size="lg" className="text-white hover:bg-white/10" cursor="EXPLORE">
+              Watch campaign
+            </Button>
+          </motion.div>
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={ready ? { opacity: 1 } : {}}
+          transition={{ delay: 1.1 }}
+          className="mt-16 flex items-center gap-3 font-display text-[10px] tracking-[0.35em] text-white/50 uppercase"
+        >
+          <span className="relative flex h-8 w-5 items-start justify-center rounded-full border border-white/30 pt-1.5">
+            <motion.span
+              className="h-1.5 w-px bg-white"
+              animate={{ y: [0, 10, 0], opacity: [1, 0.2, 1] }}
+              transition={{ duration: 1.6, repeat: Infinity }}
+            />
+          </span>
+          Scroll to discover
+        </motion.div>
+      </div>
+    </section>
+  );
+}

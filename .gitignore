@@ -1,0 +1,22 @@
+# Next.js
+node_modules
+.next
+out
+build
+.DS_Store
+*.pem
+npm-debug.log*
+.env*.local
+.vercel
+*.tsbuildinfo
+next-env.d.ts
+
+# Raw source media at project root (organized copies live in /public)
+/Bg video .mp4
+/Cloth 1 .mp4
+/Cloth 2.mp4
+/IMG_*.jpg.jpeg
+/Logo 4 (1).PNG
+/Mkos *.jpg.jpeg
+/WhatsApp Image*
+/WhatsApp Video*
