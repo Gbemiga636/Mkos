@@ -183,7 +183,9 @@ export function CartDrawer() {
                   <span className="text-sm text-mkos-muted">Subtotal</span>
                   <motion.span className="font-display text-xl tabular-nums">{display}</motion.span>
                 </div>
-                <p className="mt-2 text-xs text-mkos-muted">Shipping calculated at checkout</p>
+                <p className="mt-2 text-xs text-mkos-muted">
+                  Delivery arranged at checkout · fees quoted separately
+                </p>
                 <Button href="/checkout" size="lg" variant="checkout" className="mt-5 w-full" onClick={close}>
                   <span>Checkout</span>
                   <span className="font-body tracking-normal normal-case opacity-90">→</span>

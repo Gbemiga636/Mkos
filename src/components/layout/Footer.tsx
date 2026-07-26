@@ -39,6 +39,7 @@ export function Footer() {
       title: "House",
       links: [
         { href: "/about", label: "About MKOS" },
+        { href: "/experience", label: "MKOS Experience" },
         { href: "/blog", label: "Journal" },
         { href: "/about#contact", label: "Contact" },
         { href: "/shop?collection=men", label: "MKoS Men" },

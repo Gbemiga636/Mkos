@@ -133,6 +133,8 @@ export async function fulfillPaidOrder(opts: {
     total: Number(order.total),
     currency: order.currency || "NGN",
     paidAt,
+    deliveryMethod: order.delivery_method || null,
+    expectedDeliveryDate: order.expected_delivery_date || null,
   };
 
   if (payload.email) {

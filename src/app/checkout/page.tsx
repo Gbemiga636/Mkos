@@ -7,22 +7,27 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useCartStore, cartItemKey } from "@/store/cart";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
-import { useCms, useFormatPrice } from "@/lib/cms/CmsProvider";
+import { useFormatPrice } from "@/lib/cms/CmsProvider";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useUIStore } from "@/store/ui";
+import {
+  DELIVERY_FEE_NOTE,
+  DELIVERY_METHODS,
+  STUDIO_PICKUP_ADDRESS,
+  deliveryMethodLabel,
+  type DeliveryMethod,
+} from "@/lib/checkout/delivery";
 
-const steps = ["Shipping", "Review", "Pay"] as const;
+const steps = ["Delivery", "Review", "Pay"] as const;
 
 export default function CheckoutPage() {
   const items = useCartStore((s) => s.items);
-  const { settings } = useCms();
   const formatPrice = useFormatPrice();
   const { user } = useAuth();
   const openAuth = useUIStore((s) => s.openAuth);
   const subtotal = items.reduce((n, i) => n + i.price * i.quantity, 0);
-  const shipping =
-    subtotal > settings.free_shipping_threshold || subtotal === 0 ? 0 : settings.shipping_fee;
-  const total = subtotal + shipping;
+  // Product total only — delivery is quoted separately after checkout
+  const total = subtotal;
   const [step, setStep] = useState(0);
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState("");
@@ -31,6 +36,8 @@ export default function CheckoutPage() {
     first: "",
     last: "",
     phone: "",
+    deliveryMethod: "" as "" | DeliveryMethod,
+    expectedDeliveryDate: "",
     address: "",
     city: "",
     state: "Lagos",
@@ -38,6 +45,8 @@ export default function CheckoutPage() {
     country: "Nigeria",
   });
 
+  const needsAddress =
+    form.deliveryMethod === "home_delivery" || form.deliveryMethod === "international";
   const hasPricedItems = useMemo(() => items.every((i) => i.price > 0), [items]);
 
   if (items.length === 0) {
@@ -82,7 +91,6 @@ export default function CheckoutPage() {
         setError(data.error || "Could not start payment");
         return;
       }
-      // Hand off to Paystack — success URL returns to /checkout/success
       window.location.href = data.authorization_url as string;
     } catch {
       setError("Network error starting payment. Please try again.");
@@ -90,6 +98,33 @@ export default function CheckoutPage() {
       setPlacing(false);
     }
   }
+
+  function validateDelivery() {
+    if (!form.email || !form.first || !form.last || !form.phone) {
+      return "Please fill email, name, and phone.";
+    }
+    if (!form.deliveryMethod) {
+      return "Please choose a delivery method.";
+    }
+    if (!form.expectedDeliveryDate) {
+      return "Please share your expected delivery / pickup date.";
+    }
+    if (needsAddress && (!form.address || !form.city || !form.country)) {
+      return "Please complete your delivery address, city, and country.";
+    }
+    return "";
+  }
+
+  const addressSummary =
+    form.deliveryMethod === "pickup"
+      ? STUDIO_PICKUP_ADDRESS
+      : [
+          form.address,
+          [form.city, form.state, form.zip].filter(Boolean).join(", "),
+          form.country,
+        ]
+          .filter(Boolean)
+          .join("\n");
 
   return (
     <div className="min-h-screen bg-mkos-warm pt-28 pb-24">
@@ -139,11 +174,69 @@ export default function CheckoutPage() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                 >
-                  <h2 className="font-display text-2xl">Shipping</h2>
+                  <h2 className="font-display text-2xl">Delivery</h2>
                   <p className="mt-2 text-sm text-mkos-muted">
-                    We’ll use this for delivery and your confirmation email.
+                    Product prices do not include delivery. Choose how you’d like to receive your
+                    order — we’ll confirm any delivery fee with you before dispatch.
                   </p>
-                  <div className="mt-6 grid gap-4 sm:grid-cols-2">
+
+                  <div className="mt-8">
+                    <p className="font-display text-[10px] tracking-[0.22em] text-mkos-muted uppercase">
+                      Delivery method
+                    </p>
+                    <div className="mt-3 grid gap-3">
+                      {DELIVERY_METHODS.map((m) => {
+                        const active = form.deliveryMethod === m.value;
+                        return (
+                          <button
+                            key={m.value}
+                            type="button"
+                            onClick={() => {
+                              setForm((f) => ({
+                                ...f,
+                                deliveryMethod: m.value,
+                                country:
+                                  m.value === "international" && f.country === "Nigeria"
+                                    ? ""
+                                    : m.value !== "international" && !f.country
+                                      ? "Nigeria"
+                                      : f.country || "Nigeria",
+                                state:
+                                  m.value === "home_delivery" && !f.state ? "Lagos" : f.state,
+                              }));
+                            }}
+                            className={cn(
+                              "border px-4 py-4 text-left transition-colors",
+                              active
+                                ? "border-mkos-ink bg-mkos-ink text-white"
+                                : "border-mkos-border bg-mkos-warm/40 hover:border-mkos-ink/40"
+                            )}
+                          >
+                            <span className="font-display text-sm tracking-[0.08em] uppercase">
+                              {m.label}
+                            </span>
+                            <span
+                              className={cn(
+                                "mt-1 block text-xs",
+                                active ? "text-white/70" : "text-mkos-muted"
+                              )}
+                            >
+                              {m.short}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="mt-6 border border-mkos-border bg-mkos-warm/60 p-4 text-sm leading-relaxed text-mkos-ink/85">
+                    <p className="font-display text-[10px] tracking-[0.2em] text-mkos-muted uppercase">
+                      Please note
+                    </p>
+                    <p className="mt-2">{DELIVERY_FEE_NOTE}</p>
+                  </div>
+
+                  <div className="mt-8 grid gap-4 sm:grid-cols-2">
                     <Field
                       label="Email"
                       type="email"
@@ -168,30 +261,72 @@ export default function CheckoutPage() {
                       className="sm:col-span-2"
                     />
                     <Field
-                      label="Address"
-                      value={form.address}
-                      onChange={(v) => setForm({ ...form, address: v })}
+                      label={
+                        form.deliveryMethod === "pickup"
+                          ? "Expected pickup date"
+                          : "Expected delivery date"
+                      }
+                      type="date"
+                      value={form.expectedDeliveryDate}
+                      onChange={(v) => setForm({ ...form, expectedDeliveryDate: v })}
                       className="sm:col-span-2"
                     />
-                    <Field label="City" value={form.city} onChange={(v) => setForm({ ...form, city: v })} />
-                    <Field
-                      label="State"
-                      value={form.state}
-                      onChange={(v) => setForm({ ...form, state: v })}
-                    />
-                    <Field label="ZIP / postal" value={form.zip} onChange={(v) => setForm({ ...form, zip: v })} />
-                    <Field
-                      label="Country"
-                      value={form.country}
-                      onChange={(v) => setForm({ ...form, country: v })}
-                    />
                   </div>
+
+                  {form.deliveryMethod === "pickup" && (
+                    <div className="mt-6 border-t border-mkos-border pt-6">
+                      <p className="font-display text-[10px] tracking-[0.22em] text-mkos-muted uppercase">
+                        Pickup location
+                      </p>
+                      <p className="mt-2 text-sm leading-relaxed text-mkos-ink">
+                        {STUDIO_PICKUP_ADDRESS}
+                      </p>
+                    </div>
+                  )}
+
+                  {needsAddress && (
+                    <div className="mt-8 border-t border-mkos-border pt-8">
+                      <p className="font-display text-[10px] tracking-[0.22em] text-mkos-muted uppercase">
+                        Delivery address
+                      </p>
+                      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                        <Field
+                          label="Street address"
+                          value={form.address}
+                          onChange={(v) => setForm({ ...form, address: v })}
+                          className="sm:col-span-2"
+                        />
+                        <Field
+                          label="City"
+                          value={form.city}
+                          onChange={(v) => setForm({ ...form, city: v })}
+                        />
+                        <Field
+                          label="State / region"
+                          value={form.state}
+                          onChange={(v) => setForm({ ...form, state: v })}
+                        />
+                        <Field
+                          label="ZIP / postal"
+                          value={form.zip}
+                          onChange={(v) => setForm({ ...form, zip: v })}
+                        />
+                        <Field
+                          label="Country"
+                          value={form.country}
+                          onChange={(v) => setForm({ ...form, country: v })}
+                        />
+                      </div>
+                    </div>
+                  )}
+
                   <Button
                     className="mt-8"
                     size="lg"
                     onClick={() => {
-                      if (!form.email || !form.first || !form.last || !form.phone || !form.address || !form.city) {
-                        setError("Please fill email, name, phone, address, and city.");
+                      const msg = validateDelivery();
+                      if (msg) {
+                        setError(msg);
                         return;
                       }
                       setError("");
@@ -224,14 +359,43 @@ export default function CheckoutPage() {
                       to save this order to your account (optional).
                     </p>
                   )}
-                  <p className="mt-4 text-sm leading-relaxed text-mkos-muted">
-                    {form.first} {form.last} · {form.email} · {form.phone}
-                    <br />
-                    {form.address}, {form.city}
-                    {form.state ? `, ${form.state}` : ""} {form.zip}
-                    <br />
-                    {form.country}
-                  </p>
+                  <div className="mt-4 space-y-3 text-sm leading-relaxed text-mkos-muted">
+                    <p>
+                      <span className="font-display text-[10px] tracking-[0.18em] text-mkos-ink uppercase">
+                        Contact
+                      </span>
+                      <br />
+                      {form.first} {form.last} · {form.email} · {form.phone}
+                    </p>
+                    <p>
+                      <span className="font-display text-[10px] tracking-[0.18em] text-mkos-ink uppercase">
+                        Delivery method
+                      </span>
+                      <br />
+                      {deliveryMethodLabel(form.deliveryMethod)}
+                    </p>
+                    <p>
+                      <span className="font-display text-[10px] tracking-[0.18em] text-mkos-ink uppercase">
+                        {form.deliveryMethod === "pickup"
+                          ? "Expected pickup date"
+                          : "Expected delivery date"}
+                      </span>
+                      <br />
+                      {form.expectedDeliveryDate
+                        ? new Date(form.expectedDeliveryDate + "T12:00:00").toLocaleDateString(
+                            undefined,
+                            { weekday: "short", year: "numeric", month: "long", day: "numeric" }
+                          )
+                        : "—"}
+                    </p>
+                    <p className="whitespace-pre-line">
+                      <span className="font-display text-[10px] tracking-[0.18em] text-mkos-ink uppercase">
+                        {form.deliveryMethod === "pickup" ? "Pickup location" : "Delivery address"}
+                      </span>
+                      <br />
+                      {addressSummary}
+                    </p>
+                  </div>
                   <ul className="mt-6 space-y-4">
                     {items.map((item) => (
                       <li key={cartItemKey(item)} className="flex justify-between text-sm">
@@ -242,10 +406,12 @@ export default function CheckoutPage() {
                       </li>
                     ))}
                   </ul>
-                  <div className="mt-6 rounded-none border border-mkos-border bg-mkos-warm/50 p-4 text-sm text-mkos-muted">
-                    You’ll pay securely with <strong className="text-mkos-ink">Paystack</strong> —
-                    cards, bank transfer, and USSD. After payment you’ll land on your order
-                    confirmation page and receive email receipts.
+                  <div className="mt-6 border border-mkos-border bg-mkos-warm/50 p-4 text-sm text-mkos-muted">
+                    <p>
+                      You’ll pay for your pieces securely with{" "}
+                      <strong className="text-mkos-ink">Paystack</strong>. Delivery fees (if any)
+                      are not included in this payment and will be communicated before delivery.
+                    </p>
                   </div>
                   <div className="mt-8 flex flex-wrap gap-3">
                     <Button variant="secondary" onClick={() => setStep(0)}>
@@ -289,18 +455,19 @@ export default function CheckoutPage() {
                 <span className="text-mkos-muted">Subtotal</span>
                 <span className="tabular-nums">{formatPrice(subtotal)}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-mkos-muted">Shipping</span>
-                <span className="tabular-nums">
-                  {shipping === 0 ? "Complimentary" : formatPrice(shipping)}
+              <div className="flex justify-between gap-4">
+                <span className="text-mkos-muted">Delivery</span>
+                <span className="max-w-[12rem] text-right text-xs leading-snug text-mkos-muted">
+                  Not included · quoted by location
                 </span>
               </div>
               <div className="flex justify-between pt-2 font-display text-lg">
-                <span>Total</span>
+                <span>Total due now</span>
                 <span className="tabular-nums">{formatPrice(total)}</span>
               </div>
             </div>
-            <p className="mt-6 text-xs text-mkos-muted">
+            <p className="mt-6 text-xs leading-relaxed text-mkos-muted">{DELIVERY_FEE_NOTE}</p>
+            <p className="mt-4 text-xs text-mkos-muted">
               Need help?{" "}
               <Link href="/about#contact" className="underline">
                 Contact the studio

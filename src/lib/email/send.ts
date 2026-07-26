@@ -4,6 +4,11 @@ import {
   customerOrderEmailHtml,
   type OrderEmailPayload,
 } from "@/lib/email/orderEmails";
+import {
+  adminExperienceEmailHtml,
+  clientExperienceEmailHtml,
+  type ExperienceInquiryPayload,
+} from "@/lib/email/experienceEmails";
 import { orderNotifyEmail, resendFrom } from "@/lib/paystack";
 
 function getResend() {
@@ -44,7 +49,6 @@ export async function sendOrderEmails(order: OrderEmailPayload) {
     .filter((r): r is PromiseRejectedResult => r.status === "rejected")
     .map((r) => String(r.reason));
 
-  // Also capture Resend API error objects from fulfilled responses
   for (const r of results) {
     if (r.status === "fulfilled" && r.value.error) {
       errors.push(String(r.value.error.message || r.value.error));
@@ -53,6 +57,57 @@ export async function sendOrderEmails(order: OrderEmailPayload) {
 
   if (errors.length) {
     console.warn("[email] partial failure", errors);
+  }
+
+  return { sent: errors.length < 2, errors };
+}
+
+/** Admin alert + client confirmation for MKOS Experience inquiries */
+export async function sendExperienceInquiryEmails(inquiry: ExperienceInquiryPayload) {
+  const resend = getResend();
+  if (!resend) {
+    console.warn("[email] RESEND_API_KEY missing — skipped experience emails");
+    return { sent: false, reason: "missing_key" as const };
+  }
+
+  const from = resendFrom();
+  const adminTo = orderNotifyEmail();
+  const isGlam = inquiry.kind === "full_glam";
+  const adminSubject = isGlam
+    ? `Full Glam consultation · ${inquiry.fullName}`
+    : `MKOS Experience content · ${inquiry.fullName}`;
+  const clientSubject = isGlam
+    ? `Your Full Glam request · MKOS`
+    : `Your MKOS Experience preference · MKOS`;
+
+  const results = await Promise.allSettled([
+    resend.emails.send({
+      from,
+      to: adminTo,
+      replyTo: inquiry.email,
+      subject: adminSubject,
+      html: adminExperienceEmailHtml(inquiry),
+    }),
+    resend.emails.send({
+      from,
+      to: inquiry.email,
+      subject: clientSubject,
+      html: clientExperienceEmailHtml(inquiry),
+    }),
+  ]);
+
+  const errors = results
+    .filter((r): r is PromiseRejectedResult => r.status === "rejected")
+    .map((r) => String(r.reason));
+
+  for (const r of results) {
+    if (r.status === "fulfilled" && r.value.error) {
+      errors.push(String(r.value.error.message || r.value.error));
+    }
+  }
+
+  if (errors.length) {
+    console.warn("[email] experience inquiry partial failure", errors);
   }
 
   return { sent: errors.length < 2, errors };

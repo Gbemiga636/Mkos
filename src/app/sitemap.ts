@@ -5,7 +5,7 @@ const site = process.env.NEXT_PUBLIC_SITE_URL || "https://mkos.studio";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const posts = await getPublishedPosts();
-  const staticRoutes = ["", "/shop", "/about", "/blog", "/checkout"].map((path) => ({
+  const staticRoutes = ["", "/shop", "/about", "/experience", "/blog", "/checkout"].map((path) => ({
     url: `${site}${path || "/"}`,
     lastModified: new Date(),
     changeFrequency: "weekly" as const,

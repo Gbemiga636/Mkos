@@ -1,20 +1,34 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useMotionValueEvent, useScroll } from "framer-motion";
 import { SectionHeading, Button } from "@/components/ui/Button";
 import { EmailSubscribe } from "@/components/ui/EmailSubscribe";
 import { ScrollReveal } from "@/components/experience/ScrollReveal";
 import { useCursorLabel } from "@/hooks/useCursorLabel";
 import { useCms, useContent } from "@/lib/cms/CmsProvider";
 import { BRAND_STORY_BODY, BRAND_TEASER_VALUES } from "@/lib/brand";
+import { cn } from "@/lib/utils";
 
 export function CollectionCarousel() {
-  const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
-  const x = useTransform(scrollYProgress, [0, 1], ["0%", "-35%"]);
+  const sectionRef = useRef<HTMLElement>(null);
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const userControlRef = useRef(false);
+  const releaseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dragRef = useRef<{ active: boolean; startX: number; startScroll: number; moved: boolean }>({
+    active: false,
+    startX: 0,
+    startScroll: 0,
+    moved: false,
+  });
+  const [dragging, setDragging] = useState(false);
+
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start end", "end start"],
+  });
   const cursor = useCursorLabel("DRAG");
   const { carousel } = useCms();
   const section = useContent("carousel");
@@ -25,23 +39,121 @@ export function CollectionCarousel() {
     href: s.href ?? "/shop",
   }));
 
+  const syncingRef = useRef(false);
+
+  const claimManual = useCallback(() => {
+    if (syncingRef.current) return;
+    userControlRef.current = true;
+    if (releaseTimerRef.current) clearTimeout(releaseTimerRef.current);
+    releaseTimerRef.current = setTimeout(() => {
+      userControlRef.current = false;
+    }, 2200);
+  }, []);
+
+  useMotionValueEvent(scrollYProgress, "change", (progress) => {
+    const el = scrollerRef.current;
+    if (!el || userControlRef.current || dragRef.current.active) return;
+    const max = el.scrollWidth - el.clientWidth;
+    if (max <= 0) return;
+    // Map mid-range of section travel so the strip moves while it's on screen
+    const t = Math.min(1, Math.max(0, (progress - 0.15) / 0.7));
+    syncingRef.current = true;
+    el.scrollLeft = t * max;
+    requestAnimationFrame(() => {
+      syncingRef.current = false;
+    });
+  });
+
+  useEffect(() => {
+    return () => {
+      if (releaseTimerRef.current) clearTimeout(releaseTimerRef.current);
+    };
+  }, []);
+
+  function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    if (e.button !== 0) return;
+    const el = scrollerRef.current;
+    if (!el) return;
+    dragRef.current = {
+      active: true,
+      startX: e.clientX,
+      startScroll: el.scrollLeft,
+      moved: false,
+    };
+    setDragging(true);
+    userControlRef.current = true;
+    el.setPointerCapture(e.pointerId);
+  }
+
+  function onPointerMove(e: React.PointerEvent<HTMLDivElement>) {
+    const drag = dragRef.current;
+    const el = scrollerRef.current;
+    if (!drag.active || !el) return;
+    const dx = e.clientX - drag.startX;
+    if (Math.abs(dx) > 4) drag.moved = true;
+    el.scrollLeft = drag.startScroll - dx;
+  }
+
+  function onPointerUp(e: React.PointerEvent<HTMLDivElement>) {
+    const el = scrollerRef.current;
+    if (el?.hasPointerCapture(e.pointerId)) {
+      el.releasePointerCapture(e.pointerId);
+    }
+    const moved = dragRef.current.moved;
+    dragRef.current.active = false;
+    setDragging(false);
+    if (moved) claimManual();
+    else userControlRef.current = false;
+  }
+
   return (
-    <section ref={ref} className="overflow-hidden bg-white py-28">
+    <section ref={sectionRef} className="bg-white py-28">
       <div className="px-5 sm:px-8 lg:px-12">
         <SectionHeading
           eyebrow={section?.eyebrow ?? "Collection Carousel"}
           title={section?.title ?? "Move through the house."}
-          subtitle={section?.subtitle ?? undefined}
+          subtitle={
+            section?.subtitle ?? "Scroll the page — or drag sideways to browse every look."
+          }
         />
       </div>
-      <motion.div style={{ x }} className="mt-14 flex w-max gap-6 px-5 sm:px-8" {...cursor}>
-        {[...slides, ...slides].map((c, i) => (
-          <ScrollReveal key={`${c.name}-${i}`} y={40} delay={(slides.length ? i % slides.length : 0) * 40}>
+      <div
+        ref={scrollerRef}
+        data-lenis-prevent
+        onScroll={claimManual}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+        onWheel={(e) => {
+          if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) claimManual();
+        }}
+        className={cn(
+          "mt-14 flex cursor-grab gap-6 overflow-x-auto overscroll-x-contain px-5 pb-4 sm:px-8",
+          "snap-x snap-mandatory scroll-smooth [-ms-overflow-style:none] [scrollbar-width:thin]",
+          "[&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:bg-mkos-ink/25 [&::-webkit-scrollbar-track]:bg-transparent",
+          dragging && "cursor-grabbing scroll-auto select-none"
+        )}
+        {...cursor}
+      >
+        {slides.map((c, i) => (
+          <ScrollReveal key={`${c.name}-${i}`} y={40} delay={i * 40} className="snap-start shrink-0">
             <Link
               href={c.href}
-              className="relative block h-[420px] w-[320px] overflow-hidden sm:h-[520px] sm:w-[400px]"
+              draggable={false}
+              onClick={(e) => {
+                if (dragRef.current.moved) e.preventDefault();
+              }}
+              className="relative block h-[420px] w-[min(80vw,320px)] overflow-hidden sm:h-[520px] sm:w-[400px]"
             >
-              <Image src={c.src} alt={c.name} fill className="object-cover" sizes="400px" />
+              <Image
+                src={c.src}
+                alt={c.name}
+                fill
+                draggable={false}
+                className="pointer-events-none object-cover"
+                sizes="400px"
+              />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
               <div className="absolute bottom-0 p-6 text-white">
                 <p className="font-display text-2xl">{c.name}</p>
@@ -49,7 +161,7 @@ export function CollectionCarousel() {
             </Link>
           </ScrollReveal>
         ))}
-      </motion.div>
+      </div>
     </section>
   );
 }

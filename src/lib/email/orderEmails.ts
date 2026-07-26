@@ -1,4 +1,5 @@
 import { formatPrice } from "@/lib/cms/types";
+import { DELIVERY_FEE_NOTE, deliveryMethodLabel } from "@/lib/checkout/delivery";
 
 export type OrderEmailItem = {
   name: string;
@@ -26,6 +27,8 @@ export type OrderEmailPayload = {
   total: number;
   currency?: string;
   paidAt?: string | null;
+  deliveryMethod?: string | null;
+  expectedDeliveryDate?: string | null;
 };
 
 const ACCENT = "#c45c26";
@@ -162,23 +165,32 @@ export function customerOrderEmailHtml(order: OrderEmailPayload) {
         <td align="right" style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:${INK};">${money(order.subtotal, currency)}</td>
       </tr>
       <tr>
-        <td style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:${MUTED};padding:4px 0;">Shipping</td>
-        <td align="right" style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:${INK};">${order.shipping === 0 ? "Complimentary" : money(order.shipping, currency)}</td>
+        <td style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:${MUTED};padding:4px 0;">Delivery</td>
+        <td align="right" style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:${INK};">Not included · quoted separately</td>
       </tr>
       <tr>
-        <td style="font-family:Georgia,'Times New Roman',serif;font-size:20px;color:${INK};padding-top:12px;">Total</td>
+        <td style="font-family:Georgia,'Times New Roman',serif;font-size:20px;color:${INK};padding-top:12px;">Total paid</td>
         <td align="right" style="font-family:Georgia,'Times New Roman',serif;font-size:20px;color:${INK};padding-top:12px;">${money(order.total, currency)}</td>
       </tr>
     </table>
 
     <div style="margin-top:28px;padding-top:20px;border-top:1px solid ${BORDER};">
-      <div style="font-family:Arial,Helvetica,sans-serif;font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:${MUTED};">Deliver to</div>
+      <div style="font-family:Arial,Helvetica,sans-serif;font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:${MUTED};">Delivery</div>
       <p style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.7;color:${INK};margin:8px 0 0;">
+        <strong>Method:</strong> ${escapeHtml(deliveryMethodLabel(order.deliveryMethod))}<br/>
+        ${
+          order.expectedDeliveryDate
+            ? `<strong>Expected date:</strong> ${escapeHtml(order.expectedDeliveryDate)}<br/>`
+            : ""
+        }
         ${escapeHtml(order.customerName)}<br/>
         ${escapeHtml(order.addressLine)}<br/>
         ${escapeHtml([order.city, order.state, order.postal].filter(Boolean).join(", "))}<br/>
         ${escapeHtml(order.country)}
         ${order.phone ? `<br/>${escapeHtml(order.phone)}` : ""}
+      </p>
+      <p style="font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.6;color:${MUTED};margin:14px 0 0;">
+        ${escapeHtml(DELIVERY_FEE_NOTE)}
       </p>
     </div>
   `;
@@ -227,8 +239,8 @@ export function adminOrderEmailHtml(order: OrderEmailPayload) {
         <td align="right" style="font-family:Arial,Helvetica,sans-serif;font-size:13px;">${money(order.subtotal, currency)}</td>
       </tr>
       <tr>
-        <td style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:${MUTED};padding:4px 0;">Shipping</td>
-        <td align="right" style="font-family:Arial,Helvetica,sans-serif;font-size:13px;">${order.shipping === 0 ? "Complimentary" : money(order.shipping, currency)}</td>
+        <td style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:${MUTED};padding:4px 0;">Delivery</td>
+        <td align="right" style="font-family:Arial,Helvetica,sans-serif;font-size:13px;">Not included · quote client</td>
       </tr>
       <tr>
         <td style="font-family:Georgia,'Times New Roman',serif;font-size:20px;padding-top:12px;">Total paid</td>
@@ -237,11 +249,20 @@ export function adminOrderEmailHtml(order: OrderEmailPayload) {
     </table>
 
     <div style="margin-top:28px;padding-top:20px;border-top:1px solid ${BORDER};">
-      <div style="font-family:Arial,Helvetica,sans-serif;font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:${MUTED};">Ship to</div>
+      <div style="font-family:Arial,Helvetica,sans-serif;font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:${MUTED};">Delivery</div>
       <p style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.7;margin:8px 0 0;">
+        <strong>Method:</strong> ${escapeHtml(deliveryMethodLabel(order.deliveryMethod))}<br/>
+        ${
+          order.expectedDeliveryDate
+            ? `<strong>Expected date:</strong> ${escapeHtml(order.expectedDeliveryDate)}<br/>`
+            : ""
+        }
         ${escapeHtml(order.addressLine)}<br/>
         ${escapeHtml([order.city, order.state, order.postal].filter(Boolean).join(", "))}<br/>
         ${escapeHtml(order.country)}
+      </p>
+      <p style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:${MUTED};margin:14px 0 0;">
+        ${escapeHtml(DELIVERY_FEE_NOTE)}
       </p>
       <p style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:${MUTED};margin:14px 0 0;">
         Internal order id: ${escapeHtml(order.orderId)}
@@ -271,6 +292,8 @@ export function sampleOrderEmailPayload(): OrderEmailPayload {
     state: "Lagos",
     postal: "101241",
     country: "Nigeria",
+    deliveryMethod: "home_delivery",
+    expectedDeliveryDate: "2026-08-15",
     items: [
       {
         name: "Abeni Boubou",

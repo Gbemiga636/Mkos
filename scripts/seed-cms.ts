@@ -158,7 +158,9 @@ async function main() {
     { label: "Women", href: "/shop?collection=women", location: "header", sort_order: 2 },
     { label: "Men", href: "/shop?collection=men", location: "header", sort_order: 3 },
     { label: "Story", href: "/about", location: "header", sort_order: 4 },
-    { label: "Account", href: "/account", location: "header", sort_order: 5 },
+    { label: "Experience", href: "/experience", location: "header", sort_order: 5 },
+    { label: "Journal", href: "/blog", location: "header", sort_order: 6 },
+    { label: "Account", href: "/account", location: "header", sort_order: 7 },
   ]);
 
   await supabase.from("carousel_slides").delete().neq("id", "00000000-0000-0000-0000-000000000000");

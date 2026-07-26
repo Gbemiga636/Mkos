@@ -319,6 +319,7 @@ function fallbackSnapshot(): CmsSnapshot {
       { label: "Women", href: "/shop?collection=women", location: "header" },
       { label: "Men", href: "/shop?collection=men", location: "header" },
       { label: "Story", href: "/about", location: "header" },
+      { label: "Experience", href: "/experience", location: "header" },
       { label: "Journal", href: "/blog", location: "header" },
       { label: "Account", href: "/account", location: "header" },
     ],
@@ -440,12 +441,24 @@ async function loadCmsSnapshot(): Promise<CmsSnapshot> {
         a: f.answer,
       })) ?? fallback.faqs;
 
-    const navigation: NavLink[] =
-      navRes.data?.map((n) => ({
-        label: n.label,
-        href: n.href,
-        location: n.location,
-      })) ?? fallback.navigation;
+    const navigation: NavLink[] = (() => {
+      const fromDb =
+        navRes.data?.map((n) => ({
+          label: n.label,
+          href: n.href,
+          location: n.location,
+        })) ?? null;
+      if (!fromDb?.length) return fallback.navigation;
+      const hasExperience = fromDb.some((n) => n.href === "/experience");
+      if (hasExperience) return fromDb;
+      const storyIdx = fromDb.findIndex((n) => n.href === "/about");
+      const insertAt = storyIdx >= 0 ? storyIdx + 1 : Math.min(4, fromDb.length);
+      return [
+        ...fromDb.slice(0, insertAt),
+        { label: "Experience", href: "/experience", location: "header" },
+        ...fromDb.slice(insertAt),
+      ];
+    })();
 
     const carousel: CarouselSlide[] =
       carouselRes.data?.map((s) => ({

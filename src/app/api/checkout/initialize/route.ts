@@ -3,6 +3,12 @@ import { randomBytes } from "crypto";
 import { createServiceClient } from "@/lib/supabase/client";
 import { paystackInitialize, siteUrl } from "@/lib/paystack";
 import type { CheckoutItem } from "@/lib/checkout/fulfill";
+import {
+  DELIVERY_FEE_NOTE,
+  STUDIO_PICKUP_ADDRESS,
+  deliveryMethodLabel,
+  isDeliveryMethod,
+} from "@/lib/checkout/delivery";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,23 +22,44 @@ export async function POST(req: Request) {
     const first = String(body.first || "").trim();
     const last = String(body.last || "").trim();
     const phone = String(body.phone || "").trim();
-    const address = String(body.address || "").trim();
-    const city = String(body.city || "").trim();
-    const state = String(body.state || "").trim();
+    const deliveryMethod = body.deliveryMethod;
+    const expectedDeliveryDate = String(body.expectedDeliveryDate || "").trim();
+    let address = String(body.address || "").trim();
+    let city = String(body.city || "").trim();
+    let state = String(body.state || "").trim();
     const zip = String(body.zip || "").trim();
-    const country = String(body.country || "Nigeria").trim();
+    let country = String(body.country || "").trim();
     const userId = body.userId ? String(body.userId) : null;
     const items = (Array.isArray(body.items) ? body.items : []) as CheckoutItem[];
 
     if (!email || !email.includes("@")) {
       return NextResponse.json({ error: "Valid email is required" }, { status: 400 });
     }
-    if (!first || !last || !address || !city || !phone) {
+    if (!first || !last || !phone) {
+      return NextResponse.json({ error: "Please complete name and phone" }, { status: 400 });
+    }
+    if (!isDeliveryMethod(deliveryMethod)) {
+      return NextResponse.json({ error: "Please choose a delivery method" }, { status: 400 });
+    }
+    if (!expectedDeliveryDate || !/^\d{4}-\d{2}-\d{2}$/.test(expectedDeliveryDate)) {
       return NextResponse.json(
-        { error: "Please complete name, phone, address, and city" },
+        { error: "Please share a valid expected delivery / pickup date" },
         { status: 400 }
       );
     }
+
+    if (deliveryMethod === "pickup") {
+      address = STUDIO_PICKUP_ADDRESS;
+      city = city || "Lagos";
+      state = state || "Lagos";
+      country = country || "Nigeria";
+    } else if (!address || !city || !country) {
+      return NextResponse.json(
+        { error: "Please complete delivery address, city, and country" },
+        { status: 400 }
+      );
+    }
+
     if (!items.length) {
       return NextResponse.json({ error: "Your bag is empty" }, { status: 400 });
     }
@@ -51,7 +78,6 @@ export async function POST(req: Request) {
 
     const sb = createServiceClient();
 
-    // Live stock check — reject sold-out / oversell before Paystack
     for (const item of items) {
       if (!item.productId) continue;
       const { data: prod } = await sb
@@ -67,10 +93,7 @@ export async function POST(req: Request) {
       }
       const available = Number(prod.stock ?? 0);
       if (available <= 0) {
-        return NextResponse.json(
-          { error: `${prod.name} is sold out` },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: `${prod.name} is sold out` }, { status: 400 });
       }
       if (Number(item.quantity) > available) {
         return NextResponse.json(
@@ -82,19 +105,17 @@ export async function POST(req: Request) {
       }
     }
 
-    // Prefer live CMS shipping settings
     const { data: settings } = await sb
       .from("site_settings")
-      .select("currency, free_shipping_threshold, shipping_fee")
+      .select("currency")
       .eq("id", "main")
       .maybeSingle();
 
     const currency = settings?.currency || "NGN";
-    const freeThreshold = Number(settings?.free_shipping_threshold ?? 300000);
-    const shippingFee = Number(settings?.shipping_fee ?? 28000);
+    // Delivery is never included in the product checkout total
     const subtotal = items.reduce((n, i) => n + Number(i.price) * Number(i.quantity), 0);
-    const shipping = subtotal >= freeThreshold || subtotal === 0 ? 0 : shippingFee;
-    const total = subtotal + shipping;
+    const shipping = 0;
+    const total = subtotal;
 
     if (total <= 0) {
       return NextResponse.json({ error: "Order total must be greater than zero" }, { status: 400 });
@@ -102,10 +123,47 @@ export async function POST(req: Request) {
 
     const reference = `mkos_${Date.now().toString(36)}_${randomBytes(4).toString("hex")}`;
     const customerName = `${first} ${last}`.trim();
+    const methodLabel = deliveryMethodLabel(deliveryMethod);
+    const notes = [
+      `Delivery method: ${methodLabel}`,
+      `Expected delivery date: ${expectedDeliveryDate}`,
+      DELIVERY_FEE_NOTE,
+    ].join("\n");
 
-    const { data: order, error: orderErr } = await sb
-      .from("orders")
-      .insert({
+    const baseOrder = {
+      user_id: userId,
+      email,
+      phone,
+      status: "pending_payment",
+      payment_status: "pending",
+      subtotal,
+      shipping,
+      total,
+      currency,
+      shipping_name: customerName,
+      shipping_address: address,
+      shipping_city: city,
+      shipping_state: state,
+      shipping_postal: zip,
+      shipping_country: country,
+      shipping_phone: phone,
+      paystack_reference: reference,
+      notes,
+      delivery_method: deliveryMethod,
+      expected_delivery_date: expectedDeliveryDate,
+    };
+
+    let order: { id: string } | null = null;
+    let orderErr: { message: string } | null = null;
+
+    {
+      const res = await sb.from("orders").insert(baseOrder).select("id").single();
+      order = res.data;
+      orderErr = res.error;
+    }
+
+    if (orderErr && /delivery_method|expected_delivery_date|schema cache/i.test(orderErr.message)) {
+      const legacy = {
         user_id: userId,
         email,
         phone,
@@ -123,9 +181,12 @@ export async function POST(req: Request) {
         shipping_country: country,
         shipping_phone: phone,
         paystack_reference: reference,
-      })
-      .select("id")
-      .single();
+        notes,
+      };
+      const res = await sb.from("orders").insert(legacy).select("id").single();
+      order = res.data;
+      orderErr = res.error;
+    }
 
     if (orderErr || !order) {
       return NextResponse.json(
@@ -136,7 +197,7 @@ export async function POST(req: Request) {
 
     const { error: itemsErr } = await sb.from("order_items").insert(
       items.map((item) => ({
-        order_id: order.id,
+        order_id: order!.id,
         product_id: item.productId,
         slug: item.slug,
         name: item.name,
@@ -164,6 +225,8 @@ export async function POST(req: Request) {
         order_id: order.id,
         customer_name: customerName,
         phone,
+        delivery_method: deliveryMethod,
+        expected_delivery_date: expectedDeliveryDate,
       },
     });
 
