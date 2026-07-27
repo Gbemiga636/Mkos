@@ -64,7 +64,13 @@ export function Hero() {
 
   const secondaryLabel = String(hero?.extra?.secondary_cta_label ?? "Watch campaign");
   const secondaryHref = String(hero?.extra?.secondary_cta_href ?? "/about");
-  const videoSrc = hero?.media_url ?? "/videos/hero-bg.mp4";
+  const rawMedia = hero?.media_url ?? "/videos/hero-bg.mp4";
+  // Guard: CMS sometimes stores an image on the hero slot — keep the video autoplay path.
+  const videoSrc =
+    hero?.media_type === "image" || /\.(jpe?g|png|webp|gif|avif)(\?|$)/i.test(rawMedia)
+      ? "/videos/hero-bg.mp4"
+      : rawMedia;
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
@@ -75,6 +81,53 @@ export function Hero() {
     return () => window.removeEventListener("mousemove", onMove);
   }, [mx, my]);
 
+  // Browsers often pause autoplay during the intro overlay — restart once ready.
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el) return;
+
+    el.muted = true;
+    el.defaultMuted = true;
+    el.playsInline = true;
+    el.setAttribute("muted", "");
+    el.setAttribute("playsinline", "");
+    el.setAttribute("webkit-playsinline", "");
+
+    const tryPlay = () => {
+      if (el.paused) {
+        void el.play().catch(() => {
+          /* Autoplay may still be blocked until a gesture; retry below. */
+        });
+      }
+    };
+
+    tryPlay();
+    el.addEventListener("loadeddata", tryPlay);
+    el.addEventListener("canplay", tryPlay);
+    const onVis = () => {
+      if (document.visibilityState === "visible") tryPlay();
+    };
+    document.addEventListener("visibilitychange", onVis);
+
+    // After intro loader exits, force another play attempt
+    if (ready) tryPlay();
+
+    // Fallback: first user gesture unlocks autoplay policies
+    const unlock = () => tryPlay();
+    window.addEventListener("pointerdown", unlock, { once: true });
+    window.addEventListener("touchstart", unlock, { once: true });
+    window.addEventListener("keydown", unlock, { once: true });
+
+    return () => {
+      el.removeEventListener("loadeddata", tryPlay);
+      el.removeEventListener("canplay", tryPlay);
+      document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("touchstart", unlock);
+      window.removeEventListener("keydown", unlock);
+    };
+  }, [ready, videoSrc]);
+
   return (
     <section
       ref={sectionRef}
@@ -83,15 +136,18 @@ export function Hero() {
     >
       <motion.div className="absolute inset-0 bg-black" style={{ x: layer1x, y: layer1y, scale: 1.08 }}>
         <video
+          ref={videoRef}
+          key={videoSrc}
+          src={videoSrc}
           autoPlay
           muted
           loop
           playsInline
-          preload="metadata"
+          preload="auto"
+          // Safari / iOS need these as raw attributes too
+          {...({ "webkit-playsinline": "true" } as React.HTMLAttributes<HTMLVideoElement>)}
           className="h-full w-full object-cover opacity-80"
-        >
-          <source src={videoSrc} type="video/mp4" />
-        </video>
+        />
       </motion.div>
 
       <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-black/40" />
