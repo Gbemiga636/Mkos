@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import { useCartStore } from "@/store/cart";
 import { formatPrice } from "@/lib/cms/types";
@@ -35,11 +35,14 @@ function SuccessInner() {
   const [status, setStatus] = useState<"loading" | "ok" | "error">("loading");
   const [message, setMessage] = useState("Confirming your payment…");
   const [order, setOrder] = useState<OrderPayload | null>(null);
+  const [experienceOpen, setExperienceOpen] = useState(false);
 
   useEffect(() => {
     if (!reference) {
       setStatus("error");
-      setMessage("Missing payment reference. If you were charged, contact the studio with your bank receipt.");
+      setMessage(
+        "Missing payment reference. If you were charged, contact the studio with your bank receipt."
+      );
       return;
     }
 
@@ -62,6 +65,9 @@ function SuccessInner() {
         clearCart();
         setStatus("ok");
         setMessage("Payment confirmed.");
+        window.setTimeout(() => {
+          if (!cancelled) setExperienceOpen(true);
+        }, 700);
       } catch {
         if (!cancelled) {
           setStatus("error");
@@ -75,7 +81,21 @@ function SuccessInner() {
     };
   }, [reference, clearCart]);
 
+  useEffect(() => {
+    if (!experienceOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setExperienceOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [experienceOpen]);
+
   const currency = order?.currency || "NGN";
+  const firstName = order?.shipping_name?.split(" ")[0];
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-mkos-warm">
@@ -135,8 +155,8 @@ function SuccessInner() {
                 Order confirmed
               </h1>
               <p className="mx-auto mt-4 max-w-md text-sm text-white/70">
-                Thank you{order?.shipping_name ? `, ${order.shipping_name.split(" ")[0]}` : ""}.
-                A detailed confirmation is on its way to {order?.email || "your inbox"}.
+                Thank you{firstName ? `, ${firstName}` : ""}. A detailed confirmation is on its way
+                to {order?.email || "your inbox"}.
               </p>
             </div>
 
@@ -188,6 +208,14 @@ function SuccessInner() {
                 <Button href="/account" variant="secondary" size="lg">
                   View account
                 </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="lg"
+                  onClick={() => setExperienceOpen(true)}
+                >
+                  MKoS Experience
+                </Button>
               </div>
               <p className="mt-6 text-xs leading-relaxed text-mkos-muted">
                 Studio enquiries:{" "}
@@ -200,6 +228,59 @@ function SuccessInner() {
           </motion.div>
         )}
       </div>
+
+      <AnimatePresence>
+        {experienceOpen && status === "ok" && (
+          <motion.div
+            className="fixed inset-0 z-[90] flex items-end justify-center bg-mkos-ink/55 p-4 backdrop-blur-sm sm:items-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setExperienceOpen(false)}
+          >
+            <motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="experience-invite-title"
+              className="w-full max-w-lg border border-white/10 bg-white p-7 shadow-lift sm:p-10"
+              initial={{ opacity: 0, y: 28, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 16, scale: 0.98 }}
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <p className="font-display text-[11px] tracking-[0.32em] text-mkos-accent uppercase">
+                Next step
+              </p>
+              <h2
+                id="experience-invite-title"
+                className="mt-4 font-display text-3xl font-medium tracking-tight sm:text-4xl"
+              >
+                Join the MKoS <span className="italic">Experience</span>
+              </h2>
+              <p className="mt-4 text-sm leading-relaxed text-mkos-muted sm:text-base">
+                {firstName ? `${firstName}, y` : "Y"}our order is confirmed. When you visit the
+                studio, tell us if you’d like to be part of MKoS Experience content — or book Full
+                Glam for your event. Continue now, or close and stay on this page.
+              </p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Button href="/experience" size="lg" cursor="EXPLORE">
+                  Go to Experience
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="lg"
+                  onClick={() => setExperienceOpen(false)}
+                  cursor=""
+                >
+                  Close
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

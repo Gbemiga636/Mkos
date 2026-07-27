@@ -320,6 +320,7 @@ function fallbackSnapshot(): CmsSnapshot {
       { label: "Men", href: "/shop?collection=men", location: "header" },
       { label: "Story", href: "/about", location: "header" },
       { label: "Experience", href: "/experience", location: "header" },
+      { label: "Style Brief", href: "/style-brief", location: "header" },
       { label: "Journal", href: "/blog", location: "header" },
       { label: "Account", href: "/account", location: "header" },
     ],
@@ -442,22 +443,35 @@ async function loadCmsSnapshot(): Promise<CmsSnapshot> {
       })) ?? fallback.faqs;
 
     const navigation: NavLink[] = (() => {
-      const fromDb =
+      let fromDb =
         navRes.data?.map((n) => ({
           label: n.label,
           href: n.href,
           location: n.location,
         })) ?? null;
       if (!fromDb?.length) return fallback.navigation;
-      const hasExperience = fromDb.some((n) => n.href === "/experience");
-      if (hasExperience) return fromDb;
-      const storyIdx = fromDb.findIndex((n) => n.href === "/about");
-      const insertAt = storyIdx >= 0 ? storyIdx + 1 : Math.min(4, fromDb.length);
-      return [
-        ...fromDb.slice(0, insertAt),
-        { label: "Experience", href: "/experience", location: "header" },
-        ...fromDb.slice(insertAt),
-      ];
+
+      if (!fromDb.some((n) => n.href === "/experience")) {
+        const storyIdx = fromDb.findIndex((n) => n.href === "/about");
+        const insertAt = storyIdx >= 0 ? storyIdx + 1 : Math.min(4, fromDb.length);
+        fromDb = [
+          ...fromDb.slice(0, insertAt),
+          { label: "Experience", href: "/experience", location: "header" },
+          ...fromDb.slice(insertAt),
+        ];
+      }
+
+      if (!fromDb.some((n) => n.href === "/style-brief")) {
+        const accountIdx = fromDb.findIndex((n) => n.href === "/account");
+        const insertAt = accountIdx >= 0 ? accountIdx : fromDb.length;
+        fromDb = [
+          ...fromDb.slice(0, insertAt),
+          { label: "Style Brief", href: "/style-brief", location: "header" },
+          ...fromDb.slice(insertAt),
+        ];
+      }
+
+      return fromDb.filter((n, i, arr) => arr.findIndex((x) => x.href === n.href) === i);
     })();
 
     const carousel: CarouselSlide[] =

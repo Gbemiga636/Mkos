@@ -20,7 +20,28 @@ export function Header() {
   const { navigation, settings } = useCms();
   const { user, loading: authLoading } = useAuth();
   const openAuth = useUIStore((s) => s.openAuth);
-  const links = navigation.filter((l) => l.location === "header" && !l.href.includes("/account"));
+  // One entry per href — avoids duplicate Style Brief (CMS + inject)
+  const links = (() => {
+    const seen = new Set<string>();
+    return navigation
+      .filter((l) => l.location === "header" && !l.href.includes("/account") && l.href !== "/checkout")
+      .filter((l) => {
+        if (seen.has(l.href)) return false;
+        seen.add(l.href);
+        return true;
+      });
+  })();
+  const mobileLinks = (() => {
+    const withoutBrief = links.filter((l) => l.href !== "/style-brief");
+    return [
+      ...withoutBrief,
+      user
+        ? { href: "/account", label: "Account", location: "header" as const }
+        : { href: "#signin", label: "Sign in", location: "header" as const },
+      { href: "/style-brief", label: "Style Brief", location: "header" as const },
+      { href: "/checkout", label: "Checkout", location: "header" as const },
+    ];
+  })();
   const [pastHero, setPastHero] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -71,7 +92,7 @@ export function Header() {
           <nav className="hidden items-center gap-8 md:flex">
             {links.map((l, i) => (
               <motion.div
-                key={`${l.label}-${l.href}`}
+                key={l.href}
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.08 + i * 0.05, duration: 0.55 }}
@@ -232,15 +253,9 @@ export function Header() {
               </button>
             </div>
             <nav className="flex flex-col gap-6 px-5 pt-16">
-              {[
-                ...links,
-                user
-                  ? { href: "/account", label: "Account", location: "header" }
-                  : { href: "#signin", label: "Sign in", location: "header" },
-                { href: "/checkout", label: "Checkout", location: "header" },
-              ].map((l, i) => (
+              {mobileLinks.map((l, i) => (
                 <motion.div
-                  key={l.href}
+                  key={`${l.href}-${l.label}`}
                   initial={{ opacity: 0, y: 24 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.15 + i * 0.06 }}
