@@ -20,6 +20,7 @@ import {
   reviews as fallbackReviews,
   faqs as fallbackFaqs,
 } from "@/data/products";
+import { BRAND_NAME, normalizeBrandText } from "@/lib/brand";
 
 /** Prefer a single primary image format; drop duplicate .webp siblings. */
 function normalizeImages(images: string[] | null | undefined): string[] {
@@ -29,7 +30,47 @@ function normalizeImages(images: string[] | null | undefined): string[] {
   return unique;
 }
 
+/** Legacy women/men collections → primary offerings (RTW / Bespoke / Bridal). */
+function normalizeCollectionSlug(slug: string) {
+  if (slug === "women" || slug === "men") return "ready-to-wear";
+  if (slug === "custom") return "bespoke";
+  return slug;
+}
+
+/** Legacy product category_slug values → current taxonomy. */
+function normalizeCategorySlug(slug: string) {
+  if (slug === "ready-to-wear" || slug === "women") return "women-rtw";
+  if (slug === "men") return "men-rtw";
+  if (slug === "custom") return "women-bespoke";
+  if (slug === "bridal") return "bridal-party";
+  return slug;
+}
+
+/** Old category rows that remap onto the new taxonomy — drop from nav/filters. */
+const LEGACY_CATEGORY_SLUGS = new Set([
+  "ready-to-wear",
+  "women",
+  "men",
+  "custom",
+  "bridal",
+]);
+
+function dedupeCategories(list: Category[]): Category[] {
+  const seen = new Set<string>();
+  const out: Category[] = [];
+  for (const c of list) {
+    if (LEGACY_CATEGORY_SLUGS.has(c.slug)) continue;
+    const slug = normalizeCategorySlug(c.slug);
+    if (seen.has(slug)) continue;
+    seen.add(slug);
+    out.push({ ...c, slug });
+  }
+  return out;
+}
+
 function mapProduct(row: Record<string, unknown>): Product {
+  const rawCollection = String(row.collection_slug ?? "");
+  const rawCategory = String(row.category_slug ?? "");
   return {
     id: String(row.id),
     slug: String(row.slug),
@@ -40,8 +81,8 @@ function mapProduct(row: Record<string, unknown>): Product {
     price: Number(row.price),
     compareAt: row.compare_at != null ? Number(row.compare_at) : undefined,
     images: normalizeImages(row.images as string[]),
-    category: String(row.category_slug ?? ""),
-    collection: String(row.collection_slug ?? ""),
+    category: normalizeCategorySlug(rawCategory),
+    collection: normalizeCollectionSlug(rawCollection),
     colors: (row.colors as Product["colors"]) ?? [],
     sizes: (row.sizes as string[]) ?? [],
     material: String(row.material ?? ""),
@@ -64,7 +105,7 @@ function fallbackSnapshot(): CmsSnapshot {
       eyebrow: "My Kind of Style",
       title: "For Those Who\nUnderstand STYLE.",
       subtitle:
-        "Nigerian contemporary fashion — timeless pieces that blend modern design with African heritage.",
+        "Nigerian contemporary fashion — timeless style that blends modern design with African heritage.",
       cta_label: "Shop the collection",
       cta_href: "/shop",
       media_url: "/videos/hero-bg.mp4",
@@ -78,8 +119,8 @@ function fallbackSnapshot(): CmsSnapshot {
       title: "Style should be personal.",
       subtitle:
         "Clean modern tailoring, premium fabrics, and traditional textiles including Aso Oke — for a global luxury audience.",
-      cta_label: "Shop women",
-      cta_href: "/shop?collection=women",
+      cta_label: "Shop Ready-to-Wear",
+      cta_href: "/shop?collection=ready-to-wear",
       media_url: "/videos/cloth-1.mp4",
       media_type: "video",
     },
@@ -222,23 +263,24 @@ function fallbackSnapshot(): CmsSnapshot {
       key: "featured_collections",
       section: "featured_collections",
       eyebrow: "Collections",
-      title: "Women. Men. Bridal.",
+      title: "Ready-to-Wear. Bespoke. Bridal.",
       subtitle:
-        "Three paths into MKoS — Ready-to-Wear and custom for women, contemporary menswear, and bridal celebrations.",
+        "Three ways to experience MKoS—discover timeless Ready-to-Wear, expertly crafted Bespoke creations, and luxurious Bridal designs, each thoughtfully made for those who understand style.",
     },
     carousel: {
       key: "carousel",
       section: "carousel",
       eyebrow: "Lookbook",
       title: "Move through the house.",
-      subtitle: "Scroll through the season — women, men, and statement pieces.",
+      subtitle: "Scroll through Ready-to-Wear, Bespoke, and Bridal — style for every expression.",
     },
     categories: {
       key: "categories",
       section: "categories",
-      eyebrow: "Shop by",
+      eyebrow: "Within the collections",
       title: "Find your kind of style.",
-      subtitle: "Ready-to-Wear, Aso Ebi, Custom, Men, and Bridal.",
+      subtitle:
+        "Women’s and Men’s RTW, Bespoke, Aso Ebi, Occasion Wear, and Bridal — within Ready-to-Wear, Bespoke, and Bridal.",
     },
     reviews: {
       key: "reviews",
@@ -316,8 +358,9 @@ function fallbackSnapshot(): CmsSnapshot {
     navigation: [
       { label: "Home", href: "/", location: "header" },
       { label: "Shop", href: "/shop", location: "header" },
-      { label: "Women", href: "/shop?collection=women", location: "header" },
-      { label: "Men", href: "/shop?collection=men", location: "header" },
+      { label: "Ready-to-Wear", href: "/shop?collection=ready-to-wear", location: "header" },
+      { label: "Bespoke", href: "/shop?collection=bespoke", location: "header" },
+      { label: "Bridal", href: "/shop?collection=bridal", location: "header" },
       { label: "Story", href: "/about", location: "header" },
       { label: "Experience", href: "/experience", location: "header" },
       { label: "Style Brief", href: "/style-brief", location: "header" },
@@ -393,9 +436,28 @@ async function loadCmsSnapshot(): Promise<CmsSnapshot> {
       };
     }
 
+    // Prefer primary-collection framing over legacy Women/Men/paths copy
+    const featured = content.featured_collections;
+    if (
+      featured &&
+      (/Women\.\s*Men/i.test(featured.title || "") || /three paths/i.test(featured.subtitle || ""))
+    ) {
+      content.featured_collections = fallback.content.featured_collections;
+    }
+    if (content.campaign?.cta_href?.includes("collection=women")) {
+      content.campaign = {
+        ...content.campaign,
+        cta_label: "Shop Ready-to-Wear",
+        cta_href: "/shop?collection=ready-to-wear",
+      };
+    }
+    if (content.categories && /Custom, Men/i.test(content.categories.subtitle || "")) {
+      content.categories = fallback.content.categories;
+    }
+
     const settings: SiteSettings = settingsRes.data
       ? {
-          brand_name: settingsRes.data.brand_name,
+          brand_name: normalizeBrandText(settingsRes.data.brand_name || BRAND_NAME),
           tagline: settingsRes.data.tagline,
           logo_url: settingsRes.data.logo_url,
           currency: settingsRes.data.currency,
@@ -408,22 +470,43 @@ async function loadCmsSnapshot(): Promise<CmsSnapshot> {
 
     const products = productsRes.data.map((row) => mapProduct(row as Record<string, unknown>));
 
-    const categories: Category[] =
-      categoriesRes.data?.map((c) => ({
-        slug: c.slug,
-        name: c.name,
-        description: c.description ?? "",
-        image_url: c.image_url,
-      })) ?? fallback.categories;
+    const categories: Category[] = (() => {
+      const fromDb =
+        categoriesRes.data?.map((c) => ({
+          slug: c.slug,
+          name: c.name,
+          description: c.description ?? "",
+          image_url: c.image_url,
+        })) ?? [];
+      const hasNew = fromDb.some((c) =>
+        ["women-rtw", "men-rtw", "women-bespoke", "aso-ebi"].includes(c.slug)
+      );
+      if (!fromDb.length || !hasNew) return [...fallback.categories];
+      const deduped = dedupeCategories(fromDb);
+      return deduped.length ? deduped : [...fallback.categories];
+    })();
 
-    const collections: Collection[] =
-      collectionsRes.data?.map((c) => ({
-        slug: c.slug,
-        name: c.name,
-        description: c.description ?? "",
-        image: c.image_url ?? "",
-        video: c.video_url ?? undefined,
-      })) ?? fallback.collections;
+    const collections: Collection[] = (() => {
+      const fromDb =
+        collectionsRes.data?.map((c) => ({
+          slug: c.slug,
+          name: c.name,
+          description: c.description ?? "",
+          image: c.image_url ?? "",
+          video: c.video_url ?? undefined,
+        })) ?? [];
+      // Prefer primary offerings (RTW / Bespoke / Bridal) over legacy Women/Men framing
+      const hasPrimary = fromDb.some((c) =>
+        ["ready-to-wear", "bespoke", "bridal"].includes(c.slug)
+      );
+      const isLegacyGender =
+        fromDb.length > 0 &&
+        fromDb.every((c) => ["women", "men", "bridal"].includes(c.slug));
+      if (!fromDb.length || isLegacyGender || !hasPrimary) {
+        return fallback.collections;
+      }
+      return fromDb;
+    })();
 
     const reviews: Review[] =
       reviewsRes.data?.map((r) => ({
@@ -450,6 +533,25 @@ async function loadCmsSnapshot(): Promise<CmsSnapshot> {
           location: n.location,
         })) ?? null;
       if (!fromDb?.length) return fallback.navigation;
+
+      // Rewrite legacy Women/Men collection links to primary offerings
+      const hasLegacyGenderNav = fromDb.some(
+        (n) => n.href === "/shop?collection=women" || n.href === "/shop?collection=men"
+      );
+      if (hasLegacyGenderNav) {
+        fromDb = fromDb.flatMap((n) => {
+          if (n.href === "/shop?collection=women") {
+            return [
+              { label: "Ready-to-Wear", href: "/shop?collection=ready-to-wear", location: n.location },
+              { label: "Bespoke", href: "/shop?collection=bespoke", location: n.location },
+            ];
+          }
+          if (n.href === "/shop?collection=men") {
+            return [{ label: "Bridal", href: "/shop?collection=bridal", location: n.location }];
+          }
+          return [n];
+        });
+      }
 
       if (!fromDb.some((n) => n.href === "/experience")) {
         const storyIdx = fromDb.findIndex((n) => n.href === "/about");
@@ -509,7 +611,7 @@ async function loadCmsSnapshot(): Promise<CmsSnapshot> {
 }
 
 /** Cross-request CMS cache — ~5 min, busted by revalidateTag("cms") on admin saves. */
-const getCachedCmsSnapshot = unstable_cache(loadCmsSnapshot, ["cms-snapshot-v1"], {
+const getCachedCmsSnapshot = unstable_cache(loadCmsSnapshot, ["cms-snapshot-v2"], {
   revalidate: 300,
   tags: ["cms"],
 });

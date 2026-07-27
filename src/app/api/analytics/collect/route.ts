@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/client";
-import { getSessionAdmin } from "@/lib/admin/auth";
+import { getSessionAdmin, ANALYTICS_OPTOUT_COOKIE } from "@/lib/admin/auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,6 +14,29 @@ type IncomingEvent = {
   value?: number;
   meta?: Record<string, unknown>;
 };
+
+function hasOptOutCookie(req: Request) {
+  const cookie = req.headers.get("cookie") || "";
+  return cookie.split(";").some((c) => c.trim().startsWith(`${ANALYTICS_OPTOUT_COOKIE}=1`));
+}
+
+function isLocalHost(req: Request) {
+  const host = (req.headers.get("host") || "").toLowerCase();
+  return (
+    host.startsWith("localhost") ||
+    host.startsWith("127.0.0.1") ||
+    host.startsWith("0.0.0.0") ||
+    host.endsWith(".local")
+  );
+}
+
+function looksLikeBot(req: Request) {
+  const ua = (req.headers.get("user-agent") || "").toLowerCase();
+  if (!ua) return true;
+  return /bot|crawl|spider|slurp|facebookexternalhit|preview|headless|wget|curl|python-requests/i.test(
+    ua
+  );
+}
 
 async function purgeVisitor(
   sb: ReturnType<typeof createServiceClient>,
@@ -31,11 +54,15 @@ async function purgeVisitor(
 
 export async function POST(req: Request) {
   try {
+    if (hasOptOutCookie(req) || isLocalHost(req) || looksLikeBot(req)) {
+      return NextResponse.json({ ok: true, skipped: true, reason: "filtered" });
+    }
+
     const body = await req.json();
     const visitorId = String(body.visitorId ?? "").slice(0, 80);
     const sessionId = String(body.sessionId ?? "").slice(0, 80);
-    if (!visitorId || !sessionId) {
-      return NextResponse.json({ error: "Missing ids" }, { status: 400 });
+    if (!visitorId || !sessionId || visitorId.startsWith("tmp-") || sessionId.startsWith("tmp-")) {
+      return NextResponse.json({ ok: true, skipped: true, reason: "bad_id" });
     }
 
     const admin = await getSessionAdmin();
@@ -60,7 +87,6 @@ export async function POST(req: Request) {
     const heartbeat = Boolean(body.heartbeat);
     const pageViews = events.filter((e) => e.type === "page_view").length;
 
-    // Visitor upsert (2 ops → still needed without RPC; keep lean)
     const { data: existing } = await sb
       .from("analytics_visitors")
       .select("id")
@@ -134,7 +160,6 @@ export async function POST(req: Request) {
       await sb.from("analytics_events").insert(rows);
     }
 
-    // Live presence only on heartbeat (~1/min) — not every batch
     if (heartbeat) {
       await sb.from("analytics_live").upsert({
         session_id: sessionId,
@@ -147,7 +172,6 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ ok: true });
   } catch (err) {
-    // Fail soft — never crash the storefront for analytics
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "track failed" },
       { status: 500 }

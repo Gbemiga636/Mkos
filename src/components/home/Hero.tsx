@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { Button } from "@/components/ui/Button";
+import { BrandText } from "@/components/ui/BrandText";
 import { useCursorLabel } from "@/hooks/useCursorLabel";
 import { useUIStore } from "@/store/ui";
 import { useContent } from "@/lib/cms/CmsProvider";
@@ -120,7 +121,7 @@ export function Hero() {
             transition={{ duration: 0.9, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
             className="font-display text-[11px] tracking-[0.4em] text-white/60 uppercase"
           >
-            {hero?.eyebrow}
+            {hero?.eyebrow ? <BrandText>{hero.eyebrow}</BrandText> : null}
           </motion.p>
 
           {/* Headline — typewriter */}

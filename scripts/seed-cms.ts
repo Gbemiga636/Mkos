@@ -155,13 +155,14 @@ async function main() {
   await upsert("navigation_links", [
     { label: "Home", href: "/", location: "header", sort_order: 0 },
     { label: "Shop", href: "/shop", location: "header", sort_order: 1 },
-    { label: "Women", href: "/shop?collection=women", location: "header", sort_order: 2 },
-    { label: "Men", href: "/shop?collection=men", location: "header", sort_order: 3 },
-    { label: "Story", href: "/about", location: "header", sort_order: 4 },
-    { label: "Experience", href: "/experience", location: "header", sort_order: 5 },
-    { label: "Style Brief", href: "/style-brief", location: "header", sort_order: 6 },
-    { label: "Journal", href: "/blog", location: "header", sort_order: 7 },
-    { label: "Account", href: "/account", location: "header", sort_order: 8 },
+    { label: "Ready-to-Wear", href: "/shop?collection=ready-to-wear", location: "header", sort_order: 2 },
+    { label: "Bespoke", href: "/shop?collection=bespoke", location: "header", sort_order: 3 },
+    { label: "Bridal", href: "/shop?collection=bridal", location: "header", sort_order: 4 },
+    { label: "Story", href: "/about", location: "header", sort_order: 5 },
+    { label: "Experience", href: "/experience", location: "header", sort_order: 6 },
+    { label: "Style Brief", href: "/style-brief", location: "header", sort_order: 7 },
+    { label: "Journal", href: "/blog", location: "header", sort_order: 8 },
+    { label: "Account", href: "/account", location: "header", sort_order: 9 },
   ]);
 
   await supabase.from("carousel_slides").delete().neq("id", "00000000-0000-0000-0000-000000000000");
@@ -236,8 +237,8 @@ async function main() {
       title: "Style should be personal.",
       subtitle:
         "Clean modern tailoring, premium fabrics, and traditional textiles including Aso Oke — for a global luxury audience.",
-      cta_label: "Shop women",
-      cta_href: "/shop?collection=women",
+      cta_label: "Shop Ready-to-Wear",
+      cta_href: "/shop?collection=ready-to-wear",
       media_url: "/videos/cloth-1.mp4",
       media_type: "video",
       sort_order: 1,
@@ -387,9 +388,9 @@ async function main() {
       key: "featured_collections",
       section: "featured_collections",
       eyebrow: "Collections",
-      title: "Women. Men. Bridal.",
+      title: "Ready-to-Wear. Bespoke. Bridal.",
       subtitle:
-        "Three paths into MKoS — Ready-to-Wear and custom for women, contemporary menswear, and bridal celebrations.",
+        "Three ways to experience MKoS—discover timeless Ready-to-Wear, expertly crafted Bespoke creations, and luxurious Bridal designs, each thoughtfully made for those who understand style.",
       sort_order: 8,
     },
     {
@@ -397,15 +398,16 @@ async function main() {
       section: "carousel",
       eyebrow: "Lookbook",
       title: "Move through the house.",
-      subtitle: "Scroll through the season — women, men, and statement pieces.",
+      subtitle: "Scroll through Ready-to-Wear, Bespoke, and Bridal — style for every expression.",
       sort_order: 9,
     },
     {
       key: "categories",
       section: "categories",
-      eyebrow: "Shop by",
+      eyebrow: "Within the collections",
       title: "Find your kind of style.",
-      subtitle: "Ready-to-Wear, Aso Ebi, Custom, Men, and Bridal.",
+      subtitle:
+        "Women’s and Men’s RTW, Bespoke, Aso Ebi, Occasion Wear, and Bridal — within Ready-to-Wear, Bespoke, and Bridal.",
       sort_order: 10,
     },
     {

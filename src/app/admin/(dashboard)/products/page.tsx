@@ -42,8 +42,8 @@ const emptyForm = {
   description: "",
   story: "",
   material: "",
-  collection: "women",
-  category: "ready-to-wear",
+  collection: "ready-to-wear",
+  category: "women-rtw",
   images: [] as string[],
   featured: false,
   newArrival: false,
@@ -84,8 +84,8 @@ export default function AdminProductsPage() {
         description: p.description ?? "",
         story: p.story ?? "",
         material: p.material ?? "",
-        collection: p.collection_slug || "women",
-        category: p.category_slug || "ready-to-wear",
+        collection: p.collection_slug || "ready-to-wear",
+        category: p.category_slug || "women-rtw",
         images: Array.isArray(p.images) ? p.images : [],
         featured: !!p.featured,
         newArrival: !!p.new_arrival,
@@ -231,8 +231,8 @@ export default function AdminProductsPage() {
   }
 
   const [selected, setSelected] = useState<string[]>([]);
-  const [bulkCategory, setBulkCategory] = useState("ready-to-wear");
-  const [bulkCollection, setBulkCollection] = useState("women");
+  const [bulkCategory, setBulkCategory] = useState("women-rtw");
+  const [bulkCollection, setBulkCollection] = useState("ready-to-wear");
 
   async function load() {
     setLoading(true);
@@ -432,11 +432,17 @@ export default function AdminProductsPage() {
               onChange={(e) => setBulkCategory(e.target.value)}
               className="h-9 border border-mkos-border bg-white px-2 text-xs"
             >
-              <option value="ready-to-wear">Ready-to-Wear</option>
+              <option value="women-rtw">Women’s RTW</option>
+              <option value="men-rtw">Men’s RTW</option>
+              <option value="women-bespoke">Women’s Bespoke</option>
+              <option value="men-bespoke">Men’s Bespoke</option>
               <option value="aso-ebi">Aso Ebi</option>
-              <option value="custom">Custom</option>
-              <option value="men">Men</option>
-              <option value="bridal">Bridal</option>
+              <option value="occasion">Occasion Wear</option>
+              <option value="registry-gowns">Registry Gowns</option>
+              <option value="reception">Reception Dresses</option>
+              <option value="bridesmaids">Bridesmaids</option>
+              <option value="grooms">Grooms</option>
+              <option value="bridal-party">Family & Bridal Party</option>
             </select>
             <button
               type="button"
@@ -450,8 +456,8 @@ export default function AdminProductsPage() {
               onChange={(e) => setBulkCollection(e.target.value)}
               className="h-9 border border-mkos-border bg-white px-2 text-xs"
             >
-              <option value="women">Women</option>
-              <option value="men">Men</option>
+              <option value="ready-to-wear">Ready-to-Wear</option>
+              <option value="bespoke">Bespoke</option>
               <option value="bridal">Bridal</option>
             </select>
             <button

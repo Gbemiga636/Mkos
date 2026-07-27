@@ -758,7 +758,40 @@ export function VisualWebsiteEditor() {
 
                 {/* Categories */}
                 {draft.key === "categories" && assets && (
-                  <AssetList title="Category pictures">
+                  <AssetList title="Categories (within collections)">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const name = window.prompt("New category name (e.g. Women’s Bespoke)");
+                        if (!name?.trim()) return;
+                        const slug =
+                          window.prompt(
+                            "Slug (lowercase, hyphens)",
+                            name
+                              .trim()
+                              .toLowerCase()
+                              .replace(/['']/g, "")
+                              .replace(/[^a-z0-9]+/g, "-")
+                              .replace(/^-+|-+$/g, "")
+                          ) || "";
+                        if (!slug.trim()) return;
+                        await withBusy(async () => {
+                          await mutateAsset({
+                            kind: "category",
+                            item: {
+                              name: name.trim(),
+                              slug: slug.trim(),
+                              description: "",
+                              image_url: null,
+                            },
+                          });
+                          setStatus("Category added");
+                        }, "Adding category…");
+                      }}
+                      className="mb-3 h-9 w-full border border-dashed border-mkos-border font-display text-[9px] tracking-[0.14em] text-mkos-accent uppercase"
+                    >
+                      + Add category
+                    </button>
                     {assets.categories
                       .filter((c) => c.is_published !== false)
                       .map((cat) => (
@@ -766,7 +799,23 @@ export function VisualWebsiteEditor() {
                           <div className="flex gap-2">
                             <Thumb src={cat.image_url} />
                             <div className="min-w-0 flex-1 space-y-1">
-                              <p className="font-display text-xs">{cat.name}</p>
+                              <input
+                                defaultValue={cat.name}
+                                onBlur={async (e) => {
+                                  if (e.target.value === cat.name) return;
+                                  await withBusy(
+                                    () =>
+                                      mutateAsset({
+                                        kind: "category",
+                                        item: { ...cat, name: e.target.value },
+                                      }),
+                                    "Saving…"
+                                  );
+                                  setStatus("Category updated");
+                                }}
+                                className="w-full border border-mkos-border px-2 py-1 font-display text-xs"
+                              />
+                              <p className="text-[10px] text-mkos-muted">{cat.slug}</p>
                               <textarea
                                 defaultValue={cat.description || ""}
                                 onBlur={async (e) => {
@@ -831,7 +880,40 @@ export function VisualWebsiteEditor() {
 
                 {/* Collections */}
                 {draft.key === "featured_collections" && assets && (
-                  <AssetList title="Collection media">
+                  <AssetList title="Collections (Ready-to-Wear · Bespoke · Bridal)">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const name = window.prompt("New collection name (e.g. Bespoke)");
+                        if (!name?.trim()) return;
+                        const slug =
+                          window.prompt(
+                            "Slug (lowercase, hyphens)",
+                            name
+                              .trim()
+                              .toLowerCase()
+                              .replace(/['']/g, "")
+                              .replace(/[^a-z0-9]+/g, "-")
+                              .replace(/^-+|-+$/g, "")
+                          ) || "";
+                        if (!slug.trim()) return;
+                        await withBusy(async () => {
+                          await mutateAsset({
+                            kind: "collection",
+                            item: {
+                              name: name.trim(),
+                              slug: slug.trim(),
+                              description: "",
+                              image_url: null,
+                            },
+                          });
+                          setStatus("Collection added");
+                        }, "Adding collection…");
+                      }}
+                      className="mb-3 h-9 w-full border border-dashed border-mkos-border font-display text-[9px] tracking-[0.14em] text-mkos-accent uppercase"
+                    >
+                      + Add collection
+                    </button>
                     {assets.collections
                       .filter((c) => c.is_published !== false)
                       .map((col) => (

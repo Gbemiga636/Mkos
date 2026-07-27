@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo, useState, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState, Suspense } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { ProductCard } from "@/components/product/ProductCard";
 import { EditableSection } from "@/components/cms/EditableSection";
 import { cn } from "@/lib/utils";
 import { useCms, useContent } from "@/lib/cms/CmsProvider";
+import Link from "next/link";
 
 function ShopContent() {
   const cms = useCms();
@@ -15,18 +16,57 @@ function ShopContent() {
   const categories = cms.categories;
   const collections = cms.collections;
   const params = useSearchParams();
-  const initialCollection = params.get("collection") ?? "";
-  const initialCategory = params.get("category") ?? "";
-  const initialFilter = params.get("filter") ?? "";
+  const router = useRouter();
+  const pathname = usePathname();
 
-  const [collection, setCollection] = useState(initialCollection);
-  const [category, setCategory] = useState(initialCategory);
-  const [filter, setFilter] = useState(initialFilter);
+  const [collection, setCollection] = useState(params.get("collection") ?? "");
+  const [category, setCategory] = useState(params.get("category") ?? "");
+  const [filter, setFilter] = useState(params.get("filter") ?? "");
   const [sort, setSort] = useState("featured");
   const [priceMax, setPriceMax] = useState(1000000);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [color, setColor] = useState("");
   const [availability, setAvailability] = useState<"all" | "in">("all");
+
+  // Keep filters in sync when navigating via header / collection cards / browser back
+  useEffect(() => {
+    setCollection(params.get("collection") ?? "");
+    setCategory(params.get("category") ?? "");
+    setFilter(params.get("filter") ?? "");
+  }, [params]);
+
+  function writeQuery(next: { collection?: string; category?: string; filter?: string }) {
+    const q = new URLSearchParams();
+    const col = next.collection ?? "";
+    const cat = next.category ?? "";
+    const f = next.filter ?? "";
+    if (col) q.set("collection", col);
+    if (cat) q.set("category", cat);
+    if (f) q.set("filter", f);
+    const qs = q.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }
+
+  function selectCollection(slug: string) {
+    const next = collection === slug ? "" : slug;
+    setCollection(next);
+    setCategory("");
+    setFilter("");
+    writeQuery({ collection: next, category: "", filter: "" });
+  }
+
+  function selectCategory(slug: string) {
+    const next = category === slug ? "" : slug;
+    setCategory(next);
+    writeQuery({ collection, category: next, filter });
+  }
+
+  function clearAll() {
+    setCollection("");
+    setCategory("");
+    setFilter("");
+    writeQuery({ collection: "", category: "", filter: "" });
+  }
 
   const filtered = useMemo(() => {
     let list = [...products];
@@ -36,33 +76,42 @@ function ShopContent() {
     if (filter === "bestsellers") list = list.filter((p) => p.bestSeller);
     if (filter === "trending") list = list.filter((p) => p.trending);
     list = list.filter((p) => p.price <= priceMax);
-    if (color) list = list.filter((p) => p.colors.some((c) => c.name.toLowerCase().includes(color.toLowerCase())));
+    if (color)
+      list = list.filter((p) =>
+        p.colors.some((c) => c.name.toLowerCase().includes(color.toLowerCase()))
+      );
     if (availability === "in") list = list.filter((p) => p.stock > 0);
 
     if (sort === "price-asc") list.sort((a, b) => a.price - b.price);
     if (sort === "price-desc") list.sort((a, b) => b.price - a.price);
     if (sort === "rating") list.sort((a, b) => b.rating - a.rating);
     return list;
-  }, [collection, category, filter, sort, priceMax, color, availability]);
+  }, [products, collection, category, filter, sort, priceMax, color, availability]);
+
+  const activeCollectionName =
+    collections.find((c) => c.slug === collection)?.name ||
+    (collection ? collection : null);
 
   return (
     <div className="min-h-screen bg-white pt-28 pb-24">
       <div className="mx-auto max-w-[1600px] px-5 sm:px-8 lg:px-12">
         <EditableSection cmsKey="shop" label="Shop header">
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
-        >
-          <p className="font-display text-[11px] tracking-[0.35em] text-mkos-muted uppercase">{shop?.eyebrow ?? "Shop"}</p>
-          <h1 className="mt-4 font-display text-5xl font-medium tracking-tight sm:text-6xl lg:text-7xl">
-            {shop?.title ?? "The full archive."}
-          </h1>
-          <p className="mt-4 max-w-xl text-mkos-muted">
-            {shop?.subtitle ??
-              "Filter by instinct. Every piece is finished by hand and ready for the wardrobe."}
-          </p>
-        </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7 }}
+          >
+            <p className="font-display text-[11px] tracking-[0.35em] text-mkos-muted uppercase">
+              {shop?.eyebrow ?? "Shop"}
+            </p>
+            <h1 className="mt-4 font-display text-5xl font-medium tracking-tight sm:text-6xl lg:text-7xl">
+              {activeCollectionName || shop?.title || "The full archive."}
+            </h1>
+            <p className="mt-4 max-w-xl text-mkos-muted">
+              {shop?.subtitle ??
+                "Filter by collection — Ready-to-Wear, Bespoke, and Bridal — then refine by style within."}
+            </p>
+          </motion.div>
         </EditableSection>
 
         <div className="mt-12 flex flex-wrap items-center justify-between gap-4 border-y border-mkos-border py-4">
@@ -73,7 +122,7 @@ function ShopContent() {
           >
             Filters
           </button>
-          <p className="text-sm text-mkos-muted">{filtered.length} pieces</p>
+          <p className="text-sm text-mkos-muted">{filtered.length} styles</p>
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value)}
@@ -86,27 +135,82 @@ function ShopContent() {
           </select>
         </div>
 
-        <div className="mt-6 flex flex-wrap gap-2">
-          <Chip active={!collection && !category && !filter} onClick={() => { setCollection(""); setCategory(""); setFilter(""); }}>
-            All
-          </Chip>
-          {collections.map((c) => (
-            <Chip key={c.slug} active={collection === c.slug} onClick={() => setCollection(c.slug)}>
-              {c.name}
-            </Chip>
-          ))}
-          {categories.map((c) => (
-            <Chip key={c.slug} active={category === c.slug} onClick={() => setCategory(c.slug)}>
-              {c.name}
-            </Chip>
-          ))}
+        <div className="mt-6 space-y-4">
+          <div>
+            <p className="mb-2 font-display text-[10px] tracking-[0.22em] text-mkos-muted uppercase">
+              Collections
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Chip active={!collection && !category && !filter} onClick={clearAll}>
+                All
+              </Chip>
+              {collections.map((c) => (
+                <Chip
+                  key={c.slug}
+                  active={collection === c.slug}
+                  onClick={() => selectCollection(c.slug)}
+                >
+                  {c.name}
+                </Chip>
+              ))}
+            </div>
+          </div>
+          <div>
+            <p className="mb-2 font-display text-[10px] tracking-[0.22em] text-mkos-muted uppercase">
+              Within the collections
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {categories.map((c) => (
+                <Chip
+                  key={c.slug}
+                  active={category === c.slug}
+                  onClick={() => selectCategory(c.slug)}
+                >
+                  {c.name}
+                </Chip>
+              ))}
+            </div>
+          </div>
         </div>
 
-        <div className="mt-12 grid grid-cols-2 gap-4 md:gap-6 lg:grid-cols-3 xl:grid-cols-4">
-          {filtered.map((p, i) => (
-            <ProductCard key={p.id} product={p} index={i % 8} />
-          ))}
-        </div>
+        {filtered.length > 0 ? (
+          <div className="mt-12 grid grid-cols-2 gap-4 md:gap-6 lg:grid-cols-3 xl:grid-cols-4">
+            {filtered.map((p, i) => (
+              <ProductCard key={p.id} product={p} index={i % 8} />
+            ))}
+          </div>
+        ) : (
+          <div className="mt-16 max-w-lg border border-mkos-border bg-mkos-warm/40 px-6 py-10">
+            <p className="font-display text-[11px] tracking-[0.28em] text-mkos-accent uppercase">
+              {activeCollectionName || "Shop"}
+            </p>
+            <h2 className="mt-3 font-display text-2xl font-medium tracking-tight">
+              Styles for this selection are being prepared
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-mkos-muted">
+              {collection === "bespoke" || collection === "bridal"
+                ? "Share your vision on the Client Style Brief and the house will craft something exceptional for you."
+                : "Try another collection, or browse everything in the archive."}
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              {(collection === "bespoke" || collection === "bridal") && (
+                <Link
+                  href="/style-brief"
+                  className="inline-flex h-11 items-center bg-mkos-ink px-5 font-display text-[10px] tracking-[0.18em] text-white uppercase"
+                >
+                  Client Style Brief
+                </Link>
+              )}
+              <button
+                type="button"
+                onClick={clearAll}
+                className="inline-flex h-11 items-center border border-mkos-border px-5 font-display text-[10px] tracking-[0.18em] uppercase"
+              >
+                View all styles
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <AnimatePresence>
@@ -145,14 +249,16 @@ function ShopContent() {
                     onChange={(e) => setPriceMax(Number(e.target.value))}
                     className="w-full accent-orange-700"
                   />
-                  <p className="mt-2 text-sm text-mkos-muted">Up to ₦{priceMax.toLocaleString("en-NG")}</p>
+                  <p className="mt-2 text-sm text-mkos-muted">
+                    Up to ₦{priceMax.toLocaleString("en-NG")}
+                  </p>
                 </FilterGroup>
                 <FilterGroup label="Color">
                   <input
                     value={color}
                     onChange={(e) => setColor(e.target.value)}
                     placeholder="e.g. Black, Ivory"
-                    className="h-11 w-full border border-mkos-border px-3 text-sm outline-none focus:shadow-[0_0_0_3px_rgba(91,33,182,0.12)]"
+                    className="h-11 w-full border border-mkos-border px-3 text-sm outline-none focus:shadow-[0_0_0_3px_rgba(196,92,38,0.12)]"
                   />
                 </FilterGroup>
                 <FilterGroup label="Availability">
@@ -167,18 +273,33 @@ function ShopContent() {
                 </FilterGroup>
                 <FilterGroup label="Quick">
                   <div className="flex flex-wrap gap-2">
-                    <Chip active={filter === "new"} onClick={() => setFilter(filter === "new" ? "" : "new")}>
+                    <Chip
+                      active={filter === "new"}
+                      onClick={() => {
+                        const next = filter === "new" ? "" : "new";
+                        setFilter(next);
+                        writeQuery({ collection, category, filter: next });
+                      }}
+                    >
                       New
                     </Chip>
                     <Chip
                       active={filter === "bestsellers"}
-                      onClick={() => setFilter(filter === "bestsellers" ? "" : "bestsellers")}
+                      onClick={() => {
+                        const next = filter === "bestsellers" ? "" : "bestsellers";
+                        setFilter(next);
+                        writeQuery({ collection, category, filter: next });
+                      }}
                     >
                       Bestsellers
                     </Chip>
                     <Chip
                       active={filter === "trending"}
-                      onClick={() => setFilter(filter === "trending" ? "" : "trending")}
+                      onClick={() => {
+                        const next = filter === "trending" ? "" : "trending";
+                        setFilter(next);
+                        writeQuery({ collection, category, filter: next });
+                      }}
                     >
                       Trending
                     </Chip>
@@ -217,7 +338,9 @@ function Chip({
       onClick={onClick}
       className={cn(
         "border px-4 py-2 font-display text-[10px] tracking-[0.18em] uppercase transition-colors",
-        active ? "border-mkos-ink bg-mkos-ink text-white" : "border-mkos-border hover:border-mkos-ink/40"
+        active
+          ? "border-mkos-ink bg-mkos-ink text-white"
+          : "border-mkos-border hover:border-mkos-ink/40"
       )}
     >
       {children}

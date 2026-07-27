@@ -4,6 +4,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getPublishedPost, getPublishedPosts } from "@/lib/blog";
 import { ScrollReveal } from "@/components/experience/ScrollReveal";
+import { BrandText } from "@/components/ui/BrandText";
 
 export const revalidate = 300;
 
@@ -56,15 +57,21 @@ export default async function BlogPostPage({
         </ScrollReveal>
         <ScrollReveal y={28} delay={40}>
           <p className="mt-8 font-display text-[11px] tracking-[0.3em] text-mkos-accent uppercase">
-            {post.author_name || "MKoS"}
-            {post.published_at
-              ? ` · ${new Date(post.published_at).toLocaleDateString("en-GB", {
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                })}`
-              : ""}
-            {post.reading_time ? ` · ${post.reading_time} min read` : ""}
+            <BrandText>
+              {[
+                post.author_name || "MKoS",
+                post.published_at
+                  ? new Date(post.published_at).toLocaleDateString("en-GB", {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })
+                  : null,
+                post.reading_time ? `${post.reading_time} min read` : null,
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            </BrandText>
           </p>
           <h1 className="mt-4 font-display text-4xl leading-[1.05] font-medium tracking-tight sm:text-5xl lg:text-6xl">
             {post.title}

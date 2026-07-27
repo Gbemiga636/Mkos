@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, useMotionValueEvent, useScroll } from "framer-motion";
 import { SectionHeading, Button } from "@/components/ui/Button";
+import { BrandText } from "@/components/ui/BrandText";
 import { EmailSubscribe } from "@/components/ui/EmailSubscribe";
 import { ScrollReveal } from "@/components/experience/ScrollReveal";
 import { useCursorLabel } from "@/hooks/useCursorLabel";
@@ -245,7 +246,7 @@ export function BrandStory() {
         <div>
           <ScrollReveal y={20}>
             <p className="font-display text-[11px] tracking-[0.35em] text-mkos-muted uppercase">
-              {section?.eyebrow ?? "About MKoS"}
+              <BrandText>{section?.eyebrow ?? "About MKoS"}</BrandText>
             </p>
           </ScrollReveal>
           <ScrollReveal y={32} delay={60}>

@@ -21,7 +21,7 @@ export default function SettingsPage() {
       .then((d) => {
         if (d.settings) {
           setForm({
-            brand_name: d.settings.brand_name ?? "MKoS",
+            brand_name: (d.settings.brand_name ?? "MKoS").replace(/\bmkos\b/gi, "MKoS"),
             tagline: d.settings.tagline ?? "",
             logo_url: d.settings.logo_url ?? "",
             currency: d.settings.currency ?? "NGN",
@@ -78,6 +78,12 @@ export default function SettingsPage() {
               onChange={(e) => setForm({ ...form, [key]: e.target.value })}
               className="mt-1.5 h-11 w-full border border-mkos-border bg-white px-3 text-sm text-mkos-ink outline-none focus:border-mkos-accent"
             />
+            {key === "brand_name" ? (
+              <p className="mt-1.5 text-xs text-mkos-muted">
+                Use <span className="font-medium text-mkos-ink">MKoS</span> (lowercase o) — never
+                MKOS.
+              </p>
+            ) : null}
           </label>
         ))}
         <button

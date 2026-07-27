@@ -4,6 +4,7 @@ import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
+import { BrandText } from "@/components/ui/BrandText";
 import { ScrollReveal } from "@/components/experience/ScrollReveal";
 import { cn } from "@/lib/utils";
 
@@ -354,7 +355,7 @@ export function StyleBriefPageClient() {
 
           <div className="mt-14 border-t border-mkos-border pt-12">
             <p className="font-display text-[11px] tracking-[0.28em] text-mkos-accent uppercase">
-              MKoS Experience content
+              <BrandText>MKoS Experience content</BrandText>
             </p>
             <p className="mt-4 max-w-2xl text-sm leading-relaxed text-mkos-muted">
               We love to celebrate our clients and share your beautiful looks as part of the MKoS

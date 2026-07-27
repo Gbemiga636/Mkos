@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
+import { BrandText } from "@/components/ui/BrandText";
 import { useCartStore } from "@/store/cart";
 import { formatPrice } from "@/lib/cms/types";
 
@@ -149,7 +150,7 @@ function SuccessInner() {
                 ✓
               </motion.div>
               <p className="mt-6 font-display text-[11px] tracking-[0.35em] text-white/55 uppercase">
-                MKoS
+                <BrandText>MKoS</BrandText>
               </p>
               <h1 className="mt-3 font-display text-3xl font-medium tracking-tight sm:text-5xl">
                 Order confirmed

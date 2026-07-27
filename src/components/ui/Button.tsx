@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { useMagnetic } from "@/hooks/useMagnetic";
 import { useCursorLabel } from "@/hooks/useCursorLabel";
 import { ScrollReveal } from "@/components/experience/ScrollReveal";
+import { BrandText } from "@/components/ui/BrandText";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -19,6 +19,14 @@ type Props = {
   disabled?: boolean;
 };
 
+function brandAwareChildren(children: React.ReactNode) {
+  return typeof children === "string" && /\bmkos\b/i.test(children) ? (
+    <BrandText>{children}</BrandText>
+  ) : (
+    children
+  );
+}
+
 export function Button({
   children,
   href,
@@ -32,6 +40,7 @@ export function Button({
 }: Props) {
   const ref = useMagnetic<HTMLElement>(0.28);
   const cursorProps = useCursorLabel(cursor || "");
+  const label = brandAwareChildren(children);
 
   const classes = cn(
     "group relative inline-flex items-center justify-center overflow-hidden font-display tracking-[0.14em] uppercase transition-all duration-500 ease-out will-change-transform",
@@ -57,10 +66,10 @@ export function Button({
   const inner = (
     <>
       <span className="relative z-10 flex items-center justify-center gap-3 transition-transform duration-500 group-hover:-translate-y-[120%] group-active:scale-95">
-        {children}
+        {label}
       </span>
       <span className="absolute inset-0 z-10 flex translate-y-[120%] items-center justify-center gap-3 transition-transform duration-500 group-hover:translate-y-0">
-        {children}
+        {label}
       </span>
       {variant === "primary" && (
         <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-orange-500/25 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
@@ -123,7 +132,7 @@ export function SectionHeading({
           y={16}
           className="mb-4 font-display text-[11px] tracking-[0.35em] text-mkos-muted uppercase"
         >
-          {eyebrow}
+          <BrandText>{eyebrow}</BrandText>
         </ScrollReveal>
       )}
       <ScrollReveal y={32} delay={60}>

@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Button } from "@/components/ui/Button";
+import { BrandText } from "@/components/ui/BrandText";
 import { ScrollReveal } from "@/components/experience/ScrollReveal";
 import { useContent } from "@/lib/cms/CmsProvider";
 
@@ -71,7 +72,7 @@ export function CampaignSection() {
       <div className="relative z-10 flex min-h-[100svh] flex-col items-center justify-center px-5 text-center text-white">
         <ScrollReveal y={48}>
           <p className="font-display text-[11px] tracking-[0.4em] text-white/60 uppercase">
-            {campaign?.eyebrow}
+            {campaign?.eyebrow ? <BrandText>{campaign.eyebrow}</BrandText> : null}
           </p>
         </ScrollReveal>
         <ScrollReveal y={56} delay={80}>

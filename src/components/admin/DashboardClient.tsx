@@ -19,6 +19,7 @@ type Data = {
   visitorsToday: number;
   visitorsWeek: number;
   visitorsMonth: number;
+  pageViewsToday?: number;
   liveCount: number;
   liveSessions: { session_id: string; path: string | null; last_seen_at: string }[];
   productsCount: number;
@@ -37,13 +38,17 @@ type Data = {
 
 export function DashboardClient({ data }: { data: Data }) {
   const cards = [
-    { label: "Visitors today", value: data.visitorsToday, hint: "Last 24h" },
-    { label: "This week", value: data.visitorsWeek, hint: "7-day activity" },
-    { label: "This month", value: data.visitorsMonth, hint: "30-day activity" },
-    { label: "Live now", value: data.liveCount, hint: "Active now" },
+    {
+      label: "Visitors today",
+      value: data.visitorsToday,
+      hint: `${data.pageViewsToday ?? 0} page views`,
+    },
+    { label: "This week", value: data.visitorsWeek, hint: "Unique visitors · 7 days" },
+    { label: "This month", value: data.visitorsMonth, hint: "Unique visitors · 30 days" },
+    { label: "Live now", value: data.liveCount, hint: "Unique people active" },
     { label: "Orders", value: data.ordersCount, hint: `${data.pending} pending` },
-    { label: "Revenue", value: data.revenue, hint: "All-time", money: true },
-    { label: "Conversion", value: data.conversionRate, hint: "Estimate %" },
+    { label: "Revenue", value: data.revenue, hint: "Paid orders", money: true },
+    { label: "Conversion", value: data.conversionRate, hint: "Orders ÷ visitors today" },
     { label: "Products", value: data.productsCount, hint: "Published" },
   ];
 
@@ -88,7 +93,11 @@ export function DashboardClient({ data }: { data: Data }) {
               {c.label}
             </p>
             <p className="mt-3 font-display text-3xl tracking-tight">
-              {c.money ? formatPrice(c.value) : <AnimatedNumber value={c.value} />}
+              {c.money
+                ? c.value > 0
+                  ? formatPrice(c.value)
+                  : "₦0"
+                : <AnimatedNumber value={c.value} />}
               {!c.money && c.label === "Conversion" ? "%" : null}
             </p>
             <p className="mt-2 text-xs text-mkos-muted">{c.hint}</p>

@@ -1,5 +1,26 @@
 /** Canonical MKoS brand copy — keep site surfaces aligned with this. */
 
+/** Always M·K·o·S — lowercase o. Never MKOS / Mkos. */
+export const BRAND_NAME = "MKoS";
+
+const BRAND_RE = /\bmkos\b/gi;
+
+/** Force every brand occurrence to exact casing `MKoS`. */
+export function normalizeBrandText(value: string): string {
+  return value.replace(BRAND_RE, BRAND_NAME);
+}
+
+/**
+ * Uppercase a label for display while keeping `MKoS` intact
+ * (CSS `text-transform: uppercase` would turn it into MKOS).
+ */
+export function upperPreserveBrand(value: string): string {
+  return value
+    .split(BRAND_RE)
+    .map((part) => (/^mkos$/i.test(part) ? BRAND_NAME : part.toUpperCase()))
+    .join("");
+}
+
 export const BRAND_PROMISE = "For Those Who Understand STYLE.";
 
 export const BRAND_MISSION =

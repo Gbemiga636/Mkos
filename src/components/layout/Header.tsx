@@ -12,6 +12,7 @@ import { useUIStore } from "@/store/ui";
 import { useMagnetic } from "@/hooks/useMagnetic";
 import { useCms } from "@/lib/cms/CmsProvider";
 import { useAuth } from "@/lib/auth/AuthProvider";
+import { BrandText } from "@/components/ui/BrandText";
 import { cn } from "@/lib/utils";
 
 export function Header() {
@@ -107,7 +108,7 @@ export function Header() {
                     pathname === l.href && (onHero ? "text-white" : "text-mkos-ink")
                   )}
                 >
-                  {l.label}
+                  <BrandText>{l.label}</BrandText>
                 </Link>
               </motion.div>
             ))}
@@ -230,13 +231,13 @@ export function Header() {
       <AnimatePresence>
         {menuOpen && (
           <motion.div
-            className="fixed inset-0 z-[60] bg-mkos-ink text-white md:hidden"
+            className="fixed inset-0 z-[60] flex flex-col bg-mkos-ink text-white md:hidden"
             initial={{ clipPath: "inset(0 0 100% 0)" }}
             animate={{ clipPath: "inset(0 0 0% 0)" }}
             exit={{ clipPath: "inset(0 0 100% 0)" }}
             transition={{ duration: 0.7, ease: [0.76, 0, 0.24, 1] }}
           >
-            <div className="flex h-20 items-center justify-between px-5">
+            <div className="flex h-20 shrink-0 items-center justify-between px-5">
               <Image
                 src={settings.logo_url ?? "/logo/mkos-logo.png"}
                 alt={settings.brand_name}
@@ -252,7 +253,11 @@ export function Header() {
                 Close
               </button>
             </div>
-            <nav className="flex flex-col gap-6 px-5 pt-16">
+            <nav
+              data-lenis-prevent
+              className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-16 pt-10 [-webkit-overflow-scrolling:touch]"
+            >
+              <div className="flex flex-col gap-6">
               {mobileLinks.map((l, i) => (
                 <motion.div
                   key={`${l.href}-${l.label}`}
@@ -282,6 +287,7 @@ export function Header() {
                   )}
                 </motion.div>
               ))}
+              </div>
             </nav>
           </motion.div>
         )}

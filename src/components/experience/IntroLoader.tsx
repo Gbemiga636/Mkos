@@ -5,12 +5,13 @@ import { motion, AnimatePresence, useMotionValue, useSpring } from "framer-motio
 import Image from "next/image";
 import { useUIStore } from "@/store/ui";
 import { useCmsOptional } from "@/lib/cms/CmsProvider";
+import { BRAND_NAME, normalizeBrandText } from "@/lib/brand";
 
 export function IntroLoader() {
   const setLoaderComplete = useUIStore((s) => s.setLoaderComplete);
   const cms = useCmsOptional();
   const logoSrc = cms?.settings.logo_url ?? "/logo/mkos-logo.png";
-  const brand = cms?.settings.brand_name ?? "MKoS";
+  const brand = normalizeBrandText(cms?.settings.brand_name ?? BRAND_NAME);
   const [progress, setProgress] = useState(0);
   const [exiting, setExiting] = useState(false);
   const [done, setDone] = useState(false);

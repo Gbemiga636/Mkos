@@ -1,3 +1,5 @@
+import { normalizeBrandText, upperPreserveBrand } from "@/lib/brand";
+
 export type ExperienceInquiryKind = "content" | "full_glam";
 
 export type ExperienceInquiryPayload = {
@@ -28,8 +30,9 @@ function escapeHtml(s: string) {
 
 function row(label: string, value?: string | null) {
   if (!value) return "";
+  const displayLabel = upperPreserveBrand(normalizeBrandText(label));
   return `<tr>
-    <td style="padding:10px 0;border-bottom:1px solid #eee;color:#6b6b6b;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;width:38%;vertical-align:top;">${escapeHtml(label)}</td>
+    <td style="padding:10px 0;border-bottom:1px solid #eee;color:#6b6b6b;font-size:12px;letter-spacing:0.12em;width:38%;vertical-align:top;">${escapeHtml(displayLabel)}</td>
     <td style="padding:10px 0;border-bottom:1px solid #eee;color:#111;font-size:15px;">${escapeHtml(value)}</td>
   </tr>`;
 }

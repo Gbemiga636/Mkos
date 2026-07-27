@@ -43,7 +43,7 @@ export function Footer() {
         { href: "/style-brief", label: "Style Brief" },
         { href: "/blog", label: "Journal" },
         { href: "/about#contact", label: "Contact" },
-        { href: "/shop?collection=men", label: "MKoS Men" },
+        { href: "/shop?collection=ready-to-wear&category=men-rtw", label: "MKoS Men" },
         { href: IG_MAIN, label: "Instagram" },
       ],
     },

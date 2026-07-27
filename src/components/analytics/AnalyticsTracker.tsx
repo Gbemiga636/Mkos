@@ -6,16 +6,34 @@ import { usePathname } from "next/navigation";
 const FLUSH_MS = 20_000;
 const HEARTBEAT_MS = 60_000;
 const MAX_EVENTS = 8;
+const SESSION_TTL_MS = 30 * 60 * 1000;
 
-function uid(key: string) {
+function visitorId() {
   try {
-    const existing = localStorage.getItem(key);
+    const existing = localStorage.getItem("mkos_vid");
     if (existing) return existing;
     const id = crypto.randomUUID();
-    localStorage.setItem(key, id);
+    localStorage.setItem("mkos_vid", id);
     return id;
   } catch {
-    return `tmp-${Date.now()}`;
+    return "";
+  }
+}
+
+/** Sliding 30-minute session — avoids one forever-session and tmp-ids on every load */
+function sessionId() {
+  try {
+    const now = Date.now();
+    const exp = Number(localStorage.getItem("mkos_sid_exp") || 0);
+    let id = localStorage.getItem("mkos_sid");
+    if (!id || now > exp) {
+      id = crypto.randomUUID();
+      localStorage.setItem("mkos_sid", id);
+    }
+    localStorage.setItem("mkos_sid_exp", String(now + SESSION_TTL_MS));
+    return id;
+  } catch {
+    return "";
   }
 }
 
@@ -28,14 +46,23 @@ function hasAnalyticsOptOut() {
   }
 }
 
+function isLocalDevHost() {
+  try {
+    const h = window.location.hostname;
+    return h === "localhost" || h === "127.0.0.1" || h === "0.0.0.0" || h.endsWith(".local");
+  } catch {
+    return false;
+  }
+}
+
 function detect() {
   const ua = navigator.userAgent;
   const device = /Mobi|Android/i.test(ua) ? "mobile" : /Tablet|iPad/i.test(ua) ? "tablet" : "desktop";
   let browser = "other";
-  if (ua.includes("Chrome")) browser = "chrome";
+  if (ua.includes("Edg")) browser = "edge";
+  else if (ua.includes("Chrome")) browser = "chrome";
   else if (ua.includes("Safari")) browser = "safari";
   else if (ua.includes("Firefox")) browser = "firefox";
-  else if (ua.includes("Edg")) browser = "edge";
   let os = "other";
   if (ua.includes("Windows")) os = "windows";
   else if (ua.includes("Mac")) os = "macos";
@@ -45,26 +72,30 @@ function detect() {
 }
 
 /**
- * Lightweight storefront analytics — page views + explicit [data-track] only.
- * Batched every 20s; live heartbeat at most once per minute to protect Supabase free tier.
+ * Lightweight storefront analytics — unique visitors + page views.
+ * Skips admin cookie, localhost, and missing storage ids.
  */
 export function AnalyticsTracker() {
   const pathname = usePathname();
   const started = useRef(Date.now());
   const queue = useRef<Record<string, unknown>[]>([]);
   const lastHeartbeat = useRef(0);
+  const lastPath = useRef<string | null>(null);
 
   useEffect(() => {
     if (pathname?.startsWith("/admin")) return;
     if (hasAnalyticsOptOut()) return;
+    if (isLocalDevHost()) return;
 
-    const visitorId = uid("mkos_vid");
-    const sessionId = uid("mkos_sid");
+    const vid = visitorId();
+    const sid = sessionId();
+    if (!vid || !sid) return;
+
     const { device, browser, os } = detect();
     started.current = Date.now();
 
     const flush = async (events: Record<string, unknown>[], forceHeartbeat = false) => {
-      if (hasAnalyticsOptOut()) return;
+      if (hasAnalyticsOptOut() || isLocalDevHost()) return;
       if (!events.length && !forceHeartbeat) return;
       const now = Date.now();
       const heartbeat = forceHeartbeat || now - lastHeartbeat.current >= HEARTBEAT_MS;
@@ -76,8 +107,8 @@ export function AnalyticsTracker() {
           headers: { "Content-Type": "application/json" },
           credentials: "same-origin",
           body: JSON.stringify({
-            visitorId,
-            sessionId,
+            visitorId: vid,
+            sessionId: sid,
             path: pathname,
             referrer: document.referrer || null,
             device,
@@ -90,18 +121,22 @@ export function AnalyticsTracker() {
           keepalive: true,
         });
       } catch {
-        // silent — never block UX for analytics
+        /* silent */
       }
     };
 
-    // One page_view per navigation (batched with first flush / heartbeat)
-    queue.current.push({ type: "page_view", path: pathname });
-    flush(queue.current.splice(0, MAX_EVENTS), true);
+    // One page_view per distinct path change (not every React remount)
+    if (lastPath.current !== pathname) {
+      lastPath.current = pathname;
+      queue.current.push({ type: "page_view", path: pathname });
+      flush(queue.current.splice(0, MAX_EVENTS), true);
+    } else {
+      flush([], true);
+    }
 
     const onClick = (e: MouseEvent) => {
       if (hasAnalyticsOptOut()) return;
       const t = e.target as HTMLElement | null;
-      // Only explicit tracking attrs — not every link/button (huge write savings)
       const el = t?.closest("[data-track]") as HTMLElement | null;
       if (!el) return;
       queue.current.push({
@@ -123,14 +158,12 @@ export function AnalyticsTracker() {
       if (document.visibilityState === "hidden") onHide();
     });
     window.addEventListener("pagehide", onHide);
-
     window.addEventListener("click", onClick);
 
     return () => {
       window.removeEventListener("click", onClick);
       window.removeEventListener("pagehide", onHide);
       clearInterval(interval);
-      if (queue.current.length) flush(queue.current.splice(0));
     };
   }, [pathname]);
 

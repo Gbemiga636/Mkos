@@ -157,8 +157,8 @@ export function ProductDraftsModal({
                     onChange={(e) => onChange(index, { collection: e.target.value })}
                     className="mt-1.5 h-11 w-full border border-mkos-border bg-white px-3 text-sm outline-none"
                   >
-                    <option value="women">Women</option>
-                    <option value="men">Men</option>
+                    <option value="ready-to-wear">Ready-to-Wear</option>
+                    <option value="bespoke">Bespoke</option>
                     <option value="bridal">Bridal</option>
                   </select>
                 </label>
@@ -171,11 +171,17 @@ export function ProductDraftsModal({
                     onChange={(e) => onChange(index, { category: e.target.value })}
                     className="mt-1.5 h-11 w-full border border-mkos-border bg-white px-3 text-sm outline-none"
                   >
-                    <option value="ready-to-wear">Ready-to-Wear</option>
+                    <option value="women-rtw">Women’s RTW</option>
+                    <option value="men-rtw">Men’s RTW</option>
+                    <option value="women-bespoke">Women’s Bespoke</option>
+                    <option value="men-bespoke">Men’s Bespoke</option>
                     <option value="aso-ebi">Aso Ebi</option>
-                    <option value="custom">Custom</option>
-                    <option value="men">Men</option>
-                    <option value="bridal">Bridal</option>
+                    <option value="occasion">Occasion Wear</option>
+                    <option value="registry-gowns">Registry Gowns</option>
+                    <option value="reception">Reception Dresses</option>
+                    <option value="bridesmaids">Bridesmaids</option>
+                    <option value="grooms">Grooms</option>
+                    <option value="bridal-party">Family & Bridal Party</option>
                   </select>
                 </label>
 

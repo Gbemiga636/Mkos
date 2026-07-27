@@ -7,15 +7,16 @@ async function getOverview() {
   const dayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
   const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
-  const liveCutoff = new Date(now.getTime() - 2 * 60 * 1000).toISOString();
+  // Slightly longer window + unique by visitor (not every tab session)
+  const liveCutoff = new Date(now.getTime() - 3 * 60 * 1000).toISOString();
 
-  // Prefer head counts over downloading all analytics rows (free-tier friendly)
   const [
     products,
     orders,
+    visitorsToday,
+    visitorsWeek,
+    visitorsMonth,
     viewsToday,
-    viewsWeek,
-    viewsMonth,
     live,
     lowStock,
     notifications,
@@ -27,23 +28,29 @@ async function getOverview() {
       .from("products")
       .select("id, stock, price, name, slug, featured")
       .eq("is_published", true),
-    sb.from("orders").select("id, total, status, created_at"),
+    sb.from("orders").select("id, total, status, created_at, payment_status"),
+    // Unique people (not page views)
+    sb
+      .from("analytics_visitors")
+      .select("*", { count: "exact", head: true })
+      .gte("last_seen_at", dayAgo),
+    sb
+      .from("analytics_visitors")
+      .select("*", { count: "exact", head: true })
+      .gte("last_seen_at", weekAgo),
+    sb
+      .from("analytics_visitors")
+      .select("*", { count: "exact", head: true })
+      .gte("last_seen_at", monthAgo),
     sb
       .from("analytics_events")
       .select("*", { count: "exact", head: true })
       .eq("event_type", "page_view")
       .gte("occurred_at", dayAgo),
     sb
-      .from("analytics_events")
-      .select("*", { count: "exact", head: true })
-      .eq("event_type", "page_view")
-      .gte("occurred_at", weekAgo),
-    sb
-      .from("analytics_events")
-      .select("*", { count: "exact", head: true })
-      .eq("event_type", "page_view")
-      .gte("occurred_at", monthAgo),
-    sb.from("analytics_live").select("session_id, path, last_seen_at").gte("last_seen_at", liveCutoff),
+      .from("analytics_live")
+      .select("session_id, visitor_id, path, last_seen_at")
+      .gte("last_seen_at", liveCutoff),
     sb.from("products").select("id, name, stock, slug").lte("stock", 5).order("stock").limit(12),
     sb
       .from("admin_notifications")
@@ -63,11 +70,14 @@ async function getOverview() {
       .limit(300),
   ]);
 
-  const orderRows = orders.data ?? [];
+  const orderRows = (orders.data ?? []).filter(
+    (o) => o.payment_status === "paid" || o.status === "paid" || o.status === "completed"
+  );
   const revenue = orderRows.reduce((n, o) => n + Number(o.total || 0), 0);
-  const pending = orderRows.filter((o) => o.status === "placed" || o.status === "pending").length;
-  const completed = orderRows.filter((o) => o.status === "completed" || o.status === "placed").length;
-  const cancelled = orderRows.filter((o) => o.status === "cancelled").length;
+  const allOrders = orders.data ?? [];
+  const pending = allOrders.filter(
+    (o) => o.status === "placed" || o.status === "pending" || o.payment_status === "pending"
+  ).length;
 
   const pathCounts: Record<string, number> = {};
   for (const e of topEvents.data ?? []) {
@@ -79,31 +89,34 @@ async function getOverview() {
     .slice(0, 6)
     .map(([path, count]) => ({ path, count }));
 
+  const uniqueLive = new Set(
+    (live.data ?? []).map((r) => r.visitor_id || r.session_id).filter(Boolean)
+  );
+  const uniqueToday = visitorsToday.count ?? 0;
   const pageViewsToday = viewsToday.count ?? 0;
   const returning = visitorsReturning.count ?? 0;
   const totalVisitors = visitorsTotal.count ?? 0;
 
   return {
-    visitorsToday: pageViewsToday,
-    visitorsWeek: viewsWeek.count ?? 0,
-    visitorsMonth: viewsMonth.count ?? 0,
-    liveCount: live.data?.length ?? 0,
+    visitorsToday: uniqueToday,
+    visitorsWeek: visitorsWeek.count ?? 0,
+    visitorsMonth: visitorsMonth.count ?? 0,
+    pageViewsToday,
+    liveCount: uniqueLive.size,
     liveSessions: live.data ?? [],
     productsCount: products.data?.length ?? 0,
     revenue,
     ordersCount: orderRows.length,
     pending,
-    completed,
-    cancelled,
+    completed: orderRows.length,
+    cancelled: allOrders.filter((o) => o.status === "cancelled").length,
     lowStock: lowStock.data ?? [],
     notifications: notifications.data ?? [],
     topPages,
     returning,
     newVisitors: Math.max(0, totalVisitors - returning),
     conversionRate:
-      pageViewsToday > 0
-        ? Number(((orderRows.length / Math.max(pageViewsToday, 1)) * 100).toFixed(2))
-        : 0,
+      uniqueToday > 0 ? Number(((orderRows.length / Math.max(uniqueToday, 1)) * 100).toFixed(2)) : 0,
     productList: products.data ?? [],
   };
 }
@@ -117,6 +130,7 @@ export default async function AdminDashboardPage() {
       visitorsToday: 0,
       visitorsWeek: 0,
       visitorsMonth: 0,
+      pageViewsToday: 0,
       liveCount: 0,
       liveSessions: [],
       productsCount: 0,

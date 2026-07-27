@@ -91,9 +91,42 @@ export async function PUT(req: Request) {
       } else {
         const item = body.item ?? {};
         const id = String(item.id || "");
-        if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+        const name = String(item.name || "").trim();
+        const slug = String(item.slug || "")
+          .trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9-]+/g, "-")
+          .replace(/^-+|-+$/g, "");
+        if (!name) return NextResponse.json({ error: "Category name required" }, { status: 400 });
+
+        if (!id) {
+          if (!slug) {
+            return NextResponse.json({ error: "Category slug required" }, { status: 400 });
+          }
+          const { count } = await sb
+            .from("categories")
+            .select("*", { count: "exact", head: true });
+          const { data, error } = await sb
+            .from("categories")
+            .insert({
+              slug,
+              name,
+              description: item.description ?? "",
+              image_url: item.image_url || null,
+              sort_order: Number(item.sort_order ?? count ?? 0),
+              is_published: item.is_published !== false,
+            })
+            .select("*")
+            .single();
+          if (error) throw error;
+          await writeAudit(session.admin.id, "category_create", "categories", data.id);
+          revalidateStorefront(["/shop"]);
+          return NextResponse.json({ item: data });
+        }
+
         const patch = {
-          name: item.name,
+          name,
+          ...(item.slug ? { slug } : {}),
           description: item.description,
           image_url: item.image_url,
           is_published: item.is_published !== false,
@@ -107,7 +140,7 @@ export async function PUT(req: Request) {
           .single();
         if (error) throw error;
         await writeAudit(session.admin.id, "category_update", "categories", id);
-        revalidateStorefront();
+        revalidateStorefront(["/shop"]);
         return NextResponse.json({ item: data });
       }
     } else if (kind === "collection") {
@@ -122,9 +155,43 @@ export async function PUT(req: Request) {
       } else {
         const item = body.item ?? {};
         const id = String(item.id || "");
-        if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+        const name = String(item.name || "").trim();
+        const slug = String(item.slug || "")
+          .trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9-]+/g, "-")
+          .replace(/^-+|-+$/g, "");
+        if (!name) return NextResponse.json({ error: "Collection name required" }, { status: 400 });
+
+        if (!id) {
+          if (!slug) {
+            return NextResponse.json({ error: "Collection slug required" }, { status: 400 });
+          }
+          const { count } = await sb
+            .from("collections")
+            .select("*", { count: "exact", head: true });
+          const { data, error } = await sb
+            .from("collections")
+            .insert({
+              slug,
+              name,
+              description: item.description ?? "",
+              image_url: item.image_url || null,
+              video_url: item.video_url || null,
+              sort_order: Number(item.sort_order ?? count ?? 0),
+              is_published: item.is_published !== false,
+            })
+            .select("*")
+            .single();
+          if (error) throw error;
+          await writeAudit(session.admin.id, "collection_create", "collections", data.id);
+          revalidateStorefront(["/", "/shop"]);
+          return NextResponse.json({ item: data });
+        }
+
         const patch = {
-          name: item.name,
+          name,
+          ...(item.slug ? { slug } : {}),
           description: item.description,
           image_url: item.image_url,
           video_url: item.video_url ?? null,
@@ -139,7 +206,7 @@ export async function PUT(req: Request) {
           .single();
         if (error) throw error;
         await writeAudit(session.admin.id, "collection_update", "collections", id);
-        revalidateStorefront();
+        revalidateStorefront(["/", "/shop"]);
         return NextResponse.json({ item: data });
       }
     } else if (kind === "product") {

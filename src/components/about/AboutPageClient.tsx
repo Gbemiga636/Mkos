@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
+import { BrandText } from "@/components/ui/BrandText";
 import { ContactBox, EmailSubscribe } from "@/components/ui/EmailSubscribe";
 import { ScrollReveal } from "@/components/experience/ScrollReveal";
 import { useContent } from "@/lib/cms/CmsProvider";
@@ -176,7 +177,7 @@ export function AboutPageClient() {
         <div className="mx-auto max-w-[1600px]">
           <ScrollReveal y={20}>
             <p className="font-display text-[11px] tracking-[0.35em] text-white/50 uppercase">
-              MKoS
+              <BrandText>MKoS</BrandText>
             </p>
             <h2 className="mt-4 max-w-2xl font-display text-3xl font-medium tracking-tight sm:text-4xl">
               Defines who we are.
@@ -303,7 +304,7 @@ export function AboutPageClient() {
             <Button href="/shop" size="lg">
               Shop the collection
             </Button>
-            <Button href="/shop?collection=men" variant="secondary" size="lg">
+            <Button href="/shop?collection=ready-to-wear&category=men-rtw" variant="secondary" size="lg">
               MKoS Men
             </Button>
           </div>

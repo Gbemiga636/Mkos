@@ -2,12 +2,16 @@ import { NextResponse } from "next/server";
 import { getSessionAdmin, writeAudit } from "@/lib/admin/auth";
 import { createServiceClient } from "@/lib/supabase/client";
 import { revalidateStorefront } from "@/lib/cms/revalidate";
+import { BRAND_NAME, normalizeBrandText } from "@/lib/brand";
 
 export async function GET() {
   const session = await getSessionAdmin();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const sb = createServiceClient();
   const { data } = await sb.from("site_settings").select("*").eq("id", "main").maybeSingle();
+  if (data?.brand_name) {
+    data.brand_name = normalizeBrandText(data.brand_name);
+  }
   return NextResponse.json({ settings: data });
 }
 
@@ -30,7 +34,7 @@ export async function PUT(req: Request) {
     .from("site_settings")
     .upsert({
       id: "main",
-      brand_name: body.brand_name,
+      brand_name: normalizeBrandText(body.brand_name || BRAND_NAME),
       tagline: body.tagline,
       logo_url: body.logo_url,
       currency: body.currency,

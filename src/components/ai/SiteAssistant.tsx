@@ -12,8 +12,8 @@ type Msg = { role: "user" | "assistant"; content: string };
 
 const SUGGESTIONS = [
   "Help me find something for a wedding",
-  "What’s special about MKoS Men?",
-  "Show me women’s ready-to-wear",
+  "Tell me about Bespoke",
+  "Show me Ready-to-Wear",
   "Where is the studio?",
 ];
 
@@ -25,7 +25,7 @@ export function SiteAssistant() {
     {
       role: "assistant",
       content:
-        "Welcome to MKoS. I can help you find pieces, explain collections, share studio details, or guide you through the shop.",
+        "Welcome to MKoS. I can help you find style, explain collections, share studio details, or guide you through the shop.",
     },
   ]);
   const endRef = useRef<HTMLDivElement>(null);

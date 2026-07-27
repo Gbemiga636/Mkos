@@ -1,3 +1,5 @@
+import { normalizeBrandText, upperPreserveBrand } from "@/lib/brand";
+
 export type StyleBriefPayload = {
   fullName: string;
   phone: string;
@@ -33,8 +35,10 @@ function escapeHtml(s: string) {
 
 function row(label: string, value?: string | null) {
   if (!value) return "";
+  // Prefer manual casing so MKoS keeps its lowercase o (CSS uppercase → MKOS).
+  const displayLabel = upperPreserveBrand(normalizeBrandText(label));
   return `<tr>
-    <td style="padding:10px 0;border-bottom:1px solid #eee;color:#6b6b6b;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;width:34%;vertical-align:top;">${escapeHtml(label)}</td>
+    <td style="padding:10px 0;border-bottom:1px solid #eee;color:#6b6b6b;font-size:11px;letter-spacing:0.12em;width:34%;vertical-align:top;">${escapeHtml(displayLabel)}</td>
     <td style="padding:10px 0;border-bottom:1px solid #eee;color:#111;font-size:15px;white-space:pre-wrap;">${escapeHtml(value)}</td>
   </tr>`;
 }

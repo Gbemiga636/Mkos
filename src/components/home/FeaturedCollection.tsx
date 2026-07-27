@@ -46,9 +46,12 @@ export function FeaturedCollection() {
     <section ref={ref} className="relative bg-white px-5 py-28 sm:px-8 lg:px-12">
       <div className="mx-auto max-w-[1600px]">
         <SectionHeading
-          eyebrow={section?.eyebrow ?? "Featured Collections"}
-          title={section?.title ?? "Three chapters. One language."}
-          subtitle={section?.subtitle ?? undefined}
+          eyebrow={section?.eyebrow ?? "Collections"}
+          title={section?.title ?? "Ready-to-Wear. Bespoke. Bridal."}
+          subtitle={
+            section?.subtitle ??
+            "Three ways to experience MKoS—discover timeless Ready-to-Wear, expertly crafted Bespoke creations, and luxurious Bridal designs, each thoughtfully made for those who understand style."
+          }
         />
 
         <div className="mt-16 grid gap-6 md:grid-cols-3">

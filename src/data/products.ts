@@ -30,9 +30,24 @@ export type Product = {
 
 export const categories = [
   {
-    slug: "ready-to-wear",
-    name: "Ready-to-Wear",
-    description: "Curated everyday and occasion pieces for women.",
+    slug: "women-rtw",
+    name: "Women’s RTW",
+    description: "Ready-to-wear for women — everyday elegance and occasion silhouettes.",
+  },
+  {
+    slug: "men-rtw",
+    name: "Men’s RTW",
+    description: "Contemporary menswear blending modern utility with African heritage.",
+  },
+  {
+    slug: "women-bespoke",
+    name: "Women’s Bespoke",
+    description: "Made-to-measure and couture crafted for her individuality.",
+  },
+  {
+    slug: "men-bespoke",
+    name: "Men’s Bespoke",
+    description: "Bespoke menswear tailored with precision and cultural authenticity.",
   },
   {
     slug: "aso-ebi",
@@ -40,41 +55,56 @@ export const categories = [
     description: "Coordinated ensembles for celebrations and family occasions.",
   },
   {
-    slug: "custom",
-    name: "Custom & Bespoke",
-    description: "Made-to-measure and couture crafted for your individuality.",
+    slug: "occasion",
+    name: "Occasion Wear",
+    description: "Refined looks for celebrations, dinners, and standout moments.",
   },
   {
-    slug: "men",
-    name: "MKoS Men",
-    description: "Contemporary menswear blending modern utility with African heritage.",
+    slug: "registry-gowns",
+    name: "Registry Gowns",
+    description: "Bridal registry looks crafted for the ceremony.",
   },
   {
-    slug: "bridal",
-    name: "Bridal",
-    description: "Pieces made for brides, grooms, and wedding guests.",
+    slug: "reception",
+    name: "Reception Dresses",
+    description: "Reception silhouettes for the celebration after the vows.",
+  },
+  {
+    slug: "bridesmaids",
+    name: "Bridesmaids",
+    description: "Coordinated elegance for the bridal party.",
+  },
+  {
+    slug: "grooms",
+    name: "Grooms",
+    description: "Refined looks for the groom and groomsmen.",
+  },
+  {
+    slug: "bridal-party",
+    name: "Family & Bridal Party",
+    description: "Thoughtfully crafted pieces for family and wedding guests.",
   },
 ] as const;
 
 export const collections = [
   {
-    slug: "women",
-    name: "MKoS Women",
-    description:
-      "Ready-to-wear, Aso Ebi, custom, and bespoke — elegant pieces for women who understand style.",
+    slug: "ready-to-wear",
+    name: "Ready-to-Wear",
+    description: "Timeless Ready-to-Wear for women and men — refined, versatile, ready now.",
     image: "/images/products/abeni-boubou.jpg",
   },
   {
-    slug: "men",
-    name: "MKoS Men",
+    slug: "bespoke",
+    name: "Bespoke",
     description:
-      "Pieces made for men — contemporary cuts with Aso Oke, denim, and refined African textiles.",
+      "Expertly crafted Custom/Bespoke — women’s and men’s bespoke, Aso Ebi, and occasion wear.",
     image: "/images/products/jagu-jacket.jpg",
   },
   {
     slug: "bridal",
-    name: "MKoS Bridal",
-    description: "Thoughtfully crafted pieces for grooms, brides, and wedding celebrations.",
+    name: "Bridal",
+    description:
+      "Luxurious Bridal designs — registry gowns, reception dresses, bridesmaids, grooms, and family.",
     image: "/images/products/tammy-dress.jpg",
   },
 ] as const;
@@ -91,8 +121,8 @@ export const products: Product[] = [
       "The Abeni Boubou is made for women who want presence without fuss. Soft structure, generous movement, and a silhouette that feels intentional every time you put it on.",
     price: 0,
     images: ["/images/products/abeni-boubou.jpg"],
-    category: "ready-to-wear",
-    collection: "women",
+    category: "women-rtw",
+    collection: "ready-to-wear",
     colors: [
       { name: "Ink", hex: "#111111" },
       { name: "Ivory", hex: "#f5f2eb" },
@@ -118,8 +148,8 @@ export const products: Product[] = [
       "Statement silhouette, functional pockets, and travel-ready ease — the Rolly Set moves with you while honouring African craftsmanship in every panel.",
     price: 0,
     images: ["/images/products/rolly-set.jpg"],
-    category: "ready-to-wear",
-    collection: "women",
+    category: "women-rtw",
+    collection: "ready-to-wear",
     colors: [
       { name: "Indigo", hex: "#2c3e50" },
       { name: "Aso Oke Gold", hex: "#c4a35a" },
@@ -145,8 +175,8 @@ export const products: Product[] = [
       "Statement detailing, easy to style, comfortable and chic — the Puzzle Dress is made for women who want to be remembered without saying a word.",
     price: 0,
     images: ["/images/products/puzzle-dress.jpg"],
-    category: "ready-to-wear",
-    collection: "women",
+    category: "women-rtw",
+    collection: "ready-to-wear",
     colors: [
       { name: "Stripe Multi", hex: "#1a1a1a" },
       { name: "Burnt Orange", hex: "#c45c26" },
@@ -171,8 +201,8 @@ export const products: Product[] = [
       "Ideal for day-to-night styling — comfortable, versatile for casual and occasion wear, and finished with details that feel distinctly MKoS.",
     price: 0,
     images: ["/images/products/tammy-dress.jpg"],
-    category: "ready-to-wear",
-    collection: "women",
+    category: "women-rtw",
+    collection: "ready-to-wear",
     colors: [
       { name: "Noir", hex: "#111111" },
       { name: "Stripe", hex: "#e8e4dc" },
@@ -197,8 +227,8 @@ export const products: Product[] = [
       "Multiple styling options in one coordinated set — premium fabric with functional side pockets for women who move through the day with intention.",
     price: 0,
     images: ["/images/products/lily-short-set.jpg"],
-    category: "ready-to-wear",
-    collection: "women",
+    category: "women-rtw",
+    collection: "ready-to-wear",
     colors: [
       { name: "Sand", hex: "#d4c4a8" },
       { name: "Black", hex: "#111111" },
@@ -223,8 +253,8 @@ export const products: Product[] = [
       "Perfect for casual and formal occasions — easy to wear, effortless to style, and unmistakably MKoS Men.",
     price: 0,
     images: ["/images/products/jagu-jacket.jpg"],
-    category: "men",
-    collection: "men",
+    category: "men-rtw",
+    collection: "ready-to-wear",
     colors: [
       { name: "Denim", hex: "#3d4f5f" },
       { name: "Aso Oke", hex: "#b8956c" },
@@ -250,8 +280,8 @@ export const products: Product[] = [
       "Spacious cargo pockets, a relaxed fit for everyday comfort, and versatile styling for casual, cultural, and statement looks.",
     price: 0,
     images: ["/images/products/asake-pants.jpg"],
-    category: "men",
-    collection: "men",
+    category: "men-rtw",
+    collection: "ready-to-wear",
     colors: [
       { name: "Denim Blue", hex: "#4a5d6e" },
       { name: "Aso Oke Panel", hex: "#c9a66b" },
@@ -276,8 +306,8 @@ export const products: Product[] = [
       "Ideal for elevated occasions — designed for comfort and effortless movement without losing presence.",
     price: 0,
     images: ["/images/products/sheed-set.jpg"],
-    category: "men",
-    collection: "men",
+    category: "men-rtw",
+    collection: "ready-to-wear",
     colors: [
       { name: "Patterned Neutral", hex: "#8a7a66" },
       { name: "Deep Charcoal", hex: "#2a2a2a" },
@@ -302,8 +332,8 @@ export const products: Product[] = [
       "Crafted for men who value cultural authenticity with everyday ease — distinctive, wearable, and distinctly MKoS.",
     price: 0,
     images: ["/images/products/vintage-set.jpg"],
-    category: "men",
-    collection: "men",
+    category: "men-rtw",
+    collection: "ready-to-wear",
     colors: [
       { name: "Heritage Weave", hex: "#6b5a45" },
       { name: "Black", hex: "#111111" },
@@ -379,7 +409,7 @@ export const reviews = [
 export const faqs = [
   {
     q: "Do you offer custom and bespoke pieces?",
-    a: "Yes. Beyond Ready-to-Wear, MKoS creates Custom-Made, Couture, and Aso Ebi collections. Visit our Oniru studio or message us on WhatsApp to begin.",
+    a: "Yes. Within Bespoke, MKoS creates Custom/Bespoke for women and men, Aso Ebi, and Occasion Wear — alongside Ready-to-Wear and Bridal. Visit our Oniru studio or message us on WhatsApp to begin.",
   },
   {
     q: "Where is the MKoS studio?",
