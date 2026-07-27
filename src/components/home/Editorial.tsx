@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { ScrollReveal } from "@/components/experience/ScrollReveal";
+import { AutoplayVideo } from "@/components/ui/AutoplayVideo";
 import { useContent } from "@/lib/cms/CmsProvider";
 
 export function EditorialStory() {
@@ -61,16 +62,10 @@ export function FeaturedVideo() {
       <div className="mx-auto max-w-[1600px]">
         <ScrollReveal y={48}>
           <div className="relative aspect-video overflow-hidden bg-black">
-            <video
+            <AutoplayVideo
+              src={section?.media_url ?? "/videos/white-space.mp4"}
               className="h-full w-full object-cover"
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="metadata"
-            >
-              <source src={section?.media_url ?? "/videos/white-space.mp4"} type="video/mp4" />
-            </video>
+            />
             <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/50 to-transparent p-8 sm:p-12">
               <div className="text-white">
                 <p className="font-display text-[11px] tracking-[0.35em] text-white/60 uppercase">

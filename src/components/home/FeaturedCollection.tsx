@@ -6,6 +6,7 @@ import Link from "next/link";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SectionHeading } from "@/components/ui/Button";
+import { AutoplayVideo } from "@/components/ui/AutoplayVideo";
 import { ScrollReveal } from "@/components/experience/ScrollReveal";
 import { useCursorLabel } from "@/hooks/useCursorLabel";
 import { useCms, useContent } from "@/lib/cms/CmsProvider";
@@ -66,16 +67,10 @@ export function FeaturedCollection() {
                 <div className="relative aspect-[3/4] overflow-hidden bg-mkos-warm">
                   <div className="fc-media absolute inset-0 scale-110">
                     {c.video ? (
-                      <video
-                        autoPlay
-                        muted
-                        loop
-                        playsInline
-                        preload="metadata"
+                      <AutoplayVideo
+                        src={c.video}
                         className="h-full w-full object-cover transition-transform duration-1000 group-hover:scale-105"
-                      >
-                        <source src={c.video} type="video/mp4" />
-                      </video>
+                      />
                     ) : (
                       <Image
                         src={c.image}
