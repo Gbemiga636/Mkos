@@ -1,4 +1,4 @@
--- MKOS Experience inquiries (content consent + Full Glam bookings)
+-- MKoS Experience inquiries (content consent + Full Glam bookings)
 create table if not exists public.experience_inquiries (
   id uuid primary key default gen_random_uuid(),
   kind text not null check (kind in ('content', 'full_glam')),

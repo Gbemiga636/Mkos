@@ -33,7 +33,7 @@ export async function POST(req: Request) {
       excerpt: body.excerpt ?? "",
       body: postBody,
       cover_image: body.cover_image || null,
-      author_name: body.author_name || "MKOS",
+      author_name: body.author_name || "MKoS",
       tags: Array.isArray(body.tags) ? body.tags : [],
       status,
       reading_time: estimateReadingTime(postBody),

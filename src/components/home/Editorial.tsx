@@ -41,7 +41,7 @@ export function EditorialStory() {
           <div className="relative mx-auto aspect-[2.3/1] w-full overflow-hidden bg-white">
             <Image
               src={editorial?.media_url ?? "/images/brand/mkos-signature.jpg"}
-              alt="MKOS — My Kind of Style"
+              alt="MKoS — My Kind of Style"
               fill
               className="object-contain object-center"
               sizes="(max-width: 768px) 100vw, 900px"

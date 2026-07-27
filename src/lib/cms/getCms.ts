@@ -102,16 +102,16 @@ function fallbackSnapshot(): CmsSnapshot {
       key: "featured_video",
       section: "featured_video",
       eyebrow: "Featured Film",
-      title: "MKOS in motion",
+      title: "MKoS in motion",
       media_url: "/videos/white-space.mp4",
       media_type: "video",
     },
     brand_story: {
       key: "brand_story",
       section: "brand_story",
-      eyebrow: "About MKOS",
+      eyebrow: "About MKoS",
       title: "My Kind of Style.",
-      body: "MKOS (My Kind of Style) is a Nigerian contemporary fashion brand dedicated to creating timeless luxury fashion for individuals who appreciate exceptional craftsmanship, refined style, and cultural authenticity.\n\nMore than a fashion label, MKOS is a lifestyle brand that seamlessly blends contemporary design with African heritage — elegant, sophisticated, and distinctive.\n\nThe MKoS MASTER Standard defines our core values: MKoS defines who we are; MASTER defines how we work.",
+      body: "MKoS (My Kind of Style) is a Nigerian contemporary fashion brand dedicated to creating timeless luxury fashion for individuals who appreciate exceptional craftsmanship, refined style, and cultural authenticity.\n\nMore than a fashion label, MKoS is a lifestyle brand that seamlessly blends contemporary design with African heritage — elegant, sophisticated, and distinctive.\n\nThe MKoS MASTER Standard defines our core values: MKoS defines who we are; MASTER defines how we work.",
       cta_label: "Explore the shop",
       cta_href: "/shop",
       media_url: "/images/products/abeni-boubou.jpg",
@@ -224,7 +224,7 @@ function fallbackSnapshot(): CmsSnapshot {
       eyebrow: "Collections",
       title: "Women. Men. Bridal.",
       subtitle:
-        "Three paths into MKOS — Ready-to-Wear and custom for women, contemporary menswear, and bridal celebrations.",
+        "Three paths into MKoS — Ready-to-Wear and custom for women, contemporary menswear, and bridal celebrations.",
     },
     carousel: {
       key: "carousel",
@@ -251,7 +251,7 @@ function fallbackSnapshot(): CmsSnapshot {
       section: "instagram",
       eyebrow: "@shopmykindofstyle",
       title: "Life in the edit.",
-      subtitle: "Follow MKOS and MKoS Men on Instagram.",
+      subtitle: "Follow MKoS and MKoS Men on Instagram.",
       cta_label: "Follow on Instagram",
       cta_href: "https://www.instagram.com/shopmykindofstyle",
     },
@@ -271,7 +271,7 @@ function fallbackSnapshot(): CmsSnapshot {
     marquee: {
       key: "marquee",
       section: "marquee",
-      body: "MKOS · MY KIND OF STYLE · FOR THOSE WHO UNDERSTAND STYLE · MKoS MASTER STANDARD · ",
+      body: "MKoS · MY KIND OF STYLE · FOR THOSE WHO UNDERSTAND STYLE · MKoS MASTER STANDARD · ",
     },
     shop: {
       key: "shop",
@@ -284,7 +284,7 @@ function fallbackSnapshot(): CmsSnapshot {
 
   return {
     settings: {
-      brand_name: "MKOS",
+      brand_name: "MKoS",
       tagline: "For Those Who Understand STYLE.",
       logo_url: "/logo/mkos-logo.png",
       currency: "NGN",

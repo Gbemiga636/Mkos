@@ -236,7 +236,7 @@ export function BrandStory() {
         <ScrollReveal y={40} className="relative aspect-[3/4] overflow-hidden bg-mkos-warm sm:aspect-[4/5]">
           <Image
             src={section?.media_url ?? "/images/products/abeni-boubou.jpg"}
-            alt="MKOS brand"
+            alt="MKoS brand"
             fill
             className="object-cover"
             sizes="(max-width: 1024px) 100vw, 45vw"
@@ -245,7 +245,7 @@ export function BrandStory() {
         <div>
           <ScrollReveal y={20}>
             <p className="font-display text-[11px] tracking-[0.35em] text-mkos-muted uppercase">
-              {section?.eyebrow ?? "About MKOS"}
+              {section?.eyebrow ?? "About MKoS"}
             </p>
           </ScrollReveal>
           <ScrollReveal y={32} delay={60}>
@@ -468,11 +468,11 @@ export function FAQ() {
 
 export function Marquee() {
   const section = useContent("marquee");
-  const text = section?.body ?? "MKOS · QUIET LUXURY · ATELIER · ESSENTIAL · ";
+  const text = section?.body ?? "MKoS · QUIET LUXURY · ATELIER · ESSENTIAL · ";
   return (
     <div className="overflow-hidden border-y border-mkos-border bg-white py-4">
       <motion.div
-        className="flex whitespace-nowrap font-display text-sm tracking-[0.35em] text-mkos-muted uppercase"
+        className="flex whitespace-nowrap font-display text-sm tracking-[0.35em] text-mkos-muted"
         animate={{ x: ["0%", "-50%"] }}
         transition={{ duration: 28, repeat: Infinity, ease: "linear" }}
       >

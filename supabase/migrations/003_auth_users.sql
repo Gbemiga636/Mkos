@@ -1,4 +1,4 @@
--- Auth + personalization schema for MKOS users
+-- Auth + personalization schema for MKoS users
 
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,

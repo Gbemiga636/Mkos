@@ -53,7 +53,7 @@ export function AuthModal() {
       setError(res.error);
       return;
     }
-    setMessage("Account created. You are signed in — welcome to MKOS.");
+    setMessage("Account created. You are signed in — welcome to MKoS.");
     setTimeout(() => closeAuth(), 900);
   };
 

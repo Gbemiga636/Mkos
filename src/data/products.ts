@@ -59,7 +59,7 @@ export const categories = [
 export const collections = [
   {
     slug: "women",
-    name: "MKOS Women",
+    name: "MKoS Women",
     description:
       "Ready-to-wear, Aso Ebi, custom, and bespoke — elegant pieces for women who understand style.",
     image: "/images/products/abeni-boubou.jpg",
@@ -113,7 +113,7 @@ export const products: Product[] = [
     name: "Rolly Set",
     tagline: "Denim meets Aso Oke.",
     description:
-      "Made with the combination of denim and Aso Oke, the MKOS Rolly Barrel pants are designed for women who want comfort and unforgettable style.",
+      "Made with the combination of denim and Aso Oke, the MKoS Rolly Barrel pants are designed for women who want comfort and unforgettable style.",
     story:
       "Statement silhouette, functional pockets, and travel-ready ease — the Rolly Set moves with you while honouring African craftsmanship in every panel.",
     price: 0,
@@ -168,7 +168,7 @@ export const products: Product[] = [
     description:
       "A sleek dress crafted with bold striped strap detailing and statement buckle accents, blending modern structure with effortless elegance.",
     story:
-      "Ideal for day-to-night styling — comfortable, versatile for casual and occasion wear, and finished with details that feel distinctly MKOS.",
+      "Ideal for day-to-night styling — comfortable, versatile for casual and occasion wear, and finished with details that feel distinctly MKoS.",
     price: 0,
     images: ["/images/products/tammy-dress.jpg"],
     category: "ready-to-wear",
@@ -347,7 +347,7 @@ export const reviews = [
     name: "Adaeze O.",
     location: "Lagos",
     rating: 5,
-    text: "The Puzzle Dress was everything — bold, comfortable, and so distinctly MKOS. I felt like myself, elevated.",
+    text: "The Puzzle Dress was everything — bold, comfortable, and so distinctly MKoS. I felt like myself, elevated.",
     product: "Puzzle Dress",
   },
   {
@@ -363,7 +363,7 @@ export const reviews = [
     name: "Chioma E.",
     location: "London",
     rating: 5,
-    text: "MKOS understands personal style. The Lily Short Set is my everyday uniform now — versatile and refined.",
+    text: "MKoS understands personal style. The Lily Short Set is my everyday uniform now — versatile and refined.",
     product: "Lily Short Set",
   },
   {
@@ -379,10 +379,10 @@ export const reviews = [
 export const faqs = [
   {
     q: "Do you offer custom and bespoke pieces?",
-    a: "Yes. Beyond Ready-to-Wear, MKOS creates Custom-Made, Couture, and Aso Ebi collections. Visit our Oniru studio or message us on WhatsApp to begin.",
+    a: "Yes. Beyond Ready-to-Wear, MKoS creates Custom-Made, Couture, and Aso Ebi collections. Visit our Oniru studio or message us on WhatsApp to begin.",
   },
   {
-    q: "Where is the MKOS studio?",
+    q: "Where is the MKoS studio?",
     a: "1, Ade Adedeji Close, Ayo Babatunde Crescent, Oniru, Lagos, Nigeria.",
   },
   {
@@ -394,7 +394,7 @@ export const faqs = [
     a: "Yes. MKoS Men offers contemporary menswear, and MKoS Bridal creates pieces for brides, grooms, and wedding guests.",
   },
   {
-    q: "Where can I follow MKOS?",
+    q: "Where can I follow MKoS?",
     a: "Instagram: @shopmykindofstyle (main) and @mkosformen (men).",
   },
 ];

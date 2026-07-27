@@ -150,7 +150,7 @@ export default function AdminLoginPage() {
         >
           <div className="mb-10 text-center">
             <p className="font-[family-name:var(--font-space-grotesk)] text-[11px] tracking-[0.4em] text-white/50 uppercase">
-              MKOS Control
+              MKoS Control
             </p>
             <h1 className="mt-3 font-[family-name:var(--font-space-grotesk)] text-4xl font-medium tracking-tight">
               Admin

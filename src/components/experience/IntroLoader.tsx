@@ -10,7 +10,7 @@ export function IntroLoader() {
   const setLoaderComplete = useUIStore((s) => s.setLoaderComplete);
   const cms = useCmsOptional();
   const logoSrc = cms?.settings.logo_url ?? "/logo/mkos-logo.png";
-  const brand = cms?.settings.brand_name ?? "MKOS";
+  const brand = cms?.settings.brand_name ?? "MKoS";
   const [progress, setProgress] = useState(0);
   const [exiting, setExiting] = useState(false);
   const [done, setDone] = useState(false);

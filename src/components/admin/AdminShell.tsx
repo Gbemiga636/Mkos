@@ -119,7 +119,7 @@ export function AdminShell({ children, admin }: Props) {
           <div className="flex h-20 items-center gap-3 border-b border-mkos-border px-5">
             <Image
               src="/logo/mkos-logo.png"
-              alt="MKOS"
+              alt="MKoS"
               width={88}
               height={36}
               className="h-8 w-auto brightness-0"

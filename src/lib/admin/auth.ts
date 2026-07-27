@@ -62,7 +62,7 @@ export async function ensureAdminSeed() {
     await sb.from("admin_accounts").insert({
       email: ADMIN_EMAIL,
       must_set_password: true,
-      full_name: "MKOS House",
+      full_name: "MKoS House",
       role: "owner",
     });
   }

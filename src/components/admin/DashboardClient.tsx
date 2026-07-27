@@ -57,7 +57,7 @@ export function DashboardClient({ data }: { data: Data }) {
           <h1 className="mt-2 font-display text-3xl font-medium tracking-tight sm:text-4xl">
             Command center
           </h1>
-          <p className="mt-2 text-sm text-mkos-muted">Live storefront intelligence for MKOS.</p>
+          <p className="mt-2 text-sm text-mkos-muted">Live storefront intelligence for MKoS.</p>
         </div>
         <div className="flex gap-2">
           <Link

@@ -25,7 +25,7 @@ export function SiteAssistant() {
     {
       role: "assistant",
       content:
-        "Welcome to MKOS. I can help you find pieces, explain collections, share studio details, or guide you through the shop.",
+        "Welcome to MKoS. I can help you find pieces, explain collections, share studio details, or guide you through the shop.",
     },
   ]);
   const endRef = useRef<HTMLDivElement>(null);
@@ -104,13 +104,13 @@ export function SiteAssistant() {
         )}
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.98 }}
-        aria-label="Open MKOS assistant"
+        aria-label="Open MKoS assistant"
       >
         <span className="relative flex h-2 w-2">
           <span className="absolute inset-0 animate-ping rounded-full bg-[#c45c26] opacity-60" />
           <span className="relative h-2 w-2 rounded-full bg-[#c45c26]" />
         </span>
-        <span className="font-display text-[11px] tracking-[0.2em] uppercase">Ask MKOS</span>
+        <span className="font-display text-[11px] tracking-[0.2em]">Ask MKoS</span>
       </motion.button>
 
       <AnimatePresence>
@@ -127,7 +127,7 @@ export function SiteAssistant() {
                 <p className="font-display text-[10px] tracking-[0.28em] text-white/50 uppercase">
                   Concierge
                 </p>
-                <p className="mt-1 font-display text-lg tracking-tight">Ask MKOS</p>
+                <p className="mt-1 font-display text-lg tracking-tight">Ask MKoS</p>
               </div>
               <button
                 type="button"

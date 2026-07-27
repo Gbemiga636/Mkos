@@ -56,7 +56,7 @@ export default async function BlogPostPage({
         </ScrollReveal>
         <ScrollReveal y={28} delay={40}>
           <p className="mt-8 font-display text-[11px] tracking-[0.3em] text-mkos-accent uppercase">
-            {post.author_name || "MKOS"}
+            {post.author_name || "MKoS"}
             {post.published_at
               ? ` · ${new Date(post.published_at).toLocaleDateString("en-GB", {
                   day: "numeric",

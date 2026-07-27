@@ -116,7 +116,7 @@ export function Header() {
             href="/"
             ref={logoRef}
             className="absolute left-1/2 -translate-x-1/2"
-            aria-label="MKOS home"
+            aria-label="MKoS home"
           >
             <motion.div
               initial={{ opacity: 0, y: -8, scale: 0.96 }}

@@ -19,13 +19,13 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL("https://mkos.studio"),
   title: {
-    default: "MKOS — For Those Who Understand STYLE",
-    template: "%s · MKOS",
+    default: "MKoS — For Those Who Understand STYLE",
+    template: "%s · MKoS",
   },
   description:
-    "MKOS (My Kind of Style) is a Nigerian contemporary fashion brand creating timeless Ready-to-Wear, Custom, Couture, and Aso Ebi for women and men.",
+    "MKoS (My Kind of Style) is a Nigerian contemporary fashion brand creating timeless Ready-to-Wear, Custom, Couture, and Aso Ebi for women and men.",
   openGraph: {
-    title: "MKOS — For Those Who Understand STYLE",
+    title: "MKoS — For Those Who Understand STYLE",
     description:
       "Elegant, sophisticated fashion blending contemporary design with African heritage.",
     images: ["/logo/mkos-logo.png"],

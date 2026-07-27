@@ -12,7 +12,7 @@ import {
   BRAND_VISION,
   MASTER_INTRO,
   MASTER_PILLARS,
-  MKOS_PILLARS,
+  MKoS_PILLARS,
 } from "@/lib/brand";
 
 const IG_MAIN = "https://www.instagram.com/shopmykindofstyle";
@@ -33,8 +33,8 @@ export function AboutPageClient() {
   const body = /MASTER|Mastery/i.test(rawBody)
     ? rawBody
     : [
-        "MKOS (My Kind of Style) is a Nigerian contemporary fashion brand dedicated to creating timeless luxury fashion for individuals who appreciate exceptional craftsmanship, refined style, and cultural authenticity.",
-        "More than a fashion label, MKOS is a lifestyle brand that seamlessly blends contemporary design with African heritage — elegant, sophisticated, and distinctive.",
+        "MKoS (My Kind of Style) is a Nigerian contemporary fashion brand dedicated to creating timeless luxury fashion for individuals who appreciate exceptional craftsmanship, refined style, and cultural authenticity.",
+        "More than a fashion label, MKoS is a lifestyle brand that seamlessly blends contemporary design with African heritage — elegant, sophisticated, and distinctive.",
         "The MKoS MASTER Standard defines our core values: MKoS defines who we are; MASTER defines how we work.",
       ].join("\n\n");
   const paragraphs = body.split("\n\n").filter(Boolean);
@@ -45,7 +45,7 @@ export function AboutPageClient() {
   const mkosPillars =
     (section?.extra?.mkos as { letter: string; title: string; text: string }[] | undefined)?.length
       ? (section?.extra?.mkos as { letter: string; title: string; text: string }[])
-      : [...MKOS_PILLARS];
+      : [...MKoS_PILLARS];
   const masterPillars =
     (section?.extra?.master as { letter: string; title: string; text: string }[] | undefined)?.length
       ? (section?.extra?.master as { letter: string; title: string; text: string }[])
@@ -57,7 +57,7 @@ export function AboutPageClient() {
       <section className="relative min-h-[70vh] overflow-hidden bg-mkos-ink text-white">
         <Image
           src={section?.media_url ?? "/images/products/abeni-boubou.jpg"}
-          alt="MKOS"
+          alt="MKoS"
           fill
           priority
           className="object-cover opacity-45"
@@ -103,7 +103,7 @@ export function AboutPageClient() {
                 (section?.extra?.secondary_image as string | undefined) ||
                 "/images/products/rolly-set.jpg"
               }
-              alt="MKOS craftsmanship"
+              alt="MKoS craftsmanship"
               fill
               className="object-cover"
               sizes="(max-width: 1024px) 100vw, 45vw"
@@ -268,7 +268,7 @@ export function AboutPageClient() {
               label="Instagram"
               value="@shopmykindofstyle"
               href={IG_MAIN}
-              hint="MKOS main page"
+              hint="MKoS main page"
             />
             <ContactBox
               label="Instagram · Men"

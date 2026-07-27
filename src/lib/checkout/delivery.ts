@@ -22,7 +22,7 @@ export const DELIVERY_FEE_NOTE =
   "Home delivery (via our dispatch riders) and international delivery attract additional charges, which are separate from the cost of your orders and will be communicated and paid before delivery.";
 
 export const STUDIO_PICKUP_ADDRESS =
-  "MKOS Studio · 1, Ade Adedeji Close, Ayo Babatunde Crescent, Oniru, Lagos, Nigeria";
+  "MKoS Studio · 1, Ade Adedeji Close, Ayo Babatunde Crescent, Oniru, Lagos, Nigeria";
 
 export function deliveryMethodLabel(method?: string | null) {
   return DELIVERY_METHODS.find((m) => m.value === method)?.label ?? method ?? "—";

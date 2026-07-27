@@ -40,7 +40,7 @@ function shell(title: string, intro: string, rowsHtml: string, footerNote: strin
 <body style="margin:0;padding:0;background:#fafafa;font-family:Georgia,'Times New Roman',serif;">
   <div style="max-width:640px;margin:0 auto;padding:40px 20px;">
     <div style="background:#111;color:#fff;padding:28px 32px;">
-      <p style="margin:0;font-size:11px;letter-spacing:0.28em;text-transform:uppercase;opacity:0.65;">MKOS Experience</p>
+      <p style="margin:0;font-size:11px;letter-spacing:0.28em;opacity:0.65;">MKoS Experience</p>
       <h1 style="margin:12px 0 0;font-size:26px;font-weight:500;letter-spacing:-0.02em;">${escapeHtml(title)}</h1>
     </div>
     <div style="background:#fff;padding:32px;border:1px solid rgba(17,17,17,0.08);">
@@ -59,7 +59,7 @@ export function adminExperienceEmailHtml(p: ExperienceInquiryPayload) {
   const title = isGlam ? "Full Glam consultation request" : "Studio content interest";
   const intro = isGlam
     ? "A client wants to book a consultation for the Full Glam Experience."
-    : "A client shared their comfort preferences for MKOS Experience studio content.";
+    : "A client shared their comfort preferences for MKoS Experience studio content.";
 
   const rows = isGlam
     ? [
@@ -89,12 +89,12 @@ export function clientExperienceEmailHtml(p: ExperienceInquiryPayload) {
   const isGlam = p.kind === "full_glam";
   const title = isGlam ? "We received your Full Glam request" : "Thank you for sharing your preference";
   const intro = isGlam
-    ? "The MKOS studio has your Full Glam consultation request. We’ll reach out to schedule your appointment and walk through hair, makeup, gele, and outfit together."
-    : "Thank you for telling us how you’d like to be included in MKOS Experience. When you visit the studio, we’ll honour your preferences — so the vibe stays right for you.";
+    ? "The MKoS studio has your Full Glam consultation request. We’ll reach out to schedule your appointment and walk through hair, makeup, gele, and outfit together."
+    : "Thank you for telling us how you’d like to be included in MKoS Experience. When you visit the studio, we’ll honour your preferences — so the vibe stays right for you.";
 
   const rows = [
     row("Name", p.fullName),
-    row("Request", isGlam ? "Full Glam Experience" : "MKOS Experience content"),
+    row("Request", isGlam ? "Full Glam Experience" : "MKoS Experience content"),
   ].join("");
 
   return shell(

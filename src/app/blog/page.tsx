@@ -9,9 +9,9 @@ export const revalidate = 300;
 export const metadata: Metadata = {
   title: "Journal",
   description:
-    "MKOS Journal — stories on craft, style, African heritage, and the MKoS MASTER Standard.",
+    "MKoS Journal — stories on craft, style, African heritage, and the MKoS MASTER Standard.",
   openGraph: {
-    title: "MKOS Journal",
+    title: "MKoS Journal",
     description: "Stories from the house — craft, culture, and timeless style.",
   },
 };

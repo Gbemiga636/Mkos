@@ -22,7 +22,7 @@ export function orderNotifyEmail() {
 }
 
 export function resendFrom() {
-  return process.env.RESEND_FROM_EMAIL || "MKOS <onboarding@resend.dev>";
+  return process.env.RESEND_FROM_EMAIL || "MKoS <onboarding@resend.dev>";
 }
 
 export type PaystackInitResponse = {

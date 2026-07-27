@@ -373,7 +373,7 @@ export function VisualWebsiteEditor() {
             <iframe
               key={`${pageId}-${device}`}
               ref={iframeRef}
-              title="MKOS preview"
+              title="MKoS preview"
               src={previewSrc}
               className="h-full w-full bg-white"
             />

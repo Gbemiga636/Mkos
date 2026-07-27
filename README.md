@@ -1,4 +1,4 @@
-# MKOS
+# MKoS
 
 A luxury digital shopping experience — cinematic, editorial, and immersive.
 

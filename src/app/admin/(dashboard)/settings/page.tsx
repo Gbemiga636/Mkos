@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 export default function SettingsPage() {
   const [form, setForm] = useState({
-    brand_name: "MKOS",
+    brand_name: "MKoS",
     tagline: "",
     logo_url: "",
     currency: "NGN",
@@ -21,7 +21,7 @@ export default function SettingsPage() {
       .then((d) => {
         if (d.settings) {
           setForm({
-            brand_name: d.settings.brand_name ?? "MKOS",
+            brand_name: d.settings.brand_name ?? "MKoS",
             tagline: d.settings.tagline ?? "",
             logo_url: d.settings.logo_url ?? "",
             currency: d.settings.currency ?? "NGN",

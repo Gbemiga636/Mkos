@@ -11,7 +11,7 @@ export const BRAND_VISION =
 export const MASTER_INTRO =
   "At MKoS, our name is more than a brand—it is our philosophy. MKoS defines who we are. MASTER defines how we work. Together, they form the MKoS MASTER Standard—the principles that guide every decision, every design, every relationship, and every client experience.";
 
-export const MKOS_PILLARS = [
+export const MKoS_PILLARS = [
   {
     letter: "M",
     title: "Mastery",
@@ -68,13 +68,13 @@ export const MASTER_PILLARS = [
 ] as const;
 
 export const BRAND_STORY_BODY = [
-  "MKOS (My Kind of Style) is a Nigerian contemporary fashion brand dedicated to creating timeless luxury fashion for individuals who appreciate exceptional craftsmanship, refined style, and cultural authenticity.",
-  "More than a fashion label, MKOS is a lifestyle brand that seamlessly blends contemporary design with African heritage — elegant, sophisticated, and distinctive.",
+  "MKoS (My Kind of Style) is a Nigerian contemporary fashion brand dedicated to creating timeless luxury fashion for individuals who appreciate exceptional craftsmanship, refined style, and cultural authenticity.",
+  "More than a fashion label, MKoS is a lifestyle brand that seamlessly blends contemporary design with African heritage — elegant, sophisticated, and distinctive.",
   "The MKoS MASTER Standard defines our core values: MKoS defines who we are; MASTER defines how we work.",
 ].join("\n\n");
 
 /** Homepage / CMS teaser values = MKoS pillars */
-export const BRAND_TEASER_VALUES = MKOS_PILLARS.map((p) => ({
+export const BRAND_TEASER_VALUES = MKoS_PILLARS.map((p) => ({
   title: `${p.letter} — ${p.title}`,
   text: p.text,
 }));

@@ -184,7 +184,7 @@ export function ExperiencePageClient() {
       <section className="relative min-h-[85vh] overflow-hidden bg-mkos-ink text-white">
         <Image
           src="/images/products/puzzle-dress.jpg"
-          alt="MKOS Experience"
+          alt="MKoS Experience"
           fill
           priority
           className="object-cover opacity-40"
@@ -203,7 +203,7 @@ export function ExperiencePageClient() {
             transition={{ delay: 0.06 }}
             className="mt-5 max-w-4xl font-display text-5xl leading-[0.95] font-medium tracking-tight sm:text-6xl lg:text-8xl"
           >
-            MKOS <span className="italic">Experience</span>
+            MKoS <span className="italic">Experience</span>
           </motion.h1>
           <motion.p
             {...fade}
@@ -240,7 +240,7 @@ export function ExperiencePageClient() {
           </ScrollReveal>
           <ScrollReveal y={20} delay={80}>
             <p className="text-base leading-relaxed text-mkos-muted sm:text-lg">
-              Tell us how you’d like to be included in MKOS Experience content — or book a
+              Tell us how you’d like to be included in MKoS Experience content — or book a
               consultation for Full Glam. Your answers go straight to the house, so when you
               arrive the vibe is already right.
             </p>
@@ -257,7 +257,7 @@ export function ExperiencePageClient() {
                 Content
               </p>
               <h2 className="mt-4 font-display text-4xl font-medium tracking-tight sm:text-5xl">
-                Be part of MKOS Experience
+                Be part of MKoS Experience
               </h2>
               <p className="mt-6 max-w-md text-sm leading-relaxed text-mkos-muted sm:text-base">
                 Clients come to the studio and we capture the real experience — fittings, moments,

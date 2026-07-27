@@ -1,4 +1,4 @@
-# MKOS CMS Schema — run once in Supabase SQL Editor
+# MKoS CMS Schema — run once in Supabase SQL Editor
 -- Project: https://hnlhrdtsjwkythqcbmbz.supabase.co
 
 create extension if not exists "pgcrypto";
@@ -6,7 +6,7 @@ create extension if not exists "pgcrypto";
 -- Site-wide settings (logo, currency, brand copy)
 create table if not exists public.site_settings (
   id text primary key default 'main',
-  brand_name text not null default 'MKOS',
+  brand_name text not null default 'MKoS',
   tagline text,
   logo_url text,
   currency text not null default 'NGN',

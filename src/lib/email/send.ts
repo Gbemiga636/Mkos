@@ -33,7 +33,7 @@ export async function sendOrderEmails(order: OrderEmailPayload) {
     resend.emails.send({
       from,
       to: order.email,
-      subject: `Order confirmed · ${order.reference} · MKOS`,
+      subject: `Order confirmed · ${order.reference} · MKoS`,
       html: customerHtml,
     }),
     resend.emails.send({
@@ -62,7 +62,7 @@ export async function sendOrderEmails(order: OrderEmailPayload) {
   return { sent: errors.length < 2, errors };
 }
 
-/** Admin alert + client confirmation for MKOS Experience inquiries */
+/** Admin alert + client confirmation for MKoS Experience inquiries */
 export async function sendExperienceInquiryEmails(inquiry: ExperienceInquiryPayload) {
   const resend = getResend();
   if (!resend) {
@@ -75,10 +75,10 @@ export async function sendExperienceInquiryEmails(inquiry: ExperienceInquiryPayl
   const isGlam = inquiry.kind === "full_glam";
   const adminSubject = isGlam
     ? `Full Glam consultation · ${inquiry.fullName}`
-    : `MKOS Experience content · ${inquiry.fullName}`;
+    : `MKoS Experience content · ${inquiry.fullName}`;
   const clientSubject = isGlam
-    ? `Your Full Glam request · MKOS`
-    : `Your MKOS Experience preference · MKOS`;
+    ? `Your Full Glam request · MKoS`
+    : `Your MKoS Experience preference · MKoS`;
 
   const results = await Promise.allSettled([
     resend.emails.send({

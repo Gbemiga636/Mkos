@@ -103,7 +103,7 @@ function shell(opts: {
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border:1px solid ${BORDER};">
           <tr>
             <td style="padding:28px 32px 18px;border-bottom:1px solid ${BORDER};">
-              <div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:0.35em;text-transform:uppercase;color:${ACCENT};">MKOS</div>
+              <div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:0.28em;color:${ACCENT};">MKoS</div>
               <div style="font-family:Georgia,'Times New Roman',serif;font-size:28px;margin-top:10px;color:${INK};">${escapeHtml(opts.title)}</div>
               <div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:${MUTED};margin-top:8px;">${escapeHtml(opts.eyebrow)}</div>
             </td>
@@ -138,7 +138,7 @@ export function customerOrderEmailHtml(order: OrderEmailPayload) {
       Dear ${escapeHtml(order.customerName.split(" ")[0] || "client")},
     </p>
     <p style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.7;color:${MUTED};margin:0 0 24px;">
-      Thank you for your order with MKOS. Your payment was received successfully.
+      Thank you for your order with MKoS. Your payment was received successfully.
       We’re preparing your pieces with the same care we put into every atelier finish.
     </p>
 
@@ -196,7 +196,7 @@ export function customerOrderEmailHtml(order: OrderEmailPayload) {
   `;
 
   return shell({
-    preheader: `Your MKOS order ${order.reference} is confirmed.`,
+    preheader: `Your MKoS order ${order.reference} is confirmed.`,
     title: "Order confirmed",
     eyebrow: "Payment received",
     bodyHtml: body,
@@ -275,7 +275,7 @@ export function adminOrderEmailHtml(order: OrderEmailPayload) {
     title: "New order paid",
     eyebrow: "Admin alert",
     bodyHtml: body,
-    footerNote: "Sent automatically from the MKOS storefront when Paystack confirms payment.",
+    footerNote: "Sent automatically from the MKoS storefront when Paystack confirms payment.",
   });
 }
 

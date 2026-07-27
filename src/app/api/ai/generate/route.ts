@@ -58,7 +58,7 @@ export async function POST(req: Request) {
         : field === "description"
           ? "Focus ONLY on description: 2–3 refined sentences for the product page. Return empty strings for tagline and story."
           : field === "story"
-            ? "Focus ONLY on story: 2–4 sentences in MKOS brand voice. Return empty strings for tagline and description."
+            ? "Focus ONLY on story: 2–4 sentences in MKoS brand voice. Return empty strings for tagline and description."
             : "Generate tagline, description, story, and functionality.";
 
     const openai = getOpenAI();

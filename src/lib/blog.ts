@@ -28,7 +28,7 @@ function mapPost(row: Record<string, unknown>): BlogPost {
     excerpt: row.excerpt != null ? String(row.excerpt) : null,
     body: row.body != null ? String(row.body) : null,
     cover_image: row.cover_image != null ? String(row.cover_image) : null,
-    author_name: row.author_name != null ? String(row.author_name) : "MKOS",
+    author_name: row.author_name != null ? String(row.author_name) : "MKoS",
     tags: Array.isArray(tags) ? tags.map(String) : [],
     status: String(row.status ?? "draft"),
     reading_time: row.reading_time != null ? Number(row.reading_time) : 3,

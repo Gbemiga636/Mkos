@@ -1,4 +1,4 @@
--- MKOS Admin Platform + Analytics
+-- MKoS Admin Platform + Analytics
 -- Run in Supabase SQL Editor after 001–003
 
 create extension if not exists "pgcrypto";
@@ -9,7 +9,7 @@ create table if not exists public.admin_accounts (
   email text not null unique,
   password_hash text,
   password_set_at timestamptz,
-  full_name text default 'MKOS Administrator',
+  full_name text default 'MKoS Administrator',
   role text not null default 'owner' check (role in ('owner', 'editor', 'viewer')),
   must_set_password boolean not null default true,
   failed_logins int not null default 0,
@@ -20,7 +20,7 @@ create table if not exists public.admin_accounts (
 );
 
 insert into public.admin_accounts (email, must_set_password, full_name, role)
-values ('mkosfashionhouse@gmail.com', true, 'MKOS House', 'owner')
+values ('mkosfashionhouse@gmail.com', true, 'MKoS House', 'owner')
 on conflict (email) do nothing;
 
 create table if not exists public.admin_sessions (
@@ -146,7 +146,7 @@ create table if not exists public.blog_posts (
   excerpt text,
   body text,
   cover_image text,
-  author_name text default 'MKOS',
+  author_name text default 'MKoS',
   tags jsonb not null default '[]'::jsonb,
   status text not null default 'draft' check (status in ('draft', 'published', 'scheduled')),
   reading_time int default 3,
@@ -179,7 +179,7 @@ alter table public.blog_posts enable row level security;
 
 insert into public.admin_notifications (title, body, kind)
 select * from (values
-  ('Welcome to MKOS Admin', 'Your control center is ready. Set your password to secure the house.', 'system'),
+  ('Welcome to MKoS Admin', 'Your control center is ready. Set your password to secure the house.', 'system'),
   ('CMS connected', 'Products, content, and media sync with the live storefront.', 'system')
 ) as v(title, body, kind)
 where not exists (select 1 from public.admin_notifications limit 1);

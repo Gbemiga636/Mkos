@@ -1,4 +1,4 @@
-# MKOS Supabase CMS
+# MKoS Supabase CMS
 
 All storefront content (products, collections, section text, videos, images, FAQs, reviews, nav, newsletter) is loaded from Supabase so a future admin panel can edit everything.
 

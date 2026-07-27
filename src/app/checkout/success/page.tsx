@@ -129,7 +129,7 @@ function SuccessInner() {
                 ✓
               </motion.div>
               <p className="mt-6 font-display text-[11px] tracking-[0.35em] text-white/55 uppercase">
-                MKOS
+                MKoS
               </p>
               <h1 className="mt-3 font-display text-3xl font-medium tracking-tight sm:text-5xl">
                 Order confirmed
@@ -192,7 +192,7 @@ function SuccessInner() {
               <p className="mt-6 text-xs leading-relaxed text-mkos-muted">
                 Studio enquiries:{" "}
                 <Link href="/about#contact" className="underline underline-offset-2">
-                  Contact MKOS
+                  Contact MKoS
                 </Link>
                 . Keep this reference for WhatsApp follow-ups.
               </p>
