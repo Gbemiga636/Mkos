@@ -76,6 +76,25 @@ video {
   display: block;
 }
 
+/* Hide native play button / controls on ambient storefront videos */
+.mkos-autoplay-video {
+  pointer-events: none;
+  object-fit: cover;
+}
+
+.mkos-autoplay-video::-webkit-media-controls,
+.mkos-autoplay-video::-webkit-media-controls-enclosure,
+.mkos-autoplay-video::-webkit-media-controls-panel,
+.mkos-autoplay-video::-webkit-media-controls-start-playback-button,
+.mkos-autoplay-video::-webkit-media-controls-overlay-play-button {
+  display: none !important;
+  -webkit-appearance: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
 .font-display {
   font-family: var(--font-display);
 }
