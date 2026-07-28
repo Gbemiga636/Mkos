@@ -52,20 +52,28 @@ export function AutoplayVideo({
 
     let inView = !whenVisible;
     let cancelled = false;
-    let retryTimer = 0;
+    const retryTimers: number[] = [];
 
     const tryPlay = () => {
       if (cancelled || !inView) return;
       void tryPlayInline(el);
     };
 
+    const clearRetries = () => {
+      while (retryTimers.length) {
+        window.clearTimeout(retryTimers.pop());
+      }
+    };
+
     const scheduleRetries = () => {
-      window.clearTimeout(retryTimer);
+      clearRetries();
       // iOS often needs staggered retries after loader + first paint.
       [0, 120, 350, 800, 1500, 3000].forEach((ms) => {
-        window.setTimeout(() => {
-          if (!cancelled) tryPlay();
-        }, ms);
+        retryTimers.push(
+          window.setTimeout(() => {
+            if (!cancelled) tryPlay();
+          }, ms)
+        );
       });
     };
 
@@ -115,7 +123,7 @@ export function AutoplayVideo({
 
     return () => {
       cancelled = true;
-      window.clearTimeout(retryTimer);
+      clearRetries();
       unregister();
       el.removeEventListener("loadedmetadata", tryPlay);
       el.removeEventListener("loadeddata", tryPlay);
