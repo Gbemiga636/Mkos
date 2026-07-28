@@ -69,7 +69,7 @@ export const MASTER_PILLARS = [
   {
     letter: "S",
     title: "Sustainability",
-    text: "We believe true sustainability begins with intentional design. We create versatile, timeless pieces that can be styled in multiple ways, worn across occasions, and cherished for years—encouraging conscious fashion over fast fashion while respecting our people, our craft, and our environment.",
+    text: "We believe true sustainability begins with intentional design. We create versatile, timeless styles that can be styled in multiple ways, worn across occasions, and cherished for years—encouraging conscious fashion over fast fashion while respecting our people, our craft, and our environment.",
   },
   {
     letter: "T",

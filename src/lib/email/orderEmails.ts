@@ -139,7 +139,7 @@ export function customerOrderEmailHtml(order: OrderEmailPayload) {
     </p>
     <p style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.7;color:${MUTED};margin:0 0 24px;">
       Thank you for your order with MKoS. Your payment was received successfully.
-      We’re preparing your pieces with the same care we put into every atelier finish.
+      We’re preparing your styles with the same care we put into every atelier finish.
     </p>
 
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${WARM};margin-bottom:24px;">

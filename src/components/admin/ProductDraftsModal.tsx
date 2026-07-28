@@ -173,15 +173,7 @@ export function ProductDraftsModal({
                   >
                     <option value="women-rtw">Women’s RTW</option>
                     <option value="men-rtw">Men’s RTW</option>
-                    <option value="women-bespoke">Women’s Bespoke</option>
-                    <option value="men-bespoke">Men’s Bespoke</option>
-                    <option value="aso-ebi">Aso Ebi</option>
-                    <option value="occasion">Occasion Wear</option>
-                    <option value="registry-gowns">Registry Gowns</option>
-                    <option value="reception">Reception Dresses</option>
-                    <option value="bridesmaids">Bridesmaids</option>
-                    <option value="grooms">Grooms</option>
-                    <option value="bridal-party">Family & Bridal Party</option>
+                    <option value="boubou">Boubou</option>
                   </select>
                 </label>
 

@@ -40,51 +40,14 @@ export const categories = [
     description: "Contemporary menswear blending modern utility with African heritage.",
   },
   {
-    slug: "women-bespoke",
-    name: "Women’s Bespoke",
-    description: "Made-to-measure and couture crafted for her individuality.",
-  },
-  {
-    slug: "men-bespoke",
-    name: "Men’s Bespoke",
-    description: "Bespoke menswear tailored with precision and cultural authenticity.",
-  },
-  {
-    slug: "aso-ebi",
-    name: "Aso Ebi",
-    description: "Coordinated ensembles for celebrations and family occasions.",
-  },
-  {
-    slug: "occasion",
-    name: "Occasion Wear",
-    description: "Refined looks for celebrations, dinners, and standout moments.",
-  },
-  {
-    slug: "registry-gowns",
-    name: "Registry Gowns",
-    description: "Bridal registry looks crafted for the ceremony.",
-  },
-  {
-    slug: "reception",
-    name: "Reception Dresses",
-    description: "Reception silhouettes for the celebration after the vows.",
-  },
-  {
-    slug: "bridesmaids",
-    name: "Bridesmaids",
-    description: "Coordinated elegance for the bridal party.",
-  },
-  {
-    slug: "grooms",
-    name: "Grooms",
-    description: "Refined looks for the groom and groomsmen.",
-  },
-  {
-    slug: "bridal-party",
-    name: "Family & Bridal Party",
-    description: "Thoughtfully crafted pieces for family and wedding guests.",
+    slug: "boubou",
+    name: "Boubou",
+    description: "Effortless boubou silhouettes — refined, comfortable, and ready to style.",
   },
 ] as const;
+
+/** Categories shown under Ready-to-Wear on the shop */
+export const RTW_CATEGORY_SLUGS = ["women-rtw", "men-rtw", "boubou"] as const;
 
 export const collections = [
   {
@@ -121,7 +84,7 @@ export const products: Product[] = [
       "The Abeni Boubou is made for women who want presence without fuss. Soft structure, generous movement, and a silhouette that feels intentional every time you put it on.",
     price: 0,
     images: ["/images/products/abeni-boubou.jpg"],
-    category: "women-rtw",
+    category: "boubou",
     collection: "ready-to-wear",
     colors: [
       { name: "Ink", hex: "#111111" },
@@ -408,7 +371,7 @@ export const reviews = [
 
 export const faqs = [
   {
-    q: "Do you offer custom and bespoke pieces?",
+    q: "Do you offer custom and bespoke styles?",
     a: "Yes. Within Bespoke, MKoS creates Custom/Bespoke for women and men, Aso Ebi, and Occasion Wear — alongside Ready-to-Wear and Bridal. Visit our Oniru studio or message us on WhatsApp to begin.",
   },
   {
@@ -417,11 +380,11 @@ export const faqs = [
   },
   {
     q: "How do I place an order or enquire about pricing?",
-    a: "Browse the shop and add pieces to your cart, or contact us on WhatsApp (08143173661 / 08104643052) or email mkosfashionhouse@gmail.com. Pricing will also be available via the admin catalogue as it is published.",
+    a: "Browse the shop and add styles to your cart, or contact us on WhatsApp (08143173661 / 08104643052) or email mkosfashionhouse@gmail.com. Pricing will also be available via the admin catalogue as it is published.",
   },
   {
     q: "Do you design for men and bridal?",
-    a: "Yes. MKoS Men offers contemporary menswear, and MKoS Bridal creates pieces for brides, grooms, and wedding guests.",
+    a: "Yes. MKoS Men offers contemporary menswear, and MKoS Bridal creates collections for brides, grooms, and wedding guests.",
   },
   {
     q: "Where can I follow MKoS?",

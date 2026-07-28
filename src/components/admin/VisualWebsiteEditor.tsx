@@ -96,9 +96,10 @@ const PAGES = [
       "campaign",
       "editorial",
       "featured_video",
+        "experience_video",
+        "bespoke_video",
       "featured_collections",
       "new_arrivals",
-      "trending",
       "best_sellers",
       "carousel",
       "categories",
@@ -120,6 +121,18 @@ const PAGES = [
     label: "Shop",
     path: "/shop",
     keys: ["shop", "footer"],
+  },
+  {
+    id: "experience",
+    label: "Experience",
+    path: "/experience",
+    keys: ["experience_video", "footer"],
+  },
+  {
+    id: "bespoke",
+    label: "Bespoke",
+    path: "/bespoke",
+    keys: ["bespoke_video", "footer"],
   },
 ] as const;
 

@@ -1,6 +1,6 @@
 import { Hero } from "@/components/home/Hero";
 import { FeaturedCollection } from "@/components/home/FeaturedCollection";
-import { NewArrivals, Trending, BestSellers } from "@/components/home/ProductRails";
+import { NewArrivals, BestSellers } from "@/components/home/ProductRails";
 import { CampaignSection } from "@/components/home/CampaignSection";
 import { EditorialStory, FeaturedVideo } from "@/components/home/Editorial";
 import {
@@ -12,6 +12,7 @@ import {
   FAQ,
   Marquee,
 } from "@/components/home/MoreSections";
+import { VideoShowcase } from "@/components/home/VideoShowcase";
 import { EditableSection } from "@/components/cms/EditableSection";
 
 export default function HomePage() {
@@ -29,9 +30,6 @@ export default function HomePage() {
       <EditableSection cmsKey="new_arrivals" label="New arrivals">
         <NewArrivals />
       </EditableSection>
-      <EditableSection cmsKey="trending" label="Trending">
-        <Trending />
-      </EditableSection>
       <EditableSection cmsKey="best_sellers" label="Best sellers">
         <BestSellers />
       </EditableSection>
@@ -41,6 +39,7 @@ export default function HomePage() {
       <EditableSection cmsKey="editorial" label="Editorial">
         <EditorialStory />
       </EditableSection>
+      <VideoShowcase />
       <EditableSection cmsKey="brand_story" label="Brand story">
         <BrandStory />
       </EditableSection>

@@ -4,7 +4,7 @@ import { ExperiencePageClient } from "@/components/mkos-experience/ExperiencePag
 export const metadata: Metadata = {
   title: "MKoS Experience",
   description:
-    "Join MKoS Experience studio content, or book a Full Glam consultation — hair, makeup, gele, and outfit for your event. Studio in Oniru, Lagos.",
+    "Visit the MKoS studio in Oniru, Lagos — fittings, full glam energy, and the house experience in person. Stop by or message us to plan your visit.",
 };
 
 export default function ExperiencePage() {

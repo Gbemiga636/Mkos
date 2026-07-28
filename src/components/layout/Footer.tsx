@@ -11,7 +11,7 @@ const IG_MEN = "https://www.instagram.com/mkosformen";
 const WHATSAPP = "https://wa.me/2348143173661";
 
 export function Footer() {
-  const { settings, collections } = useCms();
+  const { settings } = useCms();
   const footer = useContent("footer");
 
   const columns = [
@@ -19,10 +19,8 @@ export function Footer() {
       title: "Explore",
       links: [
         { href: "/shop", label: "All Products" },
-        ...collections.map((c) => ({
-          href: `/shop?collection=${c.slug}`,
-          label: c.name,
-        })),
+        { href: "/shop?collection=ready-to-wear", label: "Ready-to-Wear" },
+        { href: "/bespoke", label: "Bespoke / Custom Wear" },
         { href: "/shop?filter=new", label: "New Arrivals" },
       ],
     },
@@ -40,7 +38,7 @@ export function Footer() {
       links: [
         { href: "/about", label: "About MKoS" },
         { href: "/experience", label: "MKoS Experience" },
-        { href: "/style-brief", label: "Style Brief" },
+        { href: "/bespoke", label: "Bespoke / Custom Wear" },
         { href: "/blog", label: "Journal" },
         { href: "/about#contact", label: "Contact" },
         { href: "/shop?collection=ready-to-wear&category=men-rtw", label: "MKoS Men" },

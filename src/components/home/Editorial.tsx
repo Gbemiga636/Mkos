@@ -9,12 +9,11 @@ export function EditorialStory() {
   const editorial = useContent("editorial");
   const lines = (() => {
     const fromCms = editorial?.extra?.lines as string[] | undefined;
-    if (fromCms?.some((l) => /MASTER|Understand STYLE/i.test(l))) return fromCms;
+    if (fromCms?.length) return fromCms;
     return [
-      "For Those Who Understand STYLE.",
-      "MKoS defines who we are.",
-      "MASTER defines how we work.",
-      "Together—the MKoS MASTER Standard.",
+      "Timeless by design.",
+      "MKoS fashion moves with time,",
+      "revisiting trends with intention.",
     ];
   })();
 

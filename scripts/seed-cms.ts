@@ -222,9 +222,9 @@ async function main() {
       eyebrow: "My Kind of Style",
       title: "For Those Who\nUnderstand STYLE.",
       subtitle:
-        "Nigerian contemporary fashion — timeless pieces that blend modern design with African heritage.",
-      cta_label: "Shop the collection",
-      cta_href: "/shop",
+        "Nigerian contemporary fashion — timeless styles that blend modern design with African heritage.",
+      cta_label: "Our services",
+      cta_href: "/#services",
       media_url: "/videos/hero-bg.mp4",
       media_type: "video",
       extra: { secondary_cta_label: "Our story", secondary_cta_href: "/about" },
@@ -251,10 +251,9 @@ async function main() {
       media_type: "image",
       extra: {
         lines: [
-          "For Those Who Understand STYLE.",
-          "MKoS defines who we are.",
-          "MASTER defines how we work.",
-          "Together—the MKoS MASTER Standard.",
+          "Timeless by design.",
+          "MKoS fashion moves with time,",
+          "revisiting trends with intention.",
         ],
       },
       sort_order: 2,
@@ -340,7 +339,7 @@ async function main() {
           {
             letter: "S",
             title: "Sustainability",
-            text: "We believe true sustainability begins with intentional design. We create versatile, timeless pieces that can be styled in multiple ways, worn across occasions, and cherished for years—encouraging conscious fashion over fast fashion while respecting our people, our craft, and our environment.",
+            text: "We believe true sustainability begins with intentional design. We create versatile, timeless styles that can be styled in multiple ways, worn across occasions, and cherished for years—encouraging conscious fashion over fast fashion while respecting our people, our craft, and our environment.",
           },
           {
             letter: "T",
@@ -366,7 +365,8 @@ async function main() {
       section: "new_arrivals",
       eyebrow: "New Arrivals",
       title: "Fresh from the studio.",
-      subtitle: "The latest Ready-to-Wear and MKoS Men pieces — crafted with care and presence.",
+      subtitle:
+        "The latest ready to wear collections crafted with care and precision for both men and women.",
       sort_order: 5,
     },
     {
@@ -381,16 +381,16 @@ async function main() {
       key: "best_sellers",
       section: "best_sellers",
       eyebrow: "Best Sellers",
-      title: "Pieces that stay with you.",
+      title: "Styles that stay with you.",
       sort_order: 7,
     },
     {
       key: "featured_collections",
       section: "featured_collections",
       eyebrow: "Collections",
-      title: "Ready-to-Wear. Bespoke. Bridal.",
+      title: "Designed for Every Defining Moment.",
       subtitle:
-        "Three ways to experience MKoS—discover timeless Ready-to-Wear, expertly crafted Bespoke creations, and luxurious Bridal designs, each thoughtfully made for those who understand style.",
+        "Ready-to-Wear. Bespoke. Bridal — three ways to experience MKoS: discover timeless Ready-to-Wear, expertly crafted Bespoke creations, and luxurious Bridal designs, each thoughtfully made for those who understand style.",
       sort_order: 8,
     },
     {
@@ -407,7 +407,7 @@ async function main() {
       eyebrow: "Within the collections",
       title: "Find your kind of style.",
       subtitle:
-        "Women’s and Men’s RTW, Bespoke, Aso Ebi, Occasion Wear, and Bridal — within Ready-to-Wear, Bespoke, and Bridal.",
+        "Women’s RTW, Men’s RTW, and Boubou — within Ready-to-Wear.",
       sort_order: 10,
     },
     {
@@ -422,7 +422,7 @@ async function main() {
       section: "instagram",
       eyebrow: "@shopmykindofstyle",
       title: "Life in the edit.",
-      subtitle: "Follow MKoS and MKoS Men on Instagram.",
+      subtitle: "For those who understand style.",
       cta_label: "Follow on Instagram",
       cta_href: "https://www.instagram.com/shopmykindofstyle",
       sort_order: 12,
@@ -455,6 +455,32 @@ async function main() {
       title: "The full collection.",
       subtitle: "Women, men, and bridal — filter by collection or category. Pricing coming via admin.",
       sort_order: 16,
+    },
+    {
+      key: "experience_video",
+      section: "experience_video",
+      eyebrow: "Studio · Oniru",
+      title: "Experience with you",
+      subtitle: "Step inside the house.",
+      body: "Luxury is more than what you wear-it's how you feel.",
+      cta_label: "Explore",
+      cta_href: "/experience",
+      media_url: "/videos/experience-1.mp4",
+      media_type: "video",
+      sort_order: 17,
+    },
+    {
+      key: "bespoke_video",
+      section: "bespoke_video",
+      eyebrow: "Bespoke / Custom Wear",
+      title: "Made for your moment — not the rack",
+      subtitle: "Made for your moment.",
+      body: "Begin your atelier brief. Share the occasion, the silhouette, and the services you want. The house crafts from there.",
+      cta_label: "Explore",
+      cta_href: "/bespoke",
+      media_url: "/videos/bespoke-1.mp4",
+      media_type: "video",
+      sort_order: 18,
     },
   ];
 

@@ -12,6 +12,7 @@ import { useCursorLabel } from "@/hooks/useCursorLabel";
 import { useCms, useContent } from "@/lib/cms/CmsProvider";
 import { BRAND_STORY_BODY, BRAND_TEASER_VALUES } from "@/lib/brand";
 import { cn } from "@/lib/utils";
+import { RTW_CATEGORY_SLUGS } from "@/data/products";
 
 export function CollectionCarousel() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -171,6 +172,9 @@ export function CategoryGrid() {
   const cursor = useCursorLabel("VIEW");
   const { categories, products } = useCms();
   const section = useContent("categories");
+  const rtwCategories = categories.filter((c) =>
+    (RTW_CATEGORY_SLUGS as readonly string[]).includes(c.slug)
+  );
 
   return (
     <section className="bg-mkos-warm px-5 py-28 sm:px-8 lg:px-12">
@@ -181,9 +185,12 @@ export function CategoryGrid() {
           subtitle={section?.subtitle ?? undefined}
         />
         <div className="mt-14 grid gap-4 md:grid-cols-2">
-          {categories.map((cat, i) => {
+          {rtwCategories.map((cat, i) => {
             const img =
-              cat.image_url || products[i * 2]?.images[0] || products[0]?.images[0] || "";
+              cat.image_url ||
+              products.find((p) => p.category === cat.slug)?.images?.[0] ||
+              products[0]?.images[0] ||
+              "";
             return (
               <ScrollReveal key={cat.slug} y={48} delay={i * 80}>
                 <Link
@@ -469,7 +476,9 @@ export function FAQ() {
 
 export function Marquee() {
   const section = useContent("marquee");
-  const text = section?.body ?? "MKoS · QUIET LUXURY · ATELIER · ESSENTIAL · ";
+  const text =
+    section?.body ??
+    "MKoS · MY KIND OF STYLE · FOR THOSE WHO UNDERSTAND STYLE · MKoS MASTER STANDARD · ";
   return (
     <div className="overflow-hidden border-y border-mkos-border bg-white py-4">
       <motion.div

@@ -76,7 +76,7 @@ export function BestSellers() {
             </ScrollReveal>
             <ScrollReveal y={36} delay={80}>
               <h2 className="mt-4 max-w-2xl font-display text-4xl leading-[1.05] font-medium tracking-tight sm:text-5xl lg:text-6xl">
-                {section?.title ?? "The pieces that never leave."}
+                {section?.title ?? "The styles that never leave."}
               </h2>
             </ScrollReveal>
           </div>

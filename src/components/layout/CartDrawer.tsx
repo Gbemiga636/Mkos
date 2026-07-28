@@ -16,6 +16,7 @@ export function CartDrawer() {
   const removeItem = useCartStore((s) => s.removeItem);
   const { products } = useCms();
   const formatPrice = useFormatPrice();
+  const stylesCount = items.reduce((n, i) => n + i.quantity, 0);
   const subtotalValue = items.reduce((n, i) => n + i.price * i.quantity, 0);
   const spring = useSpring(subtotalValue, { stiffness: 80, damping: 20 });
   const display = useTransform(spring, (v) => formatPrice(Math.round(v)));
@@ -58,7 +59,7 @@ export function CartDrawer() {
               <div>
                 <p className="font-display text-[11px] tracking-[0.28em] uppercase">Your bag</p>
                 <p className="mt-1 text-sm text-mkos-muted">
-                  {items.reduce((n, i) => n + i.quantity, 0)} pieces
+                  {stylesCount} {stylesCount === 1 ? "style" : "styles"}
                 </p>
               </div>
               <button

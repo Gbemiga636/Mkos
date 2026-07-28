@@ -63,7 +63,7 @@ export default function CheckoutPage() {
   async function payWithPaystack() {
     setError("");
     if (!hasPricedItems) {
-      setError("One or more pieces are price-on-request. Message the studio to complete this order.");
+      setError("One or more styles are price-on-request. Message the studio to complete this order.");
       return;
     }
     setPlacing(true);
@@ -408,7 +408,7 @@ export default function CheckoutPage() {
                   </ul>
                   <div className="mt-6 border border-mkos-border bg-mkos-warm/50 p-4 text-sm text-mkos-muted">
                     <p>
-                      You’ll pay for your pieces securely with{" "}
+                      You’ll pay for your styles securely with{" "}
                       <strong className="text-mkos-ink">Paystack</strong>. Delivery fees (if any)
                       are not included in this payment and will be communicated before delivery.
                     </p>

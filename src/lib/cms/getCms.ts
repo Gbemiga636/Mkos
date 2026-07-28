@@ -71,9 +71,16 @@ function dedupeCategories(list: Category[]): Category[] {
 function mapProduct(row: Record<string, unknown>): Product {
   const rawCollection = String(row.collection_slug ?? "");
   const rawCategory = String(row.category_slug ?? "");
+  const slug = String(row.slug ?? "");
+
+  // Immediate storefront fix: ensure Boubou products land under the Boubou RTW category
+  const category =
+    slug === "abeni-boubou" ? "boubou" : normalizeCategorySlug(rawCategory);
+  const collection =
+    slug === "abeni-boubou" ? "ready-to-wear" : normalizeCollectionSlug(rawCollection);
   return {
     id: String(row.id),
-    slug: String(row.slug),
+    slug,
     name: String(row.name),
     tagline: String(row.tagline ?? ""),
     description: String(row.description ?? ""),
@@ -81,8 +88,8 @@ function mapProduct(row: Record<string, unknown>): Product {
     price: Number(row.price),
     compareAt: row.compare_at != null ? Number(row.compare_at) : undefined,
     images: normalizeImages(row.images as string[]),
-    category: normalizeCategorySlug(rawCategory),
-    collection: normalizeCollectionSlug(rawCollection),
+    category,
+    collection,
     colors: (row.colors as Product["colors"]) ?? [],
     sizes: (row.sizes as string[]) ?? [],
     material: String(row.material ?? ""),
@@ -106,8 +113,8 @@ function fallbackSnapshot(): CmsSnapshot {
       title: "For Those Who\nUnderstand STYLE.",
       subtitle:
         "Nigerian contemporary fashion — timeless style that blends modern design with African heritage.",
-      cta_label: "Shop the collection",
-      cta_href: "/shop",
+      cta_label: "Our services",
+      cta_href: "/#services",
       media_url: "/videos/hero-bg.mp4",
       media_type: "video",
       extra: { secondary_cta_label: "Our story", secondary_cta_href: "/about" },
@@ -132,10 +139,9 @@ function fallbackSnapshot(): CmsSnapshot {
       media_type: "image",
       extra: {
         lines: [
-          "For Those Who Understand STYLE.",
-          "MKoS defines who we are.",
-          "MASTER defines how we work.",
-          "Together—the MKoS MASTER Standard.",
+          "Timeless by design.",
+          "MKoS fashion moves with time,",
+          "revisiting trends with intention.",
         ],
       },
     },
@@ -145,6 +151,30 @@ function fallbackSnapshot(): CmsSnapshot {
       eyebrow: "Featured Film",
       title: "MKoS in motion",
       media_url: "/videos/white-space.mp4",
+      media_type: "video",
+    },
+    experience_video: {
+      key: "experience_video",
+      section: "experience_video",
+      eyebrow: "Studio · Oniru",
+      title: "Experience with you",
+      subtitle: "Step inside the house.",
+      body: "Luxury is more than what you wear-it's how you feel.",
+      cta_label: "Explore",
+      cta_href: "/experience",
+      media_url: "/videos/experience-1.mp4",
+      media_type: "video",
+    },
+    bespoke_video: {
+      key: "bespoke_video",
+      section: "bespoke_video",
+      eyebrow: "Bespoke / Custom Wear",
+      title: "Made for your moment — not the rack",
+      subtitle: "Made for your moment.",
+      body: "Begin your atelier brief. Share the occasion, the silhouette, and the services you want. The house crafts from there.",
+      cta_label: "Explore",
+      cta_href: "/bespoke",
+      media_url: "/videos/bespoke-1.mp4",
       media_type: "video",
     },
     brand_story: {
@@ -219,7 +249,7 @@ function fallbackSnapshot(): CmsSnapshot {
           {
             letter: "S",
             title: "Sustainability",
-            text: "We believe true sustainability begins with intentional design. We create versatile, timeless pieces that can be styled in multiple ways, worn across occasions, and cherished for years—encouraging conscious fashion over fast fashion while respecting our people, our craft, and our environment.",
+            text: "We believe true sustainability begins with intentional design. We create versatile, timeless styles that can be worn across occasions, and cherished for years—encouraging conscious fashion over fast fashion while respecting our people, our craft, and our environment.",
           },
           {
             letter: "T",
@@ -244,7 +274,8 @@ function fallbackSnapshot(): CmsSnapshot {
       section: "new_arrivals",
       eyebrow: "New Arrivals",
       title: "Fresh from the studio.",
-      subtitle: "The latest Ready-to-Wear and MKoS Men pieces — crafted with care and presence.",
+      subtitle:
+        "The latest ready to wear collections crafted with care and precision for both men and women.",
     },
     trending: {
       key: "trending",
@@ -257,15 +288,15 @@ function fallbackSnapshot(): CmsSnapshot {
       key: "best_sellers",
       section: "best_sellers",
       eyebrow: "Best Sellers",
-      title: "Pieces that stay with you.",
+      title: "Styles that stay with you.",
     },
     featured_collections: {
       key: "featured_collections",
       section: "featured_collections",
       eyebrow: "Collections",
-      title: "Ready-to-Wear. Bespoke. Bridal.",
+      title: "Designed for Every Defining Moment.",
       subtitle:
-        "Three ways to experience MKoS—discover timeless Ready-to-Wear, expertly crafted Bespoke creations, and luxurious Bridal designs, each thoughtfully made for those who understand style.",
+        "Ready-to-Wear. Bespoke. Bridal — three ways to experience MKoS: discover timeless Ready-to-Wear, expertly crafted Bespoke creations, and luxurious Bridal designs, each thoughtfully made for those who understand style.",
     },
     carousel: {
       key: "carousel",
@@ -279,8 +310,7 @@ function fallbackSnapshot(): CmsSnapshot {
       section: "categories",
       eyebrow: "Within the collections",
       title: "Find your kind of style.",
-      subtitle:
-        "Women’s and Men’s RTW, Bespoke, Aso Ebi, Occasion Wear, and Bridal — within Ready-to-Wear, Bespoke, and Bridal.",
+      subtitle: "Women’s RTW, Men’s RTW, and Boubou — within Ready-to-Wear.",
     },
     reviews: {
       key: "reviews",
@@ -293,7 +323,7 @@ function fallbackSnapshot(): CmsSnapshot {
       section: "instagram",
       eyebrow: "@shopmykindofstyle",
       title: "Life in the edit.",
-      subtitle: "Follow MKoS and MKoS Men on Instagram.",
+      subtitle: "For those who understand style.",
       cta_label: "Follow on Instagram",
       cta_href: "https://www.instagram.com/shopmykindofstyle",
     },
@@ -359,11 +389,10 @@ function fallbackSnapshot(): CmsSnapshot {
       { label: "Home", href: "/", location: "header" },
       { label: "Shop", href: "/shop", location: "header" },
       { label: "Ready-to-Wear", href: "/shop?collection=ready-to-wear", location: "header" },
-      { label: "Bespoke", href: "/shop?collection=bespoke", location: "header" },
-      { label: "Bridal", href: "/shop?collection=bridal", location: "header" },
+      { label: "Bespoke", href: "/bespoke", location: "header" },
+      { label: "Bridal", href: "/#collections", location: "header" },
       { label: "Story", href: "/about", location: "header" },
       { label: "Experience", href: "/experience", location: "header" },
-      { label: "Style Brief", href: "/style-brief", location: "header" },
       { label: "Journal", href: "/blog", location: "header" },
       { label: "Account", href: "/account", location: "header" },
     ],
@@ -440,7 +469,10 @@ async function loadCmsSnapshot(): Promise<CmsSnapshot> {
     const featured = content.featured_collections;
     if (
       featured &&
-      (/Women\.\s*Men/i.test(featured.title || "") || /three paths/i.test(featured.subtitle || ""))
+      (/Women\.\s*Men/i.test(featured.title || "") ||
+        /three paths/i.test(featured.subtitle || "") ||
+        /^Ready-to-Wear\.\s*Bespoke\.\s*Bridal\.?$/i.test(featured.title || "") ||
+        /^Three ways to experience/i.test(featured.subtitle || ""))
     ) {
       content.featured_collections = fallback.content.featured_collections;
     }
@@ -453,6 +485,55 @@ async function loadCmsSnapshot(): Promise<CmsSnapshot> {
     }
     if (content.categories && /Custom, Men/i.test(content.categories.subtitle || "")) {
       content.categories = fallback.content.categories;
+    }
+    if (content.marquee?.body && /craftsmanship|aso\s*oke/i.test(content.marquee.body)) {
+      content.marquee = {
+        ...content.marquee,
+        body: content.marquee.body
+          .replace(/\s*[·•|]\s*craftsmanship\s*/gi, " · ")
+          .replace(/\s*[·•|]\s*aso\s*oke\s*/gi, " · ")
+          .replace(/\bcraftsmanship\b/gi, "")
+          .replace(/\baso\s*oke\b/gi, "")
+          .replace(/\s*·\s*·\s*/g, " · ")
+          .replace(/\s{2,}/g, " ")
+          .trim(),
+      };
+      if (!content.marquee.body || content.marquee.body === "·") {
+        content.marquee = fallback.content.marquee;
+      } else if (!content.marquee.body.endsWith(" · ") && !content.marquee.body.endsWith("· ")) {
+        content.marquee.body = `${content.marquee.body.replace(/\s*·?\s*$/, "")} · `;
+      }
+    }
+
+    // Keep editorial copy aligned with the latest MKoS storefront rules
+    if (content.new_arrivals) {
+      content.new_arrivals.subtitle =
+        "The latest ready to wear collections crafted with care and precision for both men and women.";
+    }
+    if (content.best_sellers) {
+      content.best_sellers.title = "Styles that stay with you.";
+    }
+    if (content.categories) {
+      content.categories.subtitle = "Women’s RTW, Men’s RTW, and Boubou — within Ready-to-Wear.";
+    }
+    if (content.hero) {
+      content.hero.cta_label = "Our services";
+      content.hero.cta_href = "/#services";
+    }
+
+    // Final safety net: remove any legacy "pieces" copy coming from CMS.
+    const replacePieces = (value: unknown): unknown => {
+      if (typeof value === "string") return value.replace(/\bpieces\b/gi, "styles");
+      if (Array.isArray(value)) return value.map(replacePieces);
+      if (value && typeof value === "object") {
+        return Object.fromEntries(
+          Object.entries(value as Record<string, unknown>).map(([k, v]) => [k, replacePieces(v)])
+        );
+      }
+      return value;
+    };
+    for (const key of Object.keys(content)) {
+      content[key] = replacePieces(content[key]) as SiteContentBlock;
     }
 
     const settings: SiteSettings = settingsRes.data
@@ -483,10 +564,15 @@ async function loadCmsSnapshot(): Promise<CmsSnapshot> {
       );
       if (!fromDb.length || !hasNew) return [...fallback.categories];
       const deduped = dedupeCategories(fromDb);
+      // Ensure the RTW filters always include Boubou (even before DB migration/seed)
+      if (!deduped.some((c) => c.slug === "boubou")) {
+        const boubou = fallback.categories.find((c) => c.slug === "boubou");
+        if (boubou) deduped.push(boubou);
+      }
       return deduped.length ? deduped : [...fallback.categories];
     })();
 
-    const collections: Collection[] = (() => {
+    let collections: Collection[] = (() => {
       const fromDb =
         collectionsRes.data?.map((c) => ({
           slug: c.slug,
@@ -507,6 +593,18 @@ async function loadCmsSnapshot(): Promise<CmsSnapshot> {
       }
       return fromDb;
     })();
+
+    // Ensure collection cover images match an actual product in that collection
+    const firstProductImageByCollection = new Map<string, string>();
+    for (const p of products) {
+      if (!firstProductImageByCollection.has(p.collection) && p.images?.[0]) {
+        firstProductImageByCollection.set(p.collection, p.images[0]);
+      }
+    }
+    collections = collections.map((c) => {
+      const img = firstProductImageByCollection.get(c.slug);
+      return img ? { ...c, image: img } : c;
+    });
 
     const reviews: Review[] =
       reviewsRes.data?.map((r) => ({
@@ -543,15 +641,21 @@ async function loadCmsSnapshot(): Promise<CmsSnapshot> {
           if (n.href === "/shop?collection=women") {
             return [
               { label: "Ready-to-Wear", href: "/shop?collection=ready-to-wear", location: n.location },
-              { label: "Bespoke", href: "/shop?collection=bespoke", location: n.location },
+              { label: "Bespoke", href: "/bespoke", location: n.location },
             ];
           }
           if (n.href === "/shop?collection=men") {
-            return [{ label: "Bridal", href: "/shop?collection=bridal", location: n.location }];
+            return [{ label: "Bridal", href: "/#collections", location: n.location }];
           }
           return [n];
         });
       }
+
+      fromDb = fromDb.map((n) => {
+        if (n.href === "/shop?collection=bespoke") return { ...n, href: "/bespoke", label: n.label || "Bespoke" };
+        if (n.href === "/shop?collection=bridal") return { ...n, href: "/#collections", label: n.label || "Bridal" };
+        return n;
+      });
 
       if (!fromDb.some((n) => n.href === "/experience")) {
         const storyIdx = fromDb.findIndex((n) => n.href === "/about");
@@ -563,15 +667,8 @@ async function loadCmsSnapshot(): Promise<CmsSnapshot> {
         ];
       }
 
-      if (!fromDb.some((n) => n.href === "/style-brief")) {
-        const accountIdx = fromDb.findIndex((n) => n.href === "/account");
-        const insertAt = accountIdx >= 0 ? accountIdx : fromDb.length;
-        fromDb = [
-          ...fromDb.slice(0, insertAt),
-          { label: "Style Brief", href: "/style-brief", location: "header" },
-          ...fromDb.slice(insertAt),
-        ];
-      }
+      // Style Brief stays off the public menu for now
+      fromDb = fromDb.filter((n) => n.href !== "/style-brief");
 
       return fromDb.filter((n, i, arr) => arr.findIndex((x) => x.href === n.href) === i);
     })();

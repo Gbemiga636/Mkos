@@ -1,466 +1,271 @@
 "use client";
 
-import { FormEvent, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
+import { BrandText } from "@/components/ui/BrandText";
+import { AutoplayVideo } from "@/components/ui/AutoplayVideo";
 import { ScrollReveal } from "@/components/experience/ScrollReveal";
-import { cn } from "@/lib/utils";
+import { EditableSection } from "@/components/cms/EditableSection";
+import { useContent } from "@/lib/cms/CmsProvider";
 
-const fade = {
-  initial: { opacity: 0, y: 24 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true, margin: "-60px" },
-};
+const WHATSAPP = "https://wa.me/2348143173661";
+const WHATSAPP_2 = "https://wa.me/2348104643052";
+const MAPS =
+  "https://maps.google.com/?q=1,+Ade+Adedeji+Close,+Ayo+Babatunde+Crescent,+Oniru,+Lagos";
+const STUDIO = "1, Ade Adedeji Close, Ayo Babatunde Crescent, Oniru, Lagos";
 
-const GLAM_SERVICES = ["Hair", "Makeup", "Gele", "Outfit"] as const;
-
-const CONSENT_OPTIONS = [
-  { value: "yes", label: "Yes — I’m in" },
-  { value: "discuss", label: "Let’s discuss at the studio" },
-  { value: "no", label: "Not this time" },
+const MOMENTS = [
+  {
+    title: "The fitting",
+    text: "Quiet rooms, precise hands, and the real rhythm of the house — captured as it happens.",
+  },
+  {
+    title: "The finish",
+    text: "Full glam energy when you’re ready for an event: presence, polish, and the look that walks with you.",
+  },
+  {
+    title: "The story",
+    text: "Moments that feel like you — shared only when the vibe is right, always with respect.",
+  },
 ] as const;
 
-function FieldLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <label className="mb-2 block font-display text-[11px] tracking-[0.22em] text-mkos-muted uppercase">
-      {children}
-    </label>
-  );
-}
-
-function TextInput({
-  className,
-  ...props
-}: React.InputHTMLAttributes<HTMLInputElement>) {
-  return (
-    <input
-      className={cn(
-        "w-full border-0 border-b border-mkos-border bg-transparent py-3 text-sm text-mkos-ink outline-none transition-colors placeholder:text-mkos-muted/60 focus:border-mkos-ink",
-        className
-      )}
-      {...props}
-    />
-  );
-}
-
-function TextSelect(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
-  return (
-    <select
-      className="w-full border-0 border-b border-mkos-border bg-transparent py-3 text-sm text-mkos-ink outline-none focus:border-mkos-ink"
-      {...props}
-    />
-  );
-}
-
-function TextArea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  return (
-    <textarea
-      className="min-h-[100px] w-full resize-y border-0 border-b border-mkos-border bg-transparent py-3 text-sm text-mkos-ink outline-none placeholder:text-mkos-muted/60 focus:border-mkos-ink"
-      {...props}
-    />
-  );
-}
-
-function ChoiceGroup({
-  name,
-  value,
-  onChange,
-  options,
-}: {
-  name: string;
-  value: string;
-  onChange: (v: string) => void;
-  options: readonly { value: string; label: string }[];
-}) {
-  return (
-    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-3" role="group">
-      {options.map((opt) => {
-        const active = value === opt.value;
-        return (
-          <button
-            key={opt.value}
-            type="button"
-            name={name}
-            onClick={() => onChange(opt.value)}
-            className={cn(
-              "border px-4 py-3 text-left text-sm transition-colors",
-              active
-                ? "border-mkos-ink bg-mkos-ink text-white"
-                : "border-mkos-border bg-transparent text-mkos-ink hover:border-mkos-ink/50"
-            )}
-          >
-            {opt.label}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
 export function ExperiencePageClient() {
-  const [contentStatus, setContentStatus] = useState<"idle" | "loading" | "ok" | "err">("idle");
-  const [glamStatus, setGlamStatus] = useState<"idle" | "loading" | "ok" | "err">("idle");
-  const [contentMsg, setContentMsg] = useState("");
-  const [glamMsg, setGlamMsg] = useState("");
-
-  const [filmed, setFilmed] = useState("");
-  const [posted, setPosted] = useState("");
-  const [services, setServices] = useState<string[]>([]);
-
-  function toggleService(s: string) {
-    setServices((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
-  }
-
-  async function submitContent(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setContentStatus("loading");
-    setContentMsg("");
-    const fd = new FormData(e.currentTarget);
-    try {
-      const res = await fetch("/api/experience/inquiry", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          kind: "content",
-          fullName: fd.get("fullName"),
-          email: fd.get("email"),
-          phone: fd.get("phone"),
-          filmed,
-          posted,
-          visitWindow: fd.get("visitWindow"),
-          contentNotes: fd.get("contentNotes"),
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Could not send");
-      setContentStatus("ok");
-      setContentMsg("Received. We’ll honour your preferences when you visit the studio.");
-      (e.target as HTMLFormElement).reset();
-      setFilmed("");
-      setPosted("");
-    } catch (err) {
-      setContentStatus("err");
-      setContentMsg(err instanceof Error ? err.message : "Something went wrong");
-    }
-  }
-
-  async function submitGlam(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setGlamStatus("loading");
-    setGlamMsg("");
-    const fd = new FormData(e.currentTarget);
-    try {
-      const res = await fetch("/api/experience/inquiry", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          kind: "full_glam",
-          fullName: fd.get("fullName"),
-          email: fd.get("email"),
-          phone: fd.get("phone"),
-          eventType: fd.get("eventType"),
-          eventDate: fd.get("eventDate"),
-          services,
-          consultation: fd.get("consultation"),
-          glamNotes: fd.get("glamNotes"),
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Could not send");
-      setGlamStatus("ok");
-      setGlamMsg("Request received. The house will email you to book your consultation.");
-      (e.target as HTMLFormElement).reset();
-      setServices([]);
-    } catch (err) {
-      setGlamStatus("err");
-      setGlamMsg(err instanceof Error ? err.message : "Something went wrong");
-    }
-  }
+  const experience = useContent("experience_video");
 
   return (
-    <main className="bg-white">
-      <section className="relative min-h-[85vh] overflow-hidden bg-mkos-ink text-white">
-        <Image
-          src="/images/products/puzzle-dress.jpg"
-          alt="MKoS Experience"
-          fill
-          priority
-          className="object-cover opacity-40"
-          sizes="100vw"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-mkos-ink via-mkos-ink/50 to-mkos-ink/20" />
-        <div className="relative mx-auto flex min-h-[85vh] max-w-[1600px] flex-col justify-end px-5 pb-16 pt-36 sm:px-8 lg:px-12 lg:pb-24">
-          <motion.p
-            {...fade}
-            className="font-display text-[11px] tracking-[0.4em] text-white/65 uppercase"
-          >
-            Studio · Oniru
-          </motion.p>
-          <motion.h1
-            {...fade}
-            transition={{ delay: 0.06 }}
-            className="mt-5 max-w-4xl font-display text-5xl leading-[0.95] font-medium tracking-tight sm:text-6xl lg:text-8xl"
-          >
-            MKoS <span className="italic">Experience</span>
-          </motion.h1>
-          <motion.p
-            {...fade}
-            transition={{ delay: 0.12 }}
-            className="mt-6 max-w-lg text-base text-white/75 sm:text-lg"
-          >
-            From studio content with you, to full glam for your event — arrive prepared, leave
-            elevated.
-          </motion.p>
-          <motion.div
-            {...fade}
-            transition={{ delay: 0.18 }}
-            className="mt-10 flex flex-wrap gap-4"
-          >
-            <Button href="#content" variant="secondary" cursor="EXPLORE">
-              Studio content
-            </Button>
-            <Button href="#full-glam" variant="outline" className="border-white/40 text-white" cursor="EXPLORE">
-              Full Glam
-            </Button>
-          </motion.div>
-        </div>
-      </section>
-
-      <section className="border-b border-mkos-border px-5 py-16 sm:px-8 lg:px-12 lg:py-20">
-        <div className="mx-auto grid max-w-[1600px] gap-10 lg:grid-cols-2 lg:gap-20">
-          <ScrollReveal y={20}>
-            <p className="font-display text-[11px] tracking-[0.28em] text-mkos-muted uppercase">
-              Two ways in
-            </p>
-            <h2 className="mt-4 font-display text-3xl font-medium tracking-tight sm:text-4xl">
-              Look forward to the studio.
-            </h2>
-          </ScrollReveal>
-          <ScrollReveal y={20} delay={80}>
-            <p className="text-base leading-relaxed text-mkos-muted sm:text-lg">
-              Tell us how you’d like to be included in MKoS Experience content — or book a
-              consultation for Full Glam. Your answers go straight to the house, so when you
-              arrive the vibe is already right.
-            </p>
-          </ScrollReveal>
-        </div>
-      </section>
-
-      {/* Content consent */}
-      <section id="content" className="scroll-mt-24 px-5 py-20 sm:px-8 lg:px-12 lg:py-28">
-        <div className="mx-auto grid max-w-[1600px] gap-14 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
-          <div>
-            <ScrollReveal y={16}>
-              <p className="font-display text-[11px] tracking-[0.28em] text-mkos-accent uppercase">
-                Content
-              </p>
-              <h2 className="mt-4 font-display text-4xl font-medium tracking-tight sm:text-5xl">
-                Be part of MKoS Experience
-              </h2>
-              <p className="mt-6 max-w-md text-sm leading-relaxed text-mkos-muted sm:text-base">
-                Clients come to the studio and we capture the real experience — fittings, moments,
-                the house energy you see on Instagram. Most people love it. If you’d rather skip
-                the camera, that’s fine too. Share your preference so we can prepare for you.
-              </p>
-            </ScrollReveal>
-            <ScrollReveal y={16} delay={60} className="mt-10 hidden aspect-[4/5] overflow-hidden bg-mkos-warm lg:block">
-              <Image
-                src="/images/products/rolly-set.jpg"
-                alt="Studio experience"
-                width={800}
-                height={1000}
-                className="h-full w-full object-cover"
-              />
-            </ScrollReveal>
+    <div className="bg-white">
+      <EditableSection cmsKey="experience_video" label="Experience video" className="block">
+        <section className="relative flex min-h-[100svh] flex-col justify-end overflow-hidden bg-mkos-ink text-white">
+          <div className="absolute inset-0">
+            <AutoplayVideo
+              src={experience?.media_url ?? "/videos/experience-1.mp4"}
+              whenVisible={false}
+              eager
+              className="h-full w-full object-cover opacity-50"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/45 to-black/30" />
           </div>
 
-          <ScrollReveal y={20} delay={40}>
-            <form onSubmit={submitContent} className="space-y-8 border-t border-mkos-border pt-10 lg:border-t-0 lg:pt-0">
-              <div className="grid gap-6 sm:grid-cols-2">
-                <div>
-                  <FieldLabel>Full name</FieldLabel>
-                  <TextInput name="fullName" required placeholder="Your name" autoComplete="name" />
-                </div>
-                <div>
-                  <FieldLabel>Email</FieldLabel>
-                  <TextInput name="email" type="email" required placeholder="you@email.com" autoComplete="email" />
-                </div>
-              </div>
-              <div>
-                <FieldLabel>Phone / WhatsApp</FieldLabel>
-                <TextInput name="phone" type="tel" placeholder="081…" autoComplete="tel" />
-              </div>
-              <div>
-                <FieldLabel>Comfortable being filmed at the studio?</FieldLabel>
-                <ChoiceGroup name="filmed" value={filmed} onChange={setFilmed} options={CONSENT_OPTIONS} />
-              </div>
-              <div>
-                <FieldLabel>Comfortable being posted on our channels?</FieldLabel>
-                <ChoiceGroup name="posted" value={posted} onChange={setPosted} options={CONSENT_OPTIONS} />
-              </div>
-              <div>
-                <FieldLabel>When might you visit?</FieldLabel>
-                <TextInput name="visitWindow" placeholder="e.g. Weekends, mid-morning, after work…" />
-              </div>
-              <div>
-                <FieldLabel>Anything else we should know?</FieldLabel>
-                <TextArea name="contentNotes" placeholder="Schedule, mood, privacy notes…" />
-              </div>
-              {contentMsg && (
-                <p
-                  className={cn(
-                    "text-sm",
-                    contentStatus === "ok" ? "text-mkos-ink" : "text-red-700"
-                  )}
-                >
-                  {contentMsg}
-                </p>
-              )}
+          <div className="relative z-10 mx-auto w-full max-w-[1600px] px-5 pb-16 pt-36 sm:px-8 lg:px-12 lg:pb-24">
+            <motion.p
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="font-display text-[11px] tracking-[0.4em] text-white/55 uppercase"
+            >
+              {experience?.eyebrow ?? "Studio · Oniru"}
+            </motion.p>
+            <motion.h1
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.06 }}
+              className="mt-5 max-w-4xl font-display text-5xl leading-[0.95] font-medium tracking-tight sm:text-6xl lg:text-8xl"
+            >
+              <BrandText>MKoS</BrandText>{" "}
+              <span className="italic">{experience?.title ?? "Experience with you"}</span>
+            </motion.h1>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.12 }}
+              className="mt-6 max-w-xl text-base text-white/75 sm:text-lg"
+            >
+              {experience?.body ?? experience?.subtitle ?? "Luxury is more than what you wear-it's how you feel."}
+            </motion.p>
+            <motion.div
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.18 }}
+              className="mt-10 flex flex-wrap gap-3"
+            >
+              <Link
+                href={WHATSAPP}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-14 items-center justify-center border border-white/20 bg-white px-9 font-display text-xs tracking-[0.14em] !text-mkos-ink uppercase"
+              >
+                Plan your visit on WhatsApp
+              </Link>
               <Button
-                type="submit"
-                disabled={contentStatus === "loading" || !filmed || !posted}
+                href="#studio"
+                variant="outline"
+                size="lg"
+                className="border-white/40 text-white"
                 cursor="EXPLORE"
               >
-                {contentStatus === "loading" ? "Sending…" : "Share my preference"}
+                Studio details
               </Button>
-            </form>
+            </motion.div>
+          </div>
+        </section>
+      </EditableSection>
+
+      <section className="px-5 py-24 sm:px-8 lg:px-12 lg:py-32">
+        <div className="mx-auto max-w-[1600px]">
+          <ScrollReveal y={20}>
+            <p className="font-display text-[11px] tracking-[0.28em] text-mkos-muted uppercase">
+              In the house
+            </p>
+            <h2 className="mt-4 max-w-3xl font-display text-4xl font-medium tracking-tight sm:text-5xl lg:text-6xl">
+              Come through. We’ll take it from there.
+            </h2>
           </ScrollReveal>
+
+          <div className="mt-16 grid gap-10 md:grid-cols-3 md:gap-8">
+            {MOMENTS.map((m, i) => (
+              <ScrollReveal key={m.title} y={28} delay={i * 80}>
+                <div className="border-t border-mkos-border pt-6">
+                  <p className="font-display text-[10px] tracking-[0.28em] text-mkos-accent uppercase">
+                    0{i + 1}
+                  </p>
+                  <h3 className="mt-3 font-display text-2xl font-medium tracking-tight">{m.title}</h3>
+                  <p className="mt-4 text-sm leading-relaxed text-mkos-muted sm:text-base">{m.text}</p>
+                </div>
+              </ScrollReveal>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* Full Glam */}
-      <section
-        id="full-glam"
-        className="scroll-mt-24 border-t border-mkos-border bg-mkos-warm px-5 py-20 sm:px-8 lg:px-12 lg:py-28"
-      >
-        <div className="mx-auto grid max-w-[1600px] gap-14 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
-          <ScrollReveal y={20}>
-            <form onSubmit={submitGlam} className="space-y-8">
-              <div>
-                <p className="font-display text-[11px] tracking-[0.28em] text-mkos-accent uppercase">
-                  Full Glam
-                </p>
-                <h2 className="mt-4 font-display text-4xl font-medium tracking-tight sm:text-5xl">
-                  Event-ready, handled by the house
-                </h2>
-                <p className="mt-6 max-w-lg text-sm leading-relaxed text-mkos-muted sm:text-base">
-                  Hair, makeup, gele, and your outfit — we handle the full look for your event.
-                  Request a consultation and we’ll book an appointment to plan every detail with
-                  you.
-                </p>
-              </div>
-
-              <div className="grid gap-6 sm:grid-cols-2">
-                <div>
-                  <FieldLabel>Full name</FieldLabel>
-                  <TextInput name="fullName" required placeholder="Your name" autoComplete="name" />
-                </div>
-                <div>
-                  <FieldLabel>Email</FieldLabel>
-                  <TextInput name="email" type="email" required placeholder="you@email.com" autoComplete="email" />
-                </div>
-              </div>
-              <div>
-                <FieldLabel>Phone / WhatsApp</FieldLabel>
-                <TextInput name="phone" type="tel" placeholder="081…" autoComplete="tel" />
-              </div>
-              <div className="grid gap-6 sm:grid-cols-2">
-                <div>
-                  <FieldLabel>Event type</FieldLabel>
-                  <TextInput name="eventType" required placeholder="Wedding, owambe, shoot…" />
-                </div>
-                <div>
-                  <FieldLabel>Event date</FieldLabel>
-                  <TextInput name="eventDate" type="date" />
-                </div>
-              </div>
-              <div>
-                <FieldLabel>Services you want</FieldLabel>
-                <div className="flex flex-wrap gap-2">
-                  {GLAM_SERVICES.map((s) => {
-                    const on = services.includes(s);
-                    return (
-                      <button
-                        key={s}
-                        type="button"
-                        onClick={() => toggleService(s)}
-                        className={cn(
-                          "border px-4 py-2.5 text-sm transition-colors",
-                          on
-                            ? "border-mkos-ink bg-mkos-ink text-white"
-                            : "border-mkos-border bg-white text-mkos-ink hover:border-mkos-ink/40"
-                        )}
-                      >
-                        {s}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-              <div>
-                <FieldLabel>Consultation preference</FieldLabel>
-                <TextSelect name="consultation" defaultValue="in-studio">
-                  <option value="in-studio">In-studio (Oniru)</option>
-                  <option value="virtual">Virtual</option>
-                  <option value="either">Either works</option>
-                </TextSelect>
-              </div>
-              <div>
-                <FieldLabel>Brief / notes</FieldLabel>
-                <TextArea name="glamNotes" placeholder="Theme, colours, guests, timing…" />
-              </div>
-              {glamMsg && (
-                <p className={cn("text-sm", glamStatus === "ok" ? "text-mkos-ink" : "text-red-700")}>
-                  {glamMsg}
-                </p>
-              )}
-              <Button
-                type="submit"
-                disabled={glamStatus === "loading" || services.length === 0}
-                cursor="EXPLORE"
+      <section className="relative overflow-hidden bg-mkos-ink px-5 py-24 text-white sm:px-8 lg:px-12 lg:py-28">
+        <div className="absolute inset-y-0 right-0 hidden w-1/2 lg:block">
+          <Image
+            src="/images/products/tammy-dress.jpg"
+            alt=""
+            fill
+            className="object-cover opacity-40"
+            sizes="50vw"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-mkos-ink via-mkos-ink/70 to-transparent" />
+        </div>
+        <div className="relative z-10 mx-auto grid max-w-[1600px] gap-12 lg:grid-cols-2 lg:items-center">
+          <ScrollReveal y={24}>
+            <p className="font-display text-[11px] tracking-[0.28em] text-white/45 uppercase">
+              An open invitation
+            </p>
+            <h2 className="mt-4 font-display text-4xl font-medium tracking-tight sm:text-5xl">
+              Stop by the studio.
+            </h2>
+            <p className="mt-6 max-w-md text-base leading-relaxed text-white/70 sm:text-lg">
+              Whether you’re dressing for a defining moment, joining studio content, or simply want
+              to feel the house in person — you’re welcome in Oniru. Message us, then walk through
+              the door.
+            </p>
+            <div className="mt-10 flex flex-wrap gap-3">
+              <Link
+                href={WHATSAPP}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-14 items-center justify-center border border-white/20 bg-white px-9 font-display text-xs tracking-[0.14em] !text-mkos-ink uppercase"
               >
-                {glamStatus === "loading" ? "Sending…" : "Request consultation"}
+                WhatsApp the house
+              </Link>
+              <Button
+                href={MAPS}
+                variant="outline"
+                size="lg"
+                className="border-white/35 text-white"
+              >
+                Get directions
               </Button>
-            </form>
-          </ScrollReveal>
-
-          <ScrollReveal y={20} delay={60} className="lg:sticky lg:top-28">
-            <div className="relative aspect-[3/4] overflow-hidden bg-mkos-ink">
-              <Image
-                src="/images/products/abeni-boubou.jpg"
-                alt="Full Glam"
-                fill
-                className="object-cover opacity-80"
-                sizes="(max-width: 1024px) 100vw, 40vw"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-mkos-ink/80 via-transparent to-transparent" />
-              <div className="absolute inset-x-0 bottom-0 p-8 text-white">
-                <p className="font-display text-[11px] tracking-[0.28em] text-white/60 uppercase">
-                  Includes
-                </p>
-                <ul className="mt-4 space-y-2 font-display text-lg">
-                  {GLAM_SERVICES.map((s) => (
-                    <li key={s}>{s}</li>
-                  ))}
-                </ul>
-                <p className="mt-6 text-sm text-white/70">
-                  Prefer WhatsApp?{" "}
-                  <Link
-                    href="https://wa.me/2348143173661"
-                    className="underline underline-offset-4"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Message the studio
-                  </Link>
-                </p>
-              </div>
             </div>
           </ScrollReveal>
+          <div className="relative aspect-[4/5] overflow-hidden bg-white/5 lg:hidden">
+            <Image
+              src="/images/products/tammy-dress.jpg"
+              alt=""
+              fill
+              className="object-cover opacity-70"
+              sizes="100vw"
+            />
+          </div>
         </div>
       </section>
-    </main>
+
+      <section id="studio" className="scroll-mt-24 px-5 py-24 sm:px-8 lg:px-12 lg:py-32">
+        <div className="mx-auto grid max-w-[1600px] gap-14 lg:grid-cols-[1fr_1fr] lg:gap-20">
+          <ScrollReveal y={20}>
+            <p className="font-display text-[11px] tracking-[0.28em] text-mkos-accent uppercase">
+              Find us
+            </p>
+            <h2 className="mt-4 font-display text-3xl font-medium tracking-tight sm:text-4xl">
+              The atelier is waiting.
+            </h2>
+            <p className="mt-6 text-base leading-relaxed text-mkos-muted sm:text-lg">{STUDIO}</p>
+            <div className="mt-8 space-y-3 text-sm">
+              <p>
+                <a
+                  href={WHATSAPP}
+                  className="!text-mkos-ink underline underline-offset-4 hover:text-mkos-ink"
+                >
+                  WhatsApp · 0814 317 3661
+                </a>
+              </p>
+              <p>
+                <a
+                  href={WHATSAPP_2}
+                  className="!text-mkos-ink underline underline-offset-4 hover:text-mkos-ink"
+                >
+                  WhatsApp · 0810 464 3052
+                </a>
+              </p>
+              <p>
+                <a
+                  href="mailto:mkosfashionhouse@gmail.com"
+                  className="!text-mkos-ink underline underline-offset-4 hover:text-mkos-ink"
+                >
+                  mkosfashionhouse@gmail.com
+                </a>
+              </p>
+            </div>
+            <div className="mt-10 flex flex-wrap gap-3">
+              <Button href={MAPS} size="lg">
+                Open in Maps
+              </Button>
+              <Button href="/bespoke" variant="secondary" size="lg">
+                Bespoke / Custom Wear
+              </Button>
+            </div>
+          </ScrollReveal>
+
+          <ScrollReveal y={28} delay={60}>
+            <div className="relative aspect-[5/4] overflow-hidden bg-mkos-warm">
+              <Image
+                src="/images/products/abeni-boubou.jpg"
+                alt="MKoS studio atmosphere"
+                fill
+                className="object-cover"
+                sizes="(max-width: 1024px) 100vw, 50vw"
+              />
+            </div>
+            <p className="mt-4 font-display text-[11px] tracking-[0.22em] text-mkos-muted uppercase">
+              For Those Who Understand STYLE
+            </p>
+          </ScrollReveal>
+        </div>
+      </section>
+
+      <section className="border-t border-mkos-border bg-[#f7f4ef] px-5 py-20 sm:px-8 lg:px-12">
+        <div className="mx-auto flex max-w-[1600px] flex-col items-start justify-between gap-8 md:flex-row md:items-end">
+          <div>
+            <p className="font-display text-[11px] tracking-[0.28em] text-mkos-muted uppercase">
+              Ready when you are
+            </p>
+            <h2 className="mt-3 max-w-xl font-display text-3xl font-medium tracking-tight sm:text-4xl">
+              Visit the studio. Live the Experience.
+            </h2>
+          </div>
+          <Link
+            href={WHATSAPP}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex h-14 items-center bg-mkos-ink px-8 font-display text-[11px] tracking-[0.2em] text-white uppercase"
+          >
+            WhatsApp · Message us to stop by
+          </Link>
+        </div>
+      </section>
+    </div>
   );
 }

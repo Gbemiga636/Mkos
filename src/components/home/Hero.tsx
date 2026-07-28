@@ -5,6 +5,7 @@ import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import { BrandText } from "@/components/ui/BrandText";
 import { AutoplayVideo } from "@/components/ui/AutoplayVideo";
+import { ServicesModal } from "@/components/home/ServicesModal";
 import { useCursorLabel } from "@/hooks/useCursorLabel";
 import { useUIStore } from "@/store/ui";
 import { useContent } from "@/lib/cms/CmsProvider";
@@ -48,6 +49,7 @@ function useTypewriter(text: string, active: boolean, msPerChar = 55) {
 export function Hero() {
   const ready = useUIStore((s) => s.loaderComplete);
   const hero = useContent("hero");
+  const [servicesOpen, setServicesOpen] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
   const mx = useMotionValue(0);
   const my = useMotionValue(0);
@@ -171,8 +173,14 @@ export function Hero() {
             transition={{ duration: 0.9, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}
             className="mt-10 flex flex-wrap items-center gap-4"
           >
-            <Button href={hero?.cta_href ?? "/shop"} variant="outline" size="lg" cursor="SHOP">
-              {hero?.cta_label ?? "Enter the shop"}
+            <Button
+              type="button"
+              onClick={() => setServicesOpen(true)}
+              variant="outline"
+              size="lg"
+              cursor="SHOP"
+            >
+              Our services
             </Button>
             <Button
               href={secondaryHref}
@@ -202,6 +210,8 @@ export function Hero() {
           Scroll to discover
         </motion.div>
       </div>
+
+      <ServicesModal open={servicesOpen} onClose={() => setServicesOpen(false)} />
     </section>
   );
 }

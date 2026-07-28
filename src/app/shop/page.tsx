@@ -8,6 +8,7 @@ import { EditableSection } from "@/components/cms/EditableSection";
 import { cn } from "@/lib/utils";
 import { useCms, useContent } from "@/lib/cms/CmsProvider";
 import Link from "next/link";
+import { RTW_CATEGORY_SLUGS } from "@/data/products";
 
 function ShopContent() {
   const cms = useCms();
@@ -28,12 +29,31 @@ function ShopContent() {
   const [color, setColor] = useState("");
   const [availability, setAvailability] = useState<"all" | "in">("all");
 
+  const shopCollections = useMemo(
+    () => collections.filter((c) => c.slug === "ready-to-wear"),
+    [collections]
+  );
+
+  const rtwCategories = useMemo(
+    () => categories.filter((c) => (RTW_CATEGORY_SLUGS as readonly string[]).includes(c.slug)),
+    [categories]
+  );
+
   // Keep filters in sync when navigating via header / collection cards / browser back
   useEffect(() => {
-    setCollection(params.get("collection") ?? "");
+    const col = params.get("collection") ?? "";
+    if (col === "bespoke") {
+      router.replace("/bespoke");
+      return;
+    }
+    if (col === "bridal") {
+      router.replace("/shop");
+      return;
+    }
+    setCollection(col);
     setCategory(params.get("category") ?? "");
     setFilter(params.get("filter") ?? "");
-  }, [params]);
+  }, [params, router]);
 
   function writeQuery(next: { collection?: string; category?: string; filter?: string }) {
     const q = new URLSearchParams();
@@ -69,7 +89,7 @@ function ShopContent() {
   }
 
   const filtered = useMemo(() => {
-    let list = [...products];
+    let list = products.filter((p) => p.collection === "ready-to-wear" || !p.collection);
     if (collection) list = list.filter((p) => p.collection === collection);
     if (category) list = list.filter((p) => p.category === category);
     if (filter === "new") list = list.filter((p) => p.newArrival);
@@ -109,7 +129,7 @@ function ShopContent() {
             </h1>
             <p className="mt-4 max-w-xl text-mkos-muted">
               {shop?.subtitle ??
-                "Filter by collection — Ready-to-Wear, Bespoke, and Bridal — then refine by style within."}
+                "Shop Ready-to-Wear online. For Bespoke / Custom Wear, begin your atelier brief."}
             </p>
           </motion.div>
         </EditableSection>
@@ -144,7 +164,7 @@ function ShopContent() {
               <Chip active={!collection && !category && !filter} onClick={clearAll}>
                 All
               </Chip>
-              {collections.map((c) => (
+              {shopCollections.map((c) => (
                 <Chip
                   key={c.slug}
                   active={collection === c.slug}
@@ -157,10 +177,10 @@ function ShopContent() {
           </div>
           <div>
             <p className="mb-2 font-display text-[10px] tracking-[0.22em] text-mkos-muted uppercase">
-              Within the collections
+              Ready-to-Wear
             </p>
             <div className="flex flex-wrap gap-2">
-              {categories.map((c) => (
+              {rtwCategories.map((c) => (
                 <Chip
                   key={c.slug}
                   active={category === c.slug}
@@ -188,19 +208,15 @@ function ShopContent() {
               Styles for this selection are being prepared
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-mkos-muted">
-              {collection === "bespoke" || collection === "bridal"
-                ? "Share your vision on the Client Style Brief and the house will craft something exceptional for you."
-                : "Try another collection, or browse everything in the archive."}
+              Try Ready-to-Wear, or start a Bespoke / Custom Wear request with the house.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
-              {(collection === "bespoke" || collection === "bridal") && (
-                <Link
-                  href="/style-brief"
-                  className="inline-flex h-11 items-center bg-mkos-ink px-5 font-display text-[10px] tracking-[0.18em] text-white uppercase"
-                >
-                  Client Style Brief
-                </Link>
-              )}
+              <Link
+                href="/bespoke"
+                className="inline-flex h-11 items-center bg-mkos-ink px-5 font-display text-[10px] tracking-[0.18em] text-white uppercase"
+              >
+                Bespoke / Custom Wear
+              </Link>
               <button
                 type="button"
                 onClick={clearAll}

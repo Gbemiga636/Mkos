@@ -24,6 +24,12 @@
   color-scheme: light;
 }
 
+@media (min-width: 768px) {
+  :root {
+    --header-h: 96px;
+  }
+}
+
 * {
   box-sizing: border-box;
 }

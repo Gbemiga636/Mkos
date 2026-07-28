@@ -85,7 +85,12 @@ export default function AdminProductsPage() {
         story: p.story ?? "",
         material: p.material ?? "",
         collection: p.collection_slug || "ready-to-wear",
-        category: p.category_slug || "women-rtw",
+        category:
+          p.slug === "abeni-boubou"
+            ? "boubou"
+            : ["women-rtw", "men-rtw", "boubou"].includes(p.category_slug ?? "")
+              ? p.category_slug ?? "women-rtw"
+              : "women-rtw",
         images: Array.isArray(p.images) ? p.images : [],
         featured: !!p.featured,
         newArrival: !!p.new_arrival,
@@ -434,15 +439,7 @@ export default function AdminProductsPage() {
             >
               <option value="women-rtw">Women’s RTW</option>
               <option value="men-rtw">Men’s RTW</option>
-              <option value="women-bespoke">Women’s Bespoke</option>
-              <option value="men-bespoke">Men’s Bespoke</option>
-              <option value="aso-ebi">Aso Ebi</option>
-              <option value="occasion">Occasion Wear</option>
-              <option value="registry-gowns">Registry Gowns</option>
-              <option value="reception">Reception Dresses</option>
-              <option value="bridesmaids">Bridesmaids</option>
-              <option value="grooms">Grooms</option>
-              <option value="bridal-party">Family & Bridal Party</option>
+              <option value="boubou">Boubou</option>
             </select>
             <button
               type="button"

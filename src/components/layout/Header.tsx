@@ -12,7 +12,6 @@ import { useUIStore } from "@/store/ui";
 import { useMagnetic } from "@/hooks/useMagnetic";
 import { useCms } from "@/lib/cms/CmsProvider";
 import { useAuth } from "@/lib/auth/AuthProvider";
-import { BrandText } from "@/components/ui/BrandText";
 import { cn } from "@/lib/utils";
 
 export function Header() {
@@ -21,25 +20,29 @@ export function Header() {
   const { navigation, settings } = useCms();
   const { user, loading: authLoading } = useAuth();
   const openAuth = useUIStore((s) => s.openAuth);
-  // One entry per href — avoids duplicate Style Brief (CMS + inject)
+  // One entry per href — hide Style Brief from the menu for now
   const links = (() => {
     const seen = new Set<string>();
     return navigation
-      .filter((l) => l.location === "header" && !l.href.includes("/account") && l.href !== "/checkout")
+      .filter(
+        (l) =>
+          l.location === "header" &&
+          !l.href.includes("/account") &&
+          l.href !== "/checkout" &&
+          l.href !== "/style-brief"
+      )
       .filter((l) => {
         if (seen.has(l.href)) return false;
         seen.add(l.href);
         return true;
       });
   })();
-  const mobileLinks = (() => {
-    const withoutBrief = links.filter((l) => l.href !== "/style-brief");
+  const menuLinks = (() => {
     return [
-      ...withoutBrief,
+      ...links,
       user
         ? { href: "/account", label: "Account", location: "header" as const }
         : { href: "#signin", label: "Sign in", location: "header" as const },
-      { href: "/style-brief", label: "Style Brief", location: "header" as const },
       { href: "/checkout", label: "Checkout", location: "header" as const },
     ];
   })();
@@ -79,6 +82,15 @@ export function Header() {
     };
   }, [menuOpen]);
 
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [menuOpen]);
+
   return (
     <>
       <motion.header
@@ -89,49 +101,27 @@ export function Header() {
         animate={{ y: hidden && !menuOpen ? -100 : 0 }}
         transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
       >
-        <div className="mx-auto flex h-20 max-w-[1600px] items-center justify-between px-5 sm:px-8 lg:px-12">
-          <nav className="hidden items-center gap-8 md:flex">
-            {links.map((l, i) => (
-              <motion.div
-                key={l.href}
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.08 + i * 0.05, duration: 0.55 }}
-              >
-                <Link
-                  href={l.href}
-                  className={cn(
-                    "font-display text-[11px] tracking-[0.22em] uppercase transition-colors duration-500",
-                    onHero
-                      ? "text-white/85 hover:text-white"
-                      : "text-mkos-ink/80 hover:text-mkos-ink",
-                    pathname === l.href && (onHero ? "text-white" : "text-mkos-ink")
-                  )}
-                >
-                  <BrandText>{l.label}</BrandText>
-                </Link>
-              </motion.div>
-            ))}
-          </nav>
-
+        <div className="mx-auto flex h-20 max-w-[1600px] items-center justify-between px-5 sm:px-8 md:h-24 lg:px-12">
           <button
             type="button"
-            className="flex flex-col gap-1.5 md:hidden"
+            className="relative z-10 flex flex-col gap-1.5"
             aria-label="Open menu"
+            aria-expanded={menuOpen}
             onClick={() => setMenuOpen(true)}
           >
             <span
               className={cn(
-                "h-px w-6 transition-colors duration-500",
+                "h-px w-7 transition-colors duration-500",
                 onHero ? "bg-white" : "bg-mkos-ink"
               )}
             />
             <span
               className={cn(
-                "h-px w-4 transition-colors duration-500",
+                "h-px w-5 transition-colors duration-500",
                 onHero ? "bg-white" : "bg-mkos-ink"
               )}
             />
+            <span className="sr-only">Menu</span>
           </button>
 
           <Link
@@ -149,11 +139,11 @@ export function Header() {
               <Image
                 src={settings.logo_url ?? "/logo/mkos-logo.png"}
                 alt={settings.brand_name}
-                width={120}
-                height={48}
+                width={160}
+                height={64}
                 priority
                 className={cn(
-                  "h-8 w-auto transition-[filter] duration-500 sm:h-10",
+                  "h-11 w-auto transition-[filter] duration-500 sm:h-12 md:h-14",
                   onHero ? "brightness-0 invert" : "brightness-0"
                 )}
               />
@@ -168,7 +158,7 @@ export function Header() {
             </motion.div>
           </Link>
 
-          <div className="flex items-center gap-1 sm:gap-2">
+          <div className="relative z-10 flex items-center gap-1 sm:gap-2">
             <motion.button
               type="button"
               onClick={() => setSearchOpen(true)}
@@ -231,19 +221,19 @@ export function Header() {
       <AnimatePresence>
         {menuOpen && (
           <motion.div
-            className="fixed inset-0 z-[60] flex flex-col bg-mkos-ink text-white md:hidden"
+            className="fixed inset-0 z-[60] flex flex-col bg-mkos-ink text-white"
             initial={{ clipPath: "inset(0 0 100% 0)" }}
             animate={{ clipPath: "inset(0 0 0% 0)" }}
             exit={{ clipPath: "inset(0 0 100% 0)" }}
             transition={{ duration: 0.7, ease: [0.76, 0, 0.24, 1] }}
           >
-            <div className="flex h-20 shrink-0 items-center justify-between px-5">
+            <div className="mx-auto flex h-20 w-full max-w-[1600px] shrink-0 items-center justify-between px-5 sm:px-8 md:h-24 lg:px-12">
               <Image
                 src={settings.logo_url ?? "/logo/mkos-logo.png"}
                 alt={settings.brand_name}
-                width={100}
-                height={40}
-                className="h-8 w-auto brightness-0 invert"
+                width={160}
+                height={64}
+                className="h-11 w-auto brightness-0 invert sm:h-12 md:h-14"
               />
               <button
                 type="button"
@@ -255,38 +245,38 @@ export function Header() {
             </div>
             <nav
               data-lenis-prevent
-              className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-16 pt-10 [-webkit-overflow-scrolling:touch]"
+              className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-16 pt-10 sm:px-8 md:px-12 md:pt-16 [-webkit-overflow-scrolling:touch]"
             >
-              <div className="flex flex-col gap-6">
-              {mobileLinks.map((l, i) => (
-                <motion.div
-                  key={`${l.href}-${l.label}`}
-                  initial={{ opacity: 0, y: 24 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.15 + i * 0.06 }}
-                >
-                  {l.href === "#signin" ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setMenuOpen(false);
-                        openAuth("signin");
-                      }}
-                      className="font-display text-4xl font-medium tracking-tight"
-                    >
-                      {l.label}
-                    </button>
-                  ) : (
-                    <Link
-                      href={l.href}
-                      onClick={() => setMenuOpen(false)}
-                      className="font-display text-4xl font-medium tracking-tight"
-                    >
-                      {l.label}
-                    </Link>
-                  )}
-                </motion.div>
-              ))}
+              <div className="mx-auto flex max-w-[1600px] flex-col gap-6 md:max-w-3xl md:gap-8">
+                {menuLinks.map((l, i) => (
+                  <motion.div
+                    key={`${l.href}-${l.label}`}
+                    initial={{ opacity: 0, y: 24 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.15 + i * 0.06 }}
+                  >
+                    {l.href === "#signin" ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMenuOpen(false);
+                          openAuth("signin");
+                        }}
+                        className="font-display text-4xl font-medium tracking-tight md:text-6xl"
+                      >
+                        {l.label}
+                      </button>
+                    ) : (
+                      <Link
+                        href={l.href}
+                        onClick={() => setMenuOpen(false)}
+                        className="font-display text-4xl font-medium tracking-tight md:text-6xl"
+                      >
+                        {l.label}
+                      </Link>
+                    )}
+                  </motion.div>
+                ))}
               </div>
             </nav>
           </motion.div>

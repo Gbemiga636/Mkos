@@ -154,7 +154,7 @@ export function SearchOverlay() {
             {query && (
               <div className="mt-10 grid gap-4 sm:grid-cols-2">
                 {results.length === 0 && (
-                  <p className="text-mkos-muted">No pieces found for “{query}”.</p>
+                  <p className="text-mkos-muted">No styles found for “{query}”.</p>
                 )}
                 {results.map((p) => (
                   <Link

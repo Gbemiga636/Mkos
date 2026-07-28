@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import gsap from "gsap";
@@ -11,8 +11,15 @@ import { ScrollReveal } from "@/components/experience/ScrollReveal";
 import { useCursorLabel } from "@/hooks/useCursorLabel";
 import { useCms, useContent } from "@/lib/cms/CmsProvider";
 import { isTouchDevice } from "@/lib/video/autoplay";
+import { cn } from "@/lib/utils";
 
 gsap.registerPlugin(ScrollTrigger);
+
+function collectionHref(slug: string) {
+  if (slug === "bespoke") return "/bespoke";
+  if (slug === "ready-to-wear") return "/shop?collection=ready-to-wear";
+  return null;
+}
 
 export function FeaturedCollection() {
   const ref = useRef<HTMLElement>(null);
@@ -20,12 +27,10 @@ export function FeaturedCollection() {
   const { collections } = useCms();
   const section = useContent("featured_collections");
 
-  // Soft parallax only — entrance uses ScrollReveal (reliable)
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
     if (isTouchDevice()) return;
 
     const ctx = gsap.context(() => {
@@ -47,63 +52,92 @@ export function FeaturedCollection() {
   }, [collections.length]);
 
   return (
-    <section ref={ref} className="relative bg-white px-5 py-28 sm:px-8 lg:px-12">
+    <section id="collections" ref={ref} className="relative bg-white px-5 py-28 sm:px-8 lg:px-12">
       <div className="mx-auto max-w-[1600px]">
         <SectionHeading
           eyebrow={section?.eyebrow ?? "Collections"}
-          title={section?.title ?? "Ready-to-Wear. Bespoke. Bridal."}
+          title={section?.title ?? "Designed for Every Defining Moment."}
           subtitle={
             section?.subtitle ??
-            "Three ways to experience MKoS—discover timeless Ready-to-Wear, expertly crafted Bespoke creations, and luxurious Bridal designs, each thoughtfully made for those who understand style."
+            "Ready-to-Wear. Bespoke. Bridal — three ways to experience MKoS: discover timeless Ready-to-Wear, expertly crafted Bespoke creations, and luxurious Bridal designs, each thoughtfully made for those who understand style."
           }
         />
 
         <div className="mt-16 grid gap-6 md:grid-cols-3">
-          {collections.map((c, i) => (
-            <ScrollReveal key={c.slug} y={56} delay={i * 100}>
-              <Link
-                href={`/shop?collection=${c.slug}`}
-                className="fc-card group relative block overflow-hidden"
-                style={{ marginTop: i === 1 ? "3rem" : i === 2 ? "1.5rem" : 0 }}
-                {...cursor}
-              >
-                <div className="relative aspect-[3/4] overflow-hidden bg-mkos-warm">
-                  <div
-                    className={
-                      c.video
-                        ? "absolute inset-0"
-                        : "fc-media fc-media-image absolute inset-0 scale-110"
-                    }
-                  >
-                    {c.video ? (
-                      <AutoplayVideo
-                        src={c.video}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <Image
-                        src={c.image}
-                        alt={c.name}
-                        fill
-                        className="object-cover transition-transform duration-1000 group-hover:scale-105"
-                        sizes="(max-width: 768px) 100vw, 33vw"
-                      />
-                    )}
-                  </div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-                  <div className="absolute inset-x-0 bottom-0 p-6 text-white sm:p-8">
-                    <p className="font-display text-[10px] tracking-[0.3em] text-white/60 uppercase">
-                      0{i + 1}
-                    </p>
-                    <h3 className="mt-2 font-display text-2xl font-medium tracking-tight sm:text-3xl">
-                      {c.name}
-                    </h3>
-                    <p className="mt-2 max-w-xs text-sm text-white/70">{c.description}</p>
-                  </div>
+          {collections.map((c, i) => {
+            const href = collectionHref(c.slug);
+            const isBridal = c.slug === "bridal";
+            const cardClass = cn(
+              "fc-card group relative block overflow-hidden text-left",
+              isBridal && "cursor-default"
+            );
+            const style = { marginTop: i === 1 ? "3rem" : i === 2 ? "1.5rem" : 0 };
+
+            const media = (
+              <div className="relative aspect-[3/4] overflow-hidden bg-mkos-warm">
+                <div
+                  className={
+                    c.video
+                      ? "absolute inset-0"
+                      : "fc-media fc-media-image absolute inset-0 scale-110"
+                  }
+                >
+                  {c.video ? (
+                    <AutoplayVideo src={c.video} className="h-full w-full object-cover" />
+                  ) : (
+                    <Image
+                      src={c.image}
+                      alt={c.name}
+                      fill
+                      className="object-cover transition-transform duration-1000 group-hover:scale-105"
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                    />
+                  )}
                 </div>
-              </Link>
-            </ScrollReveal>
-          ))}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+
+                {isBridal && (
+                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/55 opacity-0 transition-opacity duration-500 group-hover:opacity-100 group-focus-within:opacity-100">
+                    <p className="font-display text-sm tracking-[0.35em] text-white uppercase sm:text-base">
+                      Coming soon
+                    </p>
+                  </div>
+                )}
+
+                <div className="absolute inset-x-0 bottom-0 z-20 p-6 text-white sm:p-8">
+                  <h3 className="font-display text-2xl font-medium tracking-tight sm:text-3xl">
+                    {c.name}
+                  </h3>
+                  <p className="mt-2 max-w-xs text-sm text-white/70">{c.description}</p>
+                  {isBridal && (
+                    <p className="mt-4 font-display text-[10px] tracking-[0.28em] text-white/80 uppercase md:hidden">
+                      Coming soon
+                    </p>
+                  )}
+                </div>
+              </div>
+            );
+
+            return (
+              <ScrollReveal key={c.slug} y={56} delay={i * 100}>
+                {href ? (
+                  <Link href={href} className={cardClass} style={style} {...cursor}>
+                    {media}
+                  </Link>
+                ) : (
+                  <div
+                    className={cardClass}
+                    style={style}
+                    role="status"
+                    aria-label={`${c.name} — coming soon`}
+                    {...(isBridal ? {} : cursor)}
+                  >
+                    {media}
+                  </div>
+                )}
+              </ScrollReveal>
+            );
+          })}
         </div>
       </div>
     </section>

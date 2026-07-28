@@ -25,7 +25,7 @@ values
   ('reception', 'Reception Dresses', 'Reception silhouettes for the celebration after the vows.', 7, true),
   ('bridesmaids', 'Bridesmaids', 'Coordinated elegance for the bridal party.', 8, true),
   ('grooms', 'Grooms', 'Refined looks for the groom and groomsmen.', 9, true),
-  ('bridal-party', 'Family & Bridal Party', 'Thoughtfully crafted pieces for family and wedding guests.', 10, true)
+  ('bridal-party', 'Family & Bridal Party', 'Thoughtfully crafted collections for family and wedding guests.', 10, true)
 on conflict (slug) do update set
   name = excluded.name,
   description = excluded.description,
