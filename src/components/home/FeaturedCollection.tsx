@@ -10,6 +10,7 @@ import { AutoplayVideo } from "@/components/ui/AutoplayVideo";
 import { ScrollReveal } from "@/components/experience/ScrollReveal";
 import { useCursorLabel } from "@/hooks/useCursorLabel";
 import { useCms, useContent } from "@/lib/cms/CmsProvider";
+import { isTouchDevice } from "@/lib/video/autoplay";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -25,8 +26,10 @@ export function FeaturedCollection() {
     if (!el) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
+    if (isTouchDevice()) return;
+
     const ctx = gsap.context(() => {
-      gsap.to(".fc-media", {
+      gsap.to(".fc-media-image", {
         yPercent: -10,
         ease: "none",
         scrollTrigger: {
@@ -65,11 +68,17 @@ export function FeaturedCollection() {
                 {...cursor}
               >
                 <div className="relative aspect-[3/4] overflow-hidden bg-mkos-warm">
-                  <div className="fc-media absolute inset-0 scale-110">
+                  <div
+                    className={
+                      c.video
+                        ? "absolute inset-0"
+                        : "fc-media fc-media-image absolute inset-0 scale-110"
+                    }
+                  >
                     {c.video ? (
                       <AutoplayVideo
                         src={c.video}
-                        className="h-full w-full object-cover transition-transform duration-1000 group-hover:scale-105"
+                        className="h-full w-full object-cover"
                       />
                     ) : (
                       <Image

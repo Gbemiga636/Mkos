@@ -53,8 +53,6 @@ export function Hero() {
   const my = useMotionValue(0);
   const sx = useSpring(mx, { stiffness: 40, damping: 20 });
   const sy = useSpring(my, { stiffness: 40, damping: 20 });
-  const layer1x = useTransform(sx, (v) => v * 0.02);
-  const layer1y = useTransform(sy, (v) => v * 0.02);
   const layer2x = useTransform(sx, (v) => v * -0.03);
   const layer2y = useTransform(sy, (v) => v * -0.025);
   const playCursor = useCursorLabel("EXPLORE");
@@ -87,13 +85,14 @@ export function Hero() {
       className="relative flex min-h-[100svh] flex-col overflow-hidden bg-mkos-ink text-white"
       {...playCursor}
     >
-      <motion.div className="absolute inset-0 bg-black" style={{ x: layer1x, y: layer1y, scale: 1.08 }}>
+      <div className="absolute inset-0 overflow-hidden bg-black">
         <AutoplayVideo
           src={videoSrc}
           whenVisible={false}
+          eager
           className="h-full w-full object-cover opacity-80"
         />
-      </motion.div>
+      </div>
 
       <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-black/40" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,rgba(0,0,0,0.45)_100%)]" />

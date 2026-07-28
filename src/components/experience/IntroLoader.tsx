@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useUIStore } from "@/store/ui";
 import { useCmsOptional } from "@/lib/cms/CmsProvider";
 import { BRAND_NAME, normalizeBrandText } from "@/lib/brand";
+import { notifyLoaderComplete } from "@/lib/video/autoplay";
 
 export function IntroLoader() {
   const setLoaderComplete = useUIStore((s) => s.setLoaderComplete);
@@ -30,6 +31,7 @@ export function IntroLoader() {
         setTimeout(() => {
           setDone(true);
           setLoaderComplete(true);
+          notifyLoaderComplete();
         }, 400);
       }, 200);
       return;
@@ -44,6 +46,7 @@ export function IntroLoader() {
     const failsafe = window.setTimeout(() => {
       setDone(true);
       setLoaderComplete(true);
+      notifyLoaderComplete();
     }, duration + holdAtEnd + exitMs + 800);
 
     const tick = (now: number) => {
@@ -59,6 +62,7 @@ export function IntroLoader() {
           setTimeout(() => {
             setDone(true);
             setLoaderComplete(true);
+            notifyLoaderComplete();
             window.clearTimeout(failsafe);
           }, exitMs);
         }, holdAtEnd);

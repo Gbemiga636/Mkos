@@ -80,6 +80,9 @@ video {
 .mkos-autoplay-video {
   pointer-events: none;
   object-fit: cover;
+  /* Own compositor layer — helps iOS when siblings use transforms */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
 }
 
 .mkos-autoplay-video::-webkit-media-controls,

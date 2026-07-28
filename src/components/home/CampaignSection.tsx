@@ -8,6 +8,7 @@ import { BrandText } from "@/components/ui/BrandText";
 import { AutoplayVideo } from "@/components/ui/AutoplayVideo";
 import { ScrollReveal } from "@/components/experience/ScrollReveal";
 import { useContent } from "@/lib/cms/CmsProvider";
+import { isTouchDevice } from "@/lib/video/autoplay";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -21,17 +22,20 @@ export function CampaignSection() {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const ctx = gsap.context(() => {
-      gsap.to(".campaign-video", {
-        scale: 1.12,
-        ease: "none",
-        scrollTrigger: {
-          trigger: el,
-          start: "top bottom",
-          end: "bottom top",
-          scrub: true,
-          invalidateOnRefresh: true,
-        },
-      });
+      // iOS Safari won't autoplay video inside a transformed element.
+      if (!isTouchDevice()) {
+        gsap.to(".campaign-video-frame", {
+          scale: 1.12,
+          ease: "none",
+          scrollTrigger: {
+            trigger: el,
+            start: "top bottom",
+            end: "bottom top",
+            scrub: true,
+            invalidateOnRefresh: true,
+          },
+        });
+      }
 
       gsap.fromTo(
         ".campaign-mask",
@@ -56,11 +60,13 @@ export function CampaignSection() {
 
   return (
     <section id="campaign" ref={ref} className="relative min-h-[100svh] overflow-hidden bg-mkos-ink">
-      <div className="campaign-mask absolute inset-0" style={{ clipPath: "inset(12% 8% 12% 8%)" }}>
-        <AutoplayVideo
-          src={campaign?.media_url ?? "/videos/cloth-1.mp4"}
-          className="campaign-video h-full w-full scale-110 object-cover"
-        />
+      <div className="campaign-mask absolute inset-0 overflow-hidden" style={{ clipPath: "inset(12% 8% 12% 8%)" }}>
+        <div className="campaign-video-frame absolute inset-[-12%]">
+          <AutoplayVideo
+            src={campaign?.media_url ?? "/videos/cloth-1.mp4"}
+            className="h-full w-full object-cover"
+          />
+        </div>
         <div className="absolute inset-0 bg-black/45" />
       </div>
 
