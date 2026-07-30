@@ -8,6 +8,7 @@ import { BrandText } from "@/components/ui/BrandText";
 import { AutoplayVideo } from "@/components/ui/AutoplayVideo";
 import { ScrollReveal } from "@/components/experience/ScrollReveal";
 import { EditableSection } from "@/components/cms/EditableSection";
+import { FramedFilm } from "@/components/ui/FramedFilm";
 import { useContent } from "@/lib/cms/CmsProvider";
 
 const WHATSAPP = "https://wa.me/2348143173661";
@@ -125,6 +126,25 @@ export function ExperiencePageClient() {
               </ScrollReveal>
             ))}
           </div>
+        </div>
+      </section>
+
+      <section className="bg-[#f7f4ef] px-5 py-24 sm:px-8 lg:px-12 lg:py-32">
+        <div className="mx-auto max-w-[1600px]">
+          <ScrollReveal y={20} className="mx-auto max-w-xl text-center">
+            <p className="font-display text-[11px] tracking-[0.28em] text-mkos-muted uppercase">
+              The film
+            </p>
+            <h2 className="mt-4 font-display text-4xl font-medium tracking-tight sm:text-5xl">
+              Feel the Experience.
+            </h2>
+            <p className="mt-4 text-sm leading-relaxed text-mkos-muted sm:text-base">
+              Press play — sound on. A quiet look inside the house.
+            </p>
+          </ScrollReveal>
+          <ScrollReveal y={36} delay={80} className="mt-12 flex justify-center sm:mt-16">
+            <FramedFilm src="/videos/experience-3.mp4" aspect="portrait" />
+          </ScrollReveal>
         </div>
       </section>
 

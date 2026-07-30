@@ -71,8 +71,6 @@ export function FeaturedCollection() {
               "fc-card group relative block overflow-hidden text-left",
               isBridal && "cursor-default"
             );
-            const style = { marginTop: i === 1 ? "3rem" : i === 2 ? "1.5rem" : 0 };
-
             const media = (
               <div className="relative aspect-[3/4] overflow-hidden bg-mkos-warm">
                 <div
@@ -97,22 +95,30 @@ export function FeaturedCollection() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
 
                 {isBridal && (
-                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/55 opacity-0 transition-opacity duration-500 group-hover:opacity-100 group-focus-within:opacity-100">
-                    <p className="font-display text-sm tracking-[0.35em] text-white uppercase sm:text-base">
+                  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/72 px-6 text-center backdrop-blur-[2px]">
+                    <p className="font-display text-[11px] tracking-[0.4em] text-mkos-accent uppercase sm:text-xs">
+                      Bridal
+                    </p>
+                    <p className="mt-4 font-display text-3xl font-medium tracking-[0.2em] text-white uppercase sm:text-4xl lg:text-5xl">
                       Coming soon
+                    </p>
+                    <p className="mt-4 max-w-[14rem] text-sm leading-relaxed text-white/75">
+                      Luxurious bridal designs are being prepared for the house.
                     </p>
                   </div>
                 )}
 
-                <div className="absolute inset-x-0 bottom-0 z-20 p-6 text-white sm:p-8">
+                <div
+                  className={cn(
+                    "absolute inset-x-0 bottom-0 p-6 text-white sm:p-8",
+                    isBridal ? "z-[5]" : "z-20"
+                  )}
+                >
                   <h3 className="font-display text-2xl font-medium tracking-tight sm:text-3xl">
                     {c.name}
                   </h3>
-                  <p className="mt-2 max-w-xs text-sm text-white/70">{c.description}</p>
-                  {isBridal && (
-                    <p className="mt-4 font-display text-[10px] tracking-[0.28em] text-white/80 uppercase md:hidden">
-                      Coming soon
-                    </p>
+                  {!isBridal && (
+                    <p className="mt-2 max-w-xs text-sm text-white/70">{c.description}</p>
                   )}
                 </div>
               </div>
@@ -121,13 +127,12 @@ export function FeaturedCollection() {
             return (
               <ScrollReveal key={c.slug} y={56} delay={i * 100}>
                 {href ? (
-                  <Link href={href} className={cardClass} style={style} {...cursor}>
+                  <Link href={href} className={cardClass} {...cursor}>
                     {media}
                   </Link>
                 ) : (
                   <div
                     className={cardClass}
-                    style={style}
                     role="status"
                     aria-label={`${c.name} — coming soon`}
                     {...(isBridal ? {} : cursor)}

@@ -21,14 +21,7 @@ import {
   faqs as fallbackFaqs,
 } from "@/data/products";
 import { BRAND_NAME, normalizeBrandText } from "@/lib/brand";
-
-/** Prefer a single primary image format; drop duplicate .webp siblings. */
-function normalizeImages(images: string[] | null | undefined): string[] {
-  const list = images ?? [];
-  const jpgPreferred = list.filter((src) => !src.toLowerCase().endsWith(".webp"));
-  const unique = Array.from(new Set(jpgPreferred.length ? jpgPreferred : list));
-  return unique;
-}
+import { parseProductImages } from "@/lib/media/imageFocus";
 
 /** Legacy women/men collections → primary offerings (RTW / Bespoke / Bridal). */
 function normalizeCollectionSlug(slug: string) {
@@ -78,6 +71,7 @@ function mapProduct(row: Record<string, unknown>): Product {
     slug === "abeni-boubou" ? "boubou" : normalizeCategorySlug(rawCategory);
   const collection =
     slug === "abeni-boubou" ? "ready-to-wear" : normalizeCollectionSlug(rawCollection);
+  const parsedImages = parseProductImages(row.images);
   return {
     id: String(row.id),
     slug,
@@ -87,7 +81,8 @@ function mapProduct(row: Record<string, unknown>): Product {
     story: String(row.story ?? ""),
     price: Number(row.price),
     compareAt: row.compare_at != null ? Number(row.compare_at) : undefined,
-    images: normalizeImages(row.images as string[]),
+    images: parsedImages.images,
+    imageFocus: parsedImages.imageFocus,
     category,
     collection,
     colors: (row.colors as Product["colors"]) ?? [],
@@ -124,8 +119,7 @@ function fallbackSnapshot(): CmsSnapshot {
       section: "campaign",
       eyebrow: "Craft & Culture",
       title: "Style should be personal.",
-      subtitle:
-        "Clean modern tailoring, premium fabrics, and traditional textiles including Aso Oke — for a global luxury audience.",
+      subtitle: "",
       cta_label: "Shop Ready-to-Wear",
       cta_href: "/shop?collection=ready-to-wear",
       media_url: "/videos/cloth-1.mp4",
@@ -148,9 +142,12 @@ function fallbackSnapshot(): CmsSnapshot {
     featured_video: {
       key: "featured_video",
       section: "featured_video",
-      eyebrow: "Featured Film",
+      eyebrow: "",
       title: "MKoS in motion",
-      media_url: "/videos/white-space.mp4",
+      subtitle: "A quiet look at the house — then step into the Experience.",
+      cta_label: "Enter the Experience",
+      cta_href: "/experience",
+      media_url: "/videos/mkos-in-motion.mp4",
       media_type: "video",
     },
     experience_video: {
@@ -315,8 +312,8 @@ function fallbackSnapshot(): CmsSnapshot {
     reviews: {
       key: "reviews",
       section: "reviews",
-      eyebrow: "Client Voices",
-      title: "Worn with confidence.",
+      eyebrow: "Love notes",
+      title: "From the MKoS feed.",
     },
     instagram: {
       key: "instagram",
@@ -349,8 +346,8 @@ function fallbackSnapshot(): CmsSnapshot {
       key: "shop",
       section: "shop",
       eyebrow: "Shop",
-      title: "The full collection.",
-      subtitle: "Women, men, and bridal — filter by collection or category. Pricing coming via admin.",
+      title: "The MKoS collections.",
+      subtitle: "Women’s style, Men’s style, and Boubou. Pricing managed via admin.",
     },
   };
 
@@ -387,14 +384,10 @@ function fallbackSnapshot(): CmsSnapshot {
     content,
     navigation: [
       { label: "Home", href: "/", location: "header" },
-      { label: "Shop", href: "/shop", location: "header" },
       { label: "Ready-to-Wear", href: "/shop?collection=ready-to-wear", location: "header" },
       { label: "Bespoke", href: "/bespoke", location: "header" },
-      { label: "Bridal", href: "/#collections", location: "header" },
-      { label: "Story", href: "/about", location: "header" },
+      { label: "Who we are", href: "/about", location: "header" },
       { label: "Experience", href: "/experience", location: "header" },
-      { label: "Journal", href: "/blog", location: "header" },
-      { label: "Account", href: "/account", location: "header" },
     ],
     carousel: [
       { name: "Abeni Boubou", image_url: "/images/products/abeni-boubou.jpg", href: "/product/abeni-boubou" },
@@ -483,6 +476,16 @@ async function loadCmsSnapshot(): Promise<CmsSnapshot> {
         cta_href: "/shop?collection=ready-to-wear",
       };
     }
+    if (content.campaign) {
+      if (/Aso Oke|Clean modern tailoring/i.test(content.campaign.subtitle || "")) {
+        content.campaign.subtitle = "";
+      }
+      // Keep campaign on the original film — mkos-in-motion belongs to Featured Film
+      if (/mkos-in-motion/i.test(content.campaign.media_url || "")) {
+        content.campaign.media_url = "/videos/cloth-1.mp4";
+        content.campaign.media_type = "video";
+      }
+    }
     if (content.categories && /Custom, Men/i.test(content.categories.subtitle || "")) {
       content.categories = fallback.content.categories;
     }
@@ -515,6 +518,36 @@ async function loadCmsSnapshot(): Promise<CmsSnapshot> {
     }
     if (content.categories) {
       content.categories.subtitle = "Women’s RTW, Men’s RTW, and Boubou — within Ready-to-Wear.";
+    }
+    if (content.shop) {
+      if (/full (collection|archive)/i.test(content.shop.title || "")) {
+        content.shop.title = "The MKoS collections.";
+      }
+      if (/bridal/i.test(content.shop.subtitle || "")) {
+        content.shop.subtitle =
+          "Women’s style, Men’s style, and Boubou. Pricing managed via admin.";
+      }
+    }
+    if (content.reviews) {
+      if (/Client Voices|Whispers from the wardrobe|Worn with confidence/i.test(
+        `${content.reviews.eyebrow || ""} ${content.reviews.title || ""}`
+      )) {
+        content.reviews.eyebrow = "Love notes";
+        content.reviews.title = "From the MKoS feed.";
+      }
+    }
+    if (content.featured_video) {
+      const fv = content.featured_video;
+      if (!fv.media_url || /experience-3/i.test(fv.media_url)) {
+        fv.media_url = "/videos/mkos-in-motion.mp4";
+        fv.media_type = "video";
+      }
+      if (/Featured Film|Experience film/i.test(fv.eyebrow || "")) {
+        fv.eyebrow = "";
+      }
+      if (/Experience film|Experience — in motion/i.test(`${fv.eyebrow || ""} ${fv.title || ""}`)) {
+        fv.title = "MKoS in motion";
+      }
     }
     if (content.hero) {
       content.hero.cta_label = "Our services";
@@ -606,15 +639,22 @@ async function loadCmsSnapshot(): Promise<CmsSnapshot> {
       return img ? { ...c, image: img } : c;
     });
 
-    const reviews: Review[] =
+    const reviewsFromDb =
       reviewsRes.data?.map((r) => ({
         id: r.id,
-        name: r.author_name,
-        location: r.location ?? "",
-        rating: r.rating,
-        text: r.body,
-        product: r.product_name ?? "",
-      })) ?? fallback.reviews;
+        name: String(r.author_name ?? ""),
+        location: String(r.location ?? ""),
+        rating: Number(r.rating ?? 5),
+        text: String(r.body ?? ""),
+        product: String(r.product_name ?? ""),
+      })) ?? [];
+
+    const reviewsLegacy = reviewsFromDb.some((r) =>
+      /Adaeze|Tunde A\.|Chioma E\.|Kemi B\./i.test(r.name)
+    );
+
+    const reviews: Review[] =
+      !reviewsFromDb.length || reviewsLegacy ? fallback.reviews : reviewsFromDb;
 
     const faqs: Faq[] =
       faqsRes.data?.map((f) => ({
@@ -645,17 +685,26 @@ async function loadCmsSnapshot(): Promise<CmsSnapshot> {
             ];
           }
           if (n.href === "/shop?collection=men") {
-            return [{ label: "Bridal", href: "/#collections", location: n.location }];
+            return [];
           }
           return [n];
         });
       }
 
-      fromDb = fromDb.map((n) => {
-        if (n.href === "/shop?collection=bespoke") return { ...n, href: "/bespoke", label: n.label || "Bespoke" };
-        if (n.href === "/shop?collection=bridal") return { ...n, href: "/#collections", label: n.label || "Bridal" };
-        return n;
-      });
+      fromDb = fromDb
+        .filter(
+          (n) =>
+            n.label.toLowerCase() !== "bridal" &&
+            n.href !== "/shop?collection=bridal" &&
+            !(n.href === "/#collections" && n.label.toLowerCase() === "bridal")
+        )
+        .map((n) => {
+          if (n.href === "/shop?collection=bespoke") return { ...n, href: "/bespoke", label: n.label || "Bespoke" };
+          if (n.href === "/about" && /^story$/i.test(n.label)) {
+            return { ...n, label: "Who we are" };
+          }
+          return n;
+        });
 
       if (!fromDb.some((n) => n.href === "/experience")) {
         const storyIdx = fromDb.findIndex((n) => n.href === "/about");
@@ -667,8 +716,19 @@ async function loadCmsSnapshot(): Promise<CmsSnapshot> {
         ];
       }
 
-      // Style Brief stays off the public menu for now
-      fromDb = fromDb.filter((n) => n.href !== "/style-brief");
+      // Style Brief / Account / Journal / Shop stay off the public menu for now
+      fromDb = fromDb.filter(
+        (n) =>
+          n.href !== "/style-brief" &&
+          n.href !== "/account" &&
+          n.href !== "/blog" &&
+          n.href !== "/shop" &&
+          !n.href.includes("/account") &&
+          n.label.toLowerCase() !== "account" &&
+          n.label.toLowerCase() !== "sign in" &&
+          n.label.toLowerCase() !== "journal" &&
+          n.label.toLowerCase() !== "shop"
+      );
 
       return fromDb.filter((n, i, arr) => arr.findIndex((x) => x.href === n.href) === i);
     })();

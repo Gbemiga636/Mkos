@@ -1,7 +1,6 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
-import Link from "next/link";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import { BrandText } from "@/components/ui/BrandText";
@@ -12,10 +11,30 @@ import { cn } from "@/lib/utils";
 import { useContent } from "@/lib/cms/CmsProvider";
 
 const STEPS = [
-  { id: "you", label: "You", title: "Who we’re dressing" },
-  { id: "moment", label: "Moment", title: "The defining moment" },
-  { id: "piece", label: "Piece", title: "The piece & atelier services" },
-  { id: "finish", label: "Finish", title: "Fit, delivery & send" },
+  {
+    id: "you",
+    label: "You",
+    detail: "who you are.",
+    title: "Who are we styling today?",
+  },
+  {
+    id: "moment",
+    label: "The Moment",
+    detail: "the occasion you're dressing for.",
+    title: "The Moment",
+  },
+  {
+    id: "piece",
+    label: "Your Vision",
+    detail: "your style, inspiration, and preferences.",
+    title: "Your Vision",
+  },
+  {
+    id: "finish",
+    label: "The Finish",
+    detail: "the final fitting and completion.",
+    title: "The Finish",
+  },
 ] as const;
 
 const EVENT_TYPES = [
@@ -36,8 +55,8 @@ const OUTFIT_TYPES = [
   "Men’s Native Wear",
 ] as const;
 
-/** Full Glam services without Hair */
-const ATELIER_SERVICES = ["Makeup", "Gele", "Outfit"] as const;
+/** Full Glam services — Outfit replaced with Photoshoot */
+const ATELIER_SERVICES = ["Makeup", "Gele", "Photoshoot"] as const;
 
 const MEASUREMENT_OPTIONS = [
   { value: "attached", label: "My measurements are attached." },
@@ -183,15 +202,15 @@ export function BespokePageClient() {
   return (
     <div className="min-h-screen bg-[#f7f4ef]">
       <EditableSection cmsKey="bespoke_video" label="Bespoke video" className="block">
-        <section className="relative flex min-h-[72svh] flex-col justify-end overflow-hidden bg-mkos-ink text-white">
-          <div className="absolute inset-0">
+        <section className="relative flex min-h-[100svh] flex-col justify-end overflow-hidden bg-mkos-ink text-white">
+          <div className="absolute inset-0 flex items-center justify-center bg-black">
             <AutoplayVideo
               src={bespoke?.media_url ?? "/videos/bespoke-1.mp4"}
               whenVisible={false}
               eager
-              className="h-full w-full object-cover opacity-55"
+              className="h-full w-full object-contain opacity-80"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/25" />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/35 to-transparent" />
           </div>
           <div className="relative z-10 mx-auto w-full max-w-[1600px] px-5 pb-16 pt-36 sm:px-8 lg:px-12 lg:pb-20">
             <motion.p
@@ -215,7 +234,9 @@ export function BespokePageClient() {
               transition={{ delay: 0.12 }}
               className="mt-6 max-w-xl text-base text-white/75 sm:text-lg"
             >
-              {bespoke?.body ?? bespoke?.subtitle ?? "Begin your atelier brief. Share the occasion, the silhouette, and the services you want. The house crafts from there."}
+              {bespoke?.body ??
+                bespoke?.subtitle ??
+                "Begin your atelier brief. Share the occasion, the silhouette, and the services you want. The house crafts from there."}
             </motion.p>
           </div>
         </section>
@@ -228,11 +249,15 @@ export function BespokePageClient() {
               Atelier journey
             </p>
             <h2 className="mt-3 font-display text-3xl font-medium tracking-tight sm:text-4xl">
-              {STEPS[step].title}
+              Who are we styling today?
             </h2>
+            <p className="mt-4 text-sm leading-relaxed text-mkos-muted sm:text-base">
+              Four intentional steps. Your MKoS Experience begins here.
+            </p>
             <p className="mt-4 text-sm leading-relaxed text-mkos-muted">
-              Four quiet steps. One precise brief. Your answers land in the studio inbox — with any
-              inspiration photos attached.
+              Complete your bespoke brief and upload any inspiration images. Once submitted, your
+              responses are delivered directly to our studio, where every detail is thoughtfully
+              reviewed before we begin crafting your personalized MKoS experience.
             </p>
           </ScrollReveal>
 
@@ -244,33 +269,33 @@ export function BespokePageClient() {
             />
           </div>
 
-          <ol className="mt-8 space-y-3">
+          <ol className="mt-8 space-y-4">
             {STEPS.map((s, i) => (
               <li key={s.id}>
                 <button
                   type="button"
                   onClick={() => setStep(i)}
                   className={cn(
-                    "flex w-full items-baseline gap-4 text-left transition-colors",
+                    "flex w-full items-start gap-4 text-left transition-colors",
                     i === step ? "text-mkos-ink" : "text-mkos-muted hover:text-mkos-ink"
                   )}
                 >
-                  <span className="font-display text-[10px] tracking-[0.22em] uppercase">
+                  <span className="mt-1 font-display text-[10px] tracking-[0.22em] uppercase">
                     0{i + 1}
                   </span>
-                  <span className="font-display text-lg tracking-tight">{s.label}</span>
+                  <span>
+                    <span className="block font-display text-lg tracking-tight">
+                      {s.label}
+                      <span className="font-body text-sm font-normal tracking-normal text-mkos-muted">
+                        {" "}
+                        – {s.detail}
+                      </span>
+                    </span>
+                  </span>
                 </button>
               </li>
             ))}
           </ol>
-
-          <p className="mt-10 text-xs leading-relaxed text-mkos-muted">
-            Prefer Ready-to-Wear?{" "}
-            <Link href="/shop?collection=ready-to-wear" className="underline underline-offset-2">
-              Shop the collection
-            </Link>
-            . Bridal is coming soon.
-          </p>
         </aside>
 
         <form onSubmit={onSubmit} className="border border-mkos-border bg-white p-6 sm:p-10">
@@ -435,6 +460,10 @@ export function BespokePageClient() {
           <div className={step === 3 ? "space-y-8" : "hidden"}>
             <div>
               <FieldLabel>Measurements</FieldLabel>
+              <p className="mb-3 text-sm leading-relaxed text-mkos-muted">
+                For the most accurate fit, we recommend visiting the MKoS showroom for measurements.
+                If you cannot come in, choose an option below and share any notes you have.
+              </p>
               <div className="mt-3 space-y-2">
                 {MEASUREMENT_OPTIONS.map((o) => (
                   <label

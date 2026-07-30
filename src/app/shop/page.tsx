@@ -10,17 +10,21 @@ import { useCms, useContent } from "@/lib/cms/CmsProvider";
 import Link from "next/link";
 import { RTW_CATEGORY_SLUGS } from "@/data/products";
 
+const SHOP_CATEGORY_LABELS: Record<string, string> = {
+  "women-rtw": "Women’s style",
+  "men-rtw": "Men’s style",
+  boubou: "Boubou",
+};
+
 function ShopContent() {
   const cms = useCms();
   const shop = useContent("shop");
   const products = cms.products;
   const categories = cms.categories;
-  const collections = cms.collections;
   const params = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
 
-  const [collection, setCollection] = useState(params.get("collection") ?? "");
   const [category, setCategory] = useState(params.get("category") ?? "");
   const [filter, setFilter] = useState(params.get("filter") ?? "");
   const [sort, setSort] = useState("featured");
@@ -28,11 +32,6 @@ function ShopContent() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [color, setColor] = useState("");
   const [availability, setAvailability] = useState<"all" | "in">("all");
-
-  const shopCollections = useMemo(
-    () => collections.filter((c) => c.slug === "ready-to-wear"),
-    [collections]
-  );
 
   const rtwCategories = useMemo(
     () => categories.filter((c) => (RTW_CATEGORY_SLUGS as readonly string[]).includes(c.slug)),
@@ -50,47 +49,34 @@ function ShopContent() {
       router.replace("/shop");
       return;
     }
-    setCollection(col);
     setCategory(params.get("category") ?? "");
     setFilter(params.get("filter") ?? "");
   }, [params, router]);
 
-  function writeQuery(next: { collection?: string; category?: string; filter?: string }) {
+  function writeQuery(next: { category?: string; filter?: string }) {
     const q = new URLSearchParams();
-    const col = next.collection ?? "";
     const cat = next.category ?? "";
     const f = next.filter ?? "";
-    if (col) q.set("collection", col);
     if (cat) q.set("category", cat);
     if (f) q.set("filter", f);
     const qs = q.toString();
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   }
 
-  function selectCollection(slug: string) {
-    const next = collection === slug ? "" : slug;
-    setCollection(next);
-    setCategory("");
-    setFilter("");
-    writeQuery({ collection: next, category: "", filter: "" });
-  }
-
   function selectCategory(slug: string) {
     const next = category === slug ? "" : slug;
     setCategory(next);
-    writeQuery({ collection, category: next, filter });
+    writeQuery({ category: next, filter });
   }
 
   function clearAll() {
-    setCollection("");
     setCategory("");
     setFilter("");
-    writeQuery({ collection: "", category: "", filter: "" });
+    writeQuery({ category: "", filter: "" });
   }
 
   const filtered = useMemo(() => {
     let list = products.filter((p) => p.collection === "ready-to-wear" || !p.collection);
-    if (collection) list = list.filter((p) => p.collection === collection);
     if (category) list = list.filter((p) => p.category === category);
     if (filter === "new") list = list.filter((p) => p.newArrival);
     if (filter === "bestsellers") list = list.filter((p) => p.bestSeller);
@@ -106,11 +92,14 @@ function ShopContent() {
     if (sort === "price-desc") list.sort((a, b) => b.price - a.price);
     if (sort === "rating") list.sort((a, b) => b.rating - a.rating);
     return list;
-  }, [products, collection, category, filter, sort, priceMax, color, availability]);
+  }, [products, category, filter, sort, priceMax, color, availability]);
 
-  const activeCollectionName =
-    collections.find((c) => c.slug === collection)?.name ||
-    (collection ? collection : null);
+  const activeCategoryName =
+    category ?
+      SHOP_CATEGORY_LABELS[category] ||
+      categories.find((c) => c.slug === category)?.name ||
+      null
+    : null;
 
   return (
     <div className="min-h-screen bg-white pt-28 pb-24">
@@ -125,12 +114,8 @@ function ShopContent() {
               {shop?.eyebrow ?? "Shop"}
             </p>
             <h1 className="mt-4 font-display text-5xl font-medium tracking-tight sm:text-6xl lg:text-7xl">
-              {activeCollectionName || shop?.title || "The full archive."}
+              {activeCategoryName || shop?.title || "The MKoS collections."}
             </h1>
-            <p className="mt-4 max-w-xl text-mkos-muted">
-              {shop?.subtitle ??
-                "Shop Ready-to-Wear online. For Bespoke / Custom Wear, begin your atelier brief."}
-            </p>
           </motion.div>
         </EditableSection>
 
@@ -155,41 +140,23 @@ function ShopContent() {
           </select>
         </div>
 
-        <div className="mt-6 space-y-4">
-          <div>
-            <p className="mb-2 font-display text-[10px] tracking-[0.22em] text-mkos-muted uppercase">
-              Collections
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <Chip active={!collection && !category && !filter} onClick={clearAll}>
-                All
+        <div className="mt-6">
+          <p className="mb-2 font-display text-[10px] tracking-[0.22em] text-mkos-muted uppercase">
+            Filter
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Chip active={!category && !filter} onClick={clearAll}>
+              All
+            </Chip>
+            {rtwCategories.map((c) => (
+              <Chip
+                key={c.slug}
+                active={category === c.slug}
+                onClick={() => selectCategory(c.slug)}
+              >
+                {SHOP_CATEGORY_LABELS[c.slug] || c.name}
               </Chip>
-              {shopCollections.map((c) => (
-                <Chip
-                  key={c.slug}
-                  active={collection === c.slug}
-                  onClick={() => selectCollection(c.slug)}
-                >
-                  {c.name}
-                </Chip>
-              ))}
-            </div>
-          </div>
-          <div>
-            <p className="mb-2 font-display text-[10px] tracking-[0.22em] text-mkos-muted uppercase">
-              Ready-to-Wear
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {rtwCategories.map((c) => (
-                <Chip
-                  key={c.slug}
-                  active={category === c.slug}
-                  onClick={() => selectCategory(c.slug)}
-                >
-                  {c.name}
-                </Chip>
-              ))}
-            </div>
+            ))}
           </div>
         </div>
 
@@ -202,7 +169,7 @@ function ShopContent() {
         ) : (
           <div className="mt-16 max-w-lg border border-mkos-border bg-mkos-warm/40 px-6 py-10">
             <p className="font-display text-[11px] tracking-[0.28em] text-mkos-accent uppercase">
-              {activeCollectionName || "Shop"}
+              {activeCategoryName || "Shop"}
             </p>
             <h2 className="mt-3 font-display text-2xl font-medium tracking-tight">
               Styles for this selection are being prepared
@@ -294,7 +261,7 @@ function ShopContent() {
                       onClick={() => {
                         const next = filter === "new" ? "" : "new";
                         setFilter(next);
-                        writeQuery({ collection, category, filter: next });
+                        writeQuery({ category, filter: next });
                       }}
                     >
                       New
@@ -304,7 +271,7 @@ function ShopContent() {
                       onClick={() => {
                         const next = filter === "bestsellers" ? "" : "bestsellers";
                         setFilter(next);
-                        writeQuery({ collection, category, filter: next });
+                        writeQuery({ category, filter: next });
                       }}
                     >
                       Bestsellers
@@ -314,7 +281,7 @@ function ShopContent() {
                       onClick={() => {
                         const next = filter === "trending" ? "" : "trending";
                         setFilter(next);
-                        writeQuery({ collection, category, filter: next });
+                        writeQuery({ category, filter: next });
                       }}
                     >
                       Trending

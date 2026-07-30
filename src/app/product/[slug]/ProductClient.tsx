@@ -10,6 +10,7 @@ import { useCartStore, productToCartItem } from "@/store/cart";
 import { useWishlistStore } from "@/store/wishlist";
 import { useUIStore } from "@/store/ui";
 import { useCms, useFormatPrice } from "@/lib/cms/CmsProvider";
+import { objectPositionCss } from "@/lib/media/imageFocus";
 import { cn } from "@/lib/utils";
 
 export default function ProductClient({ product: initial }: { product: Product }) {
@@ -83,6 +84,7 @@ export default function ProductClient({ product: initial }: { product: Product }
                   priority
                   className="object-cover"
                   sizes="(max-width: 1024px) 100vw, 55vw"
+                  style={{ objectPosition: objectPositionCss(product.imageFocus?.[active]) }}
                 />
               </motion.div>
             </AnimatePresence>
@@ -98,7 +100,14 @@ export default function ProductClient({ product: initial }: { product: Product }
                   active === i ? "border-mkos-ink" : "border-transparent opacity-70 hover:opacity-100"
                 )}
               >
-                <Image src={img} alt="" fill className="object-cover" sizes="80px" />
+                <Image
+                  src={img}
+                  alt=""
+                  fill
+                  className="object-cover"
+                  sizes="80px"
+                  style={{ objectPosition: objectPositionCss(product.imageFocus?.[i]) }}
+                />
               </button>
             ))}
           </div>
@@ -256,7 +265,7 @@ export default function ProductClient({ product: initial }: { product: Product }
                 size="lg"
                 variant="checkout"
                 className="w-full"
-                cursor="SHOP"
+                cursor="EXPLORE"
                 disabled={product.stock <= 0}
                 onClick={() => {
                   if (product.stock <= 0) return;

@@ -72,7 +72,7 @@ export function CampaignSection() {
 
       <div className="relative z-10 flex min-h-[100svh] flex-col items-center justify-center px-5 text-center text-white">
         <ScrollReveal y={48}>
-          <p className="font-display text-[11px] tracking-[0.4em] text-white/60 uppercase">
+          <p className="font-display text-[11px] tracking-[0.4em] text-mkos-accent uppercase">
             {campaign?.eyebrow ? <BrandText>{campaign.eyebrow}</BrandText> : null}
           </p>
         </ScrollReveal>
@@ -81,9 +81,11 @@ export function CampaignSection() {
             {campaign?.title}
           </h2>
         </ScrollReveal>
-        <ScrollReveal y={40} delay={140}>
-          <p className="mt-6 max-w-lg text-base text-white/70 sm:text-lg">{campaign?.subtitle}</p>
-        </ScrollReveal>
+        {campaign?.subtitle ? (
+          <ScrollReveal y={40} delay={140}>
+            <p className="mt-6 max-w-lg text-base text-white/70 sm:text-lg">{campaign.subtitle}</p>
+          </ScrollReveal>
+        ) : null}
         <ScrollReveal y={32} delay={200}>
           <div className="mt-10">
             <Button href={campaign?.cta_href ?? "/shop"} variant="outline" size="lg">

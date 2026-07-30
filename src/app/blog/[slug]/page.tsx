@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { getPublishedPost, getPublishedPosts } from "@/lib/blog";
 import { ScrollReveal } from "@/components/experience/ScrollReveal";
 import { BrandText } from "@/components/ui/BrandText";
+import { pageMetadata } from "@/lib/seo";
 
 export const revalidate = 300;
 
@@ -21,13 +22,21 @@ export async function generateMetadata({
   const { slug } = await params;
   const post = await getPublishedPost(slug);
   if (!post) return { title: "Journal" };
+  const title = post.meta_title || post.title;
+  const description =
+    post.meta_description ||
+    post.excerpt ||
+    "Stories from the MKoS house — craft, culture, and timeless style.";
+  const base = pageMetadata({
+    title,
+    description,
+    path: `/blog/${post.slug}`,
+    images: post.cover_image ? [post.cover_image] : undefined,
+  });
   return {
-    title: post.meta_title || post.title,
-    description: post.meta_description || post.excerpt || undefined,
+    ...base,
     openGraph: {
-      title: post.meta_title || post.title,
-      description: post.meta_description || post.excerpt || undefined,
-      images: post.cover_image ? [post.cover_image] : undefined,
+      ...base.openGraph,
       type: "article",
     },
   };

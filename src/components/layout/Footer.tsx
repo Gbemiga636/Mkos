@@ -1,18 +1,20 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { EmailSubscribe } from "@/components/ui/EmailSubscribe";
 import { EditableSection } from "@/components/cms/EditableSection";
 import { ScrollReveal } from "@/components/experience/ScrollReveal";
-import { useCms, useContent } from "@/lib/cms/CmsProvider";
+import { useCms } from "@/lib/cms/CmsProvider";
 
 const IG_MAIN = "https://www.instagram.com/shopmykindofstyle";
 const IG_MEN = "https://www.instagram.com/mkosformen";
 const WHATSAPP = "https://wa.me/2348143173661";
+const STUDIO_ADDRESS = "1, Ade Adedeji Close, Ayo Babatunde Crescent, Oniru, Lagos, Nigeria.";
+const STUDIO_MAPS_URL = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(STUDIO_ADDRESS)}`;
 
 export function Footer() {
   const { settings } = useCms();
-  const footer = useContent("footer");
 
   const columns = [
     {
@@ -28,7 +30,6 @@ export function Footer() {
       title: "Support",
       links: [
         { href: "/#faq", label: "FAQ" },
-        { href: "/account", label: "Orders" },
         { href: WHATSAPP, label: "WhatsApp" },
         { href: "mailto:mkosfashionhouse@gmail.com", label: "Email" },
       ],
@@ -55,23 +56,33 @@ export function Footer() {
       <div className="mx-auto max-w-[1600px] px-5 pt-24 pb-10 sm:px-8 lg:px-12">
         <div className="grid gap-16 lg:grid-cols-[1.15fr_1fr]">
           <div>
-            <ScrollReveal y={16} className="font-display text-[11px] tracking-[0.35em] text-mkos-muted uppercase">
-              {footer?.eyebrow ?? "Stay close"}
+            <ScrollReveal y={16} className="mt-2 max-w-lg">
+              <EmailSubscribe buttonLabel="Join" successLabel="Joined" source="footer" />
             </ScrollReveal>
-            <ScrollReveal y={24} delay={60} className="mt-4 max-w-xl">
-              <h2 className="font-display text-4xl leading-[1.05] font-medium tracking-tight sm:text-5xl lg:text-6xl">
-                {footer?.title ?? "For Those Who Understand STYLE."}
-              </h2>
-            </ScrollReveal>
-            <div className="mt-10 max-w-lg">
-              <EmailSubscribe buttonLabel="Join" successLabel="Joined" />
-            </div>
 
-            <div className="mt-10 max-w-md space-y-2 text-sm text-mkos-muted">
+            <div className="mt-10 max-w-md space-y-3 text-sm text-mkos-muted">
               <p className="font-display text-[11px] tracking-[0.28em] text-mkos-ink uppercase">
                 Studio
               </p>
-              <p>1, Ade Adedeji Close, Ayo Babatunde Crescent, Oniru, Lagos, Nigeria.</p>
+              <a
+                href={STUDIO_MAPS_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group inline-flex max-w-full items-start gap-3 border border-mkos-border bg-white px-4 py-3 text-left transition-colors hover:border-mkos-ink"
+              >
+                <span
+                  className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center border border-mkos-border font-display text-[10px] tracking-[0.14em] text-mkos-ink uppercase transition-colors group-hover:bg-mkos-ink group-hover:text-white"
+                  aria-hidden
+                >
+                  Map
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-sm leading-relaxed text-mkos-ink">{STUDIO_ADDRESS}</span>
+                  <span className="mt-1 block font-display text-[10px] tracking-[0.18em] text-mkos-accent uppercase">
+                    Open in Google Maps
+                  </span>
+                </span>
+              </a>
               <p>
                 <a href="mailto:mkosfashionhouse@gmail.com" className="hover:text-mkos-ink">
                   mkosfashionhouse@gmail.com
@@ -117,11 +128,15 @@ export function Footer() {
         </div>
 
         <div className="mt-24 flex flex-col gap-8 border-t border-mkos-border pt-10 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="font-display text-6xl font-medium tracking-tighter sm:text-8xl lg:text-[9rem] leading-none">
-              {settings.brand_name}
-            </p>
-            <p className="mt-3 text-sm text-mkos-muted">{settings.tagline}</p>
+          <div className="max-w-xl">
+            <Image
+              src="/images/brand/mkos-signature.jpg"
+              alt="My Kind of Style"
+              width={720}
+              height={180}
+              className="h-auto w-full max-w-[min(100%,28rem)] object-contain object-left mix-blend-multiply sm:max-w-[36rem]"
+              priority={false}
+            />
           </div>
           <div className="flex flex-col gap-4 sm:items-end">
             <div className="flex flex-wrap gap-5 text-sm text-mkos-muted">

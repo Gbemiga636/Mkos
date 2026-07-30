@@ -8,6 +8,11 @@ import { useBusyStore } from "@/store/busy";
 import { cn } from "@/lib/utils";
 import { uploadMediaFile } from "@/lib/media/clientUpload";
 import { ProductDraftsModal } from "@/components/admin/ProductDraftsModal";
+import {
+  DEFAULT_IMAGE_FOCUS,
+  parseProductImages,
+  serializeProductImages,
+} from "@/lib/media/imageFocus";
 
 type Product = {
   id: string;
@@ -19,7 +24,7 @@ type Product = {
   price: number;
   stock: number;
   is_published: boolean;
-  images: string[];
+  images: unknown;
   category_slug: string | null;
   collection_slug: string | null;
   featured?: boolean;
@@ -45,6 +50,7 @@ const emptyForm = {
   collection: "ready-to-wear",
   category: "women-rtw",
   images: [] as string[],
+  imageFocus: [] as { x: number; y: number }[],
   featured: false,
   newArrival: false,
   bestSeller: false,
@@ -73,6 +79,7 @@ export default function AdminProductsPage() {
   }
 
   function openEdit(p: Product) {
+    const parsed = parseProductImages(p.images);
     setDrafts([
       {
         id: p.id,
@@ -91,7 +98,8 @@ export default function AdminProductsPage() {
             : ["women-rtw", "men-rtw", "boubou"].includes(p.category_slug ?? "")
               ? p.category_slug ?? "women-rtw"
               : "women-rtw",
-        images: Array.isArray(p.images) ? p.images : [],
+        images: parsed.images,
+        imageFocus: parsed.imageFocus,
         featured: !!p.featured,
         newArrival: !!p.new_arrival,
         bestSeller: !!p.best_seller,
@@ -123,7 +131,15 @@ export default function AdminProductsPage() {
         return;
       }
       setDrafts((prev) =>
-        prev.map((d, i) => (i === index ? { ...d, images: [...d.images, data.url] } : d))
+        prev.map((d, i) =>
+          i === index
+            ? {
+                ...d,
+                images: [...d.images, data.url],
+                imageFocus: [...(d.imageFocus ?? []), { ...DEFAULT_IMAGE_FOCUS }],
+              }
+            : d
+        )
       );
       setMsg(
         data.wasCompressed
@@ -154,7 +170,7 @@ export default function AdminProductsPage() {
         material: form.material,
         collection: form.collection,
         category: form.category,
-        images: form.images,
+        images: serializeProductImages(form.images, form.imageFocus),
         featured: form.featured,
         newArrival: form.newArrival,
         bestSeller: form.bestSeller,
@@ -475,6 +491,7 @@ export default function AdminProductsPage() {
           {filtered.map((p) => {
             const isSelected = selected.includes(p.id);
             const soldOut = Number(p.stock) <= 0;
+            const thumb = parseProductImages(p.images).images[0];
             return (
               <div
                 key={p.id}
@@ -484,13 +501,19 @@ export default function AdminProductsPage() {
                 )}
               >
                 <div className="relative aspect-[4/5] bg-mkos-warm">
-                  {p.images?.[0] ? (
+                  {thumb ? (
                     <Image
-                      src={p.images[0]}
+                      src={thumb}
                       alt={p.name}
                       fill
                       className="object-cover"
                       sizes="400px"
+                      style={{
+                        objectPosition: (() => {
+                          const parsed = parseProductImages(p.images);
+                          return `${parsed.imageFocus[0]?.x ?? 50}% ${parsed.imageFocus[0]?.y ?? 50}%`;
+                        })(),
+                      }}
                     />
                   ) : (
                     <div className="grid h-full place-items-center text-xs text-mkos-muted">

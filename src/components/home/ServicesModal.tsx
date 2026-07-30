@@ -76,7 +76,7 @@ export function ServicesModal({
           >
             <div className="flex items-start justify-between gap-4 border-b border-white/10 px-6 py-5 sm:px-8">
               <div>
-                <p className="font-display text-[10px] tracking-[0.35em] text-white/45 uppercase">
+                <p className="font-display text-[10px] tracking-[0.35em] text-mkos-accent uppercase">
                   MKoS
                 </p>
                 <h2 id="services-modal-title" className="mt-2 font-display text-2xl font-medium tracking-tight">

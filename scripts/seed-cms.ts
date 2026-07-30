@@ -154,15 +154,11 @@ async function main() {
   await supabase.from("navigation_links").delete().neq("id", "00000000-0000-0000-0000-000000000000");
   await upsert("navigation_links", [
     { label: "Home", href: "/", location: "header", sort_order: 0 },
-    { label: "Shop", href: "/shop", location: "header", sort_order: 1 },
-    { label: "Ready-to-Wear", href: "/shop?collection=ready-to-wear", location: "header", sort_order: 2 },
-    { label: "Bespoke", href: "/shop?collection=bespoke", location: "header", sort_order: 3 },
-    { label: "Bridal", href: "/shop?collection=bridal", location: "header", sort_order: 4 },
-    { label: "Story", href: "/about", location: "header", sort_order: 5 },
-    { label: "Experience", href: "/experience", location: "header", sort_order: 6 },
-    { label: "Style Brief", href: "/style-brief", location: "header", sort_order: 7 },
-    { label: "Journal", href: "/blog", location: "header", sort_order: 8 },
-    { label: "Account", href: "/account", location: "header", sort_order: 9 },
+    { label: "Ready-to-Wear", href: "/shop?collection=ready-to-wear", location: "header", sort_order: 1 },
+    { label: "Bespoke", href: "/bespoke", location: "header", sort_order: 2 },
+    { label: "Who we are", href: "/about", location: "header", sort_order: 3 },
+    { label: "Experience", href: "/experience", location: "header", sort_order: 4 },
+    { label: "Style Brief", href: "/style-brief", location: "header", sort_order: 5 },
   ]);
 
   await supabase.from("carousel_slides").delete().neq("id", "00000000-0000-0000-0000-000000000000");
@@ -235,8 +231,7 @@ async function main() {
       section: "campaign",
       eyebrow: "Craft & Culture",
       title: "Style should be personal.",
-      subtitle:
-        "Clean modern tailoring, premium fabrics, and traditional textiles including Aso Oke — for a global luxury audience.",
+      subtitle: "",
       cta_label: "Shop Ready-to-Wear",
       cta_href: "/shop?collection=ready-to-wear",
       media_url: "/videos/cloth-1.mp4",
@@ -261,9 +256,13 @@ async function main() {
     {
       key: "featured_video",
       section: "featured_video",
-      eyebrow: "Featured Film",
-      title: "MKoS in motion",
-      media_url: "/videos/white-space.mp4",
+      eyebrow: "The Experience film",
+      title: "MKoS Experience — in motion",
+      subtitle:
+        "Press play with sound. A quiet look at the house — then step into the Experience.",
+      cta_label: "Enter the Experience",
+      cta_href: "/experience",
+      media_url: "/videos/experience-3.mp4",
       media_type: "video",
       sort_order: 3,
     },
@@ -413,8 +412,8 @@ async function main() {
     {
       key: "reviews",
       section: "reviews",
-      eyebrow: "Client Voices",
-      title: "Worn with confidence.",
+      eyebrow: "Love notes",
+      title: "From the MKoS feed.",
       sort_order: 11,
     },
     {

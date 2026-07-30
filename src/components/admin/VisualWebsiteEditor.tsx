@@ -96,8 +96,6 @@ const PAGES = [
       "campaign",
       "editorial",
       "featured_video",
-        "experience_video",
-        "bespoke_video",
       "featured_collections",
       "new_arrivals",
       "best_sellers",

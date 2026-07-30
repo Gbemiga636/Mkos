@@ -140,6 +140,7 @@ export function customerOrderEmailHtml(order: OrderEmailPayload) {
     <p style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.7;color:${MUTED};margin:0 0 24px;">
       Thank you for your order with MKoS. Your payment was received successfully.
       We’re preparing your styles with the same care we put into every atelier finish.
+      Please note: orders typically arrive within <strong style="color:${INK};">7–10 business days</strong>.
     </p>
 
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${WARM};margin-bottom:24px;">
@@ -177,10 +178,11 @@ export function customerOrderEmailHtml(order: OrderEmailPayload) {
     <div style="margin-top:28px;padding-top:20px;border-top:1px solid ${BORDER};">
       <div style="font-family:Arial,Helvetica,sans-serif;font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:${MUTED};">Delivery</div>
       <p style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.7;color:${INK};margin:8px 0 0;">
+        <strong>Estimated arrival:</strong> 7–10 business days<br/>
         <strong>Method:</strong> ${escapeHtml(deliveryMethodLabel(order.deliveryMethod))}<br/>
         ${
           order.expectedDeliveryDate
-            ? `<strong>Expected date:</strong> ${escapeHtml(order.expectedDeliveryDate)}<br/>`
+            ? `<strong>Preferred date:</strong> ${escapeHtml(order.expectedDeliveryDate)}<br/>`
             : ""
         }
         ${escapeHtml(order.customerName)}<br/>
@@ -196,7 +198,7 @@ export function customerOrderEmailHtml(order: OrderEmailPayload) {
   `;
 
   return shell({
-    preheader: `Your MKoS order ${order.reference} is confirmed.`,
+    preheader: `Your MKoS order ${order.reference} is confirmed. Estimated arrival: 7–10 business days.`,
     title: "Order confirmed",
     eyebrow: "Payment received",
     bodyHtml: body,

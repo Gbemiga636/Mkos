@@ -15,15 +15,11 @@ const NAV = [
   { href: "/admin/live", label: "Live" },
   { href: "/admin/products", label: "Products" },
   { href: "/admin/content", label: "Website" },
-  { href: "/admin/media", label: "Media" },
+  { href: "/admin/faqs", label: "FAQs" },
   { href: "/admin/orders", label: "Orders" },
-  { href: "/admin/customers", label: "Customers" },
-  { href: "/admin/blog", label: "Blog" },
-  { href: "/admin/experience", label: "Experience" },
-  { href: "/admin/style-briefs", label: "Style briefs" },
+  { href: "/admin/subscribers", label: "Email list" },
   { href: "/admin/pages", label: "Pages" },
   { href: "/admin/notifications", label: "Alerts" },
-  { href: "/admin/emails", label: "Emails" },
   { href: "/admin/settings", label: "Settings" },
 ];
 

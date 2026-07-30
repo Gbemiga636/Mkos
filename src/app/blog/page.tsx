@@ -3,18 +3,16 @@ import Link from "next/link";
 import Image from "next/image";
 import { getPublishedPosts } from "@/lib/blog";
 import { ScrollReveal } from "@/components/experience/ScrollReveal";
+import { pageMetadata } from "@/lib/seo";
 
 export const revalidate = 300;
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Journal",
   description:
     "MKoS Journal — stories on craft, style, African heritage, and the MKoS MASTER Standard.",
-  openGraph: {
-    title: "MKoS Journal",
-    description: "Stories from the house — craft, culture, and timeless style.",
-  },
-};
+  path: "/blog",
+});
 
 export default async function BlogIndexPage() {
   const posts = await getPublishedPosts();

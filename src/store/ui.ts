@@ -32,7 +32,8 @@ export const useUIStore = create<UIState>((set, get) => ({
   openAuth: (mode = "signin") => set({ authOpen: true, authMode: mode }),
   closeAuth: () => set({ authOpen: false }),
   cursorLabel: "",
-  setCursorLabel: (label) => set({ cursorLabel: label }),
+  setCursorLabel: (label) =>
+    set({ cursorLabel: label === "SHOP" ? "EXPLORE" : label }),
   cursorHover: false,
   setCursorHover: (v) => set({ cursorHover: v }),
   recentlyViewed: [],

@@ -10,6 +10,7 @@ type EmailSubscribeProps = {
   successLabel?: string;
   placeholder?: string;
   className?: string;
+  source?: string;
 };
 
 export function EmailSubscribe({
@@ -18,19 +19,38 @@ export function EmailSubscribe({
   successLabel = "You're on the list",
   placeholder = "you@email.com",
   className,
+  source = "footer",
 }: EmailSubscribeProps) {
   const [email, setEmail] = useState("");
   const [done, setDone] = useState(false);
   const [focused, setFocused] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const isDark = variant === "dark" || variant === "ink";
 
   return (
     <form
       className={cn("w-full", className)}
-      onSubmit={(e) => {
+      onSubmit={async (e) => {
         e.preventDefault();
-        if (email) setDone(true);
+        if (!email || loading || done) return;
+        setLoading(true);
+        setError("");
+        try {
+          const res = await fetch("/api/newsletter/subscribe", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, source }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Could not subscribe");
+          setDone(true);
+        } catch (err) {
+          setError(err instanceof Error ? err.message : "Could not subscribe");
+        } finally {
+          setLoading(false);
+        }
       }}
     >
       <label
@@ -68,7 +88,7 @@ export function EmailSubscribe({
             type="email"
             required
             value={email}
-            disabled={done}
+            disabled={done || loading}
             onChange={(e) => setEmail(e.target.value)}
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
@@ -93,7 +113,7 @@ export function EmailSubscribe({
         <Button
           type="submit"
           size="lg"
-          disabled={done}
+          disabled={done || loading}
           variant={variant === "dark" ? "secondary" : "primary"}
           className={cn(
             variant === "dark" && "bg-white text-mkos-ink hover:bg-white/90",
@@ -102,7 +122,7 @@ export function EmailSubscribe({
           )}
           cursor=""
         >
-          {done ? successLabel : buttonLabel}
+          {done ? successLabel : loading ? "…" : buttonLabel}
         </Button>
       </div>
       {done && (
@@ -115,6 +135,7 @@ export function EmailSubscribe({
           Thank you — we’ll keep you close to the next drop.
         </p>
       )}
+      {error && <p className="mt-3 text-sm text-red-700">{error}</p>}
     </form>
   );
 }

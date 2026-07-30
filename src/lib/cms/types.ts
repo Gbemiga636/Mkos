@@ -1,3 +1,5 @@
+import type { ImageFocus } from "@/lib/media/imageFocus";
+
 export type ProductColor = {
   name: string;
   hex: string;
@@ -13,6 +15,8 @@ export type Product = {
   price: number;
   compareAt?: number;
   images: string[];
+  /** Focal points (0–100%) matching `images` — controls object-position in card frames. */
+  imageFocus?: ImageFocus[];
   category: string;
   collection: string;
   colors: ProductColor[];

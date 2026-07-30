@@ -178,7 +178,7 @@ export function Hero() {
               onClick={() => setServicesOpen(true)}
               variant="outline"
               size="lg"
-              cursor="SHOP"
+              cursor="EXPLORE"
             >
               Our services
             </Button>

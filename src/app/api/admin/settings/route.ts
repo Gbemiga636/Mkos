@@ -22,7 +22,7 @@ export async function PUT(req: Request) {
   const sb = createServiceClient();
   const { data: current } = await sb
     .from("site_settings")
-    .select("social")
+    .select("*")
     .eq("id", "main")
     .maybeSingle();
   const social = {
@@ -38,8 +38,14 @@ export async function PUT(req: Request) {
       tagline: body.tagline,
       logo_url: body.logo_url,
       currency: body.currency,
-      free_shipping_threshold: Number(body.free_shipping_threshold),
-      shipping_fee: Number(body.shipping_fee),
+      free_shipping_threshold:
+        body.free_shipping_threshold != null && body.free_shipping_threshold !== ""
+          ? Number(body.free_shipping_threshold)
+          : Number(current?.free_shipping_threshold ?? 0),
+      shipping_fee:
+        body.shipping_fee != null && body.shipping_fee !== ""
+          ? Number(body.shipping_fee)
+          : Number(current?.shipping_fee ?? 0),
       social,
       updated_at: new Date().toISOString(),
     })

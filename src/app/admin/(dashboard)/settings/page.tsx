@@ -8,8 +8,6 @@ export default function SettingsPage() {
     tagline: "",
     logo_url: "",
     currency: "NGN",
-    free_shipping_threshold: "300000",
-    shipping_fee: "28000",
     instagram: "",
     whatsapp: "",
   });
@@ -25,8 +23,6 @@ export default function SettingsPage() {
             tagline: d.settings.tagline ?? "",
             logo_url: d.settings.logo_url ?? "",
             currency: d.settings.currency ?? "NGN",
-            free_shipping_threshold: String(d.settings.free_shipping_threshold ?? 300000),
-            shipping_fee: String(d.settings.shipping_fee ?? 28000),
             instagram: d.settings.social?.instagram ?? "",
             whatsapp: d.settings.social?.whatsapp ?? "",
           });
@@ -63,8 +59,6 @@ export default function SettingsPage() {
             ["tagline", "Tagline"],
             ["logo_url", "Logo URL"],
             ["currency", "Currency"],
-            ["free_shipping_threshold", "Free shipping threshold"],
-            ["shipping_fee", "Shipping fee"],
             ["instagram", "Instagram URL"],
             ["whatsapp", "WhatsApp URL"],
           ] as const

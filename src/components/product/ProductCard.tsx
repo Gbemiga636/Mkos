@@ -9,6 +9,7 @@ import { useFormatPrice } from "@/lib/cms/CmsProvider";
 import { useWishlistStore } from "@/store/wishlist";
 import { useCursorLabel } from "@/hooks/useCursorLabel";
 import { ScrollReveal } from "@/components/experience/ScrollReveal";
+import { objectPositionCss } from "@/lib/media/imageFocus";
 import { cn } from "@/lib/utils";
 
 export function ProductCard({
@@ -75,6 +76,7 @@ export function ProductCard({
               fill
               sizes="(max-width: 768px) 50vw, 25vw"
               className="object-cover"
+              style={{ objectPosition: objectPositionCss(product.imageFocus?.[0]) }}
             />
           </motion.div>
 
@@ -91,6 +93,7 @@ export function ProductCard({
                 fill
                 sizes="(max-width: 768px) 50vw, 25vw"
                 className="object-cover"
+                style={{ objectPosition: objectPositionCss(product.imageFocus?.[1]) }}
               />
             </motion.div>
           )}

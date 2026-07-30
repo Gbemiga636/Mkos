@@ -1,8 +1,10 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { ScrollReveal } from "@/components/experience/ScrollReveal";
 import { AutoplayVideo } from "@/components/ui/AutoplayVideo";
+import { BrandText } from "@/components/ui/BrandText";
 import { useContent } from "@/lib/cms/CmsProvider";
 
 export function EditorialStory() {
@@ -53,29 +55,42 @@ export function EditorialStory() {
   );
 }
 
+const MOTION_VIDEO = "/videos/mkos-in-motion.mp4";
+
 export function FeaturedVideo() {
   const section = useContent("featured_video");
+  // Always use the MKoS in motion film for Featured Film
+  const src =
+    section?.media_url && /mkos-in-motion/i.test(section.media_url)
+      ? section.media_url
+      : MOTION_VIDEO;
 
   return (
-    <section className="bg-mkos-warm px-5 py-20 sm:px-8 lg:px-12">
-      <div className="mx-auto max-w-[1600px]">
-        <ScrollReveal y={48}>
-          <div className="relative aspect-video overflow-hidden bg-black">
-            <AutoplayVideo
-              src={section?.media_url ?? "/videos/white-space.mp4"}
-              className="h-full w-full object-cover"
-            />
-            <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/50 to-transparent p-8 sm:p-12">
-              <div className="text-white">
-                <p className="font-display text-[11px] tracking-[0.35em] text-white/60 uppercase">
-                  {section?.eyebrow ?? "Featured Film"}
-                </p>
-                <h2 className="mt-3 font-display text-3xl font-medium tracking-tight sm:text-5xl">
-                  {section?.title ?? "White Space"}
-                </h2>
-              </div>
-            </div>
-          </div>
+    <section className="relative min-h-[88svh] overflow-hidden bg-mkos-ink text-white lg:min-h-[100svh]">
+      <div className="absolute inset-0">
+        <AutoplayVideo
+          src={src}
+          whenVisible
+          className="h-full w-full object-cover opacity-70"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/45 to-black/30" />
+      </div>
+
+      <div className="relative z-10 mx-auto flex min-h-[88svh] w-full max-w-[1600px] flex-col justify-end px-5 pb-16 pt-32 sm:px-8 lg:min-h-[100svh] lg:px-12 lg:pb-24">
+        <ScrollReveal y={28}>
+          <h2 className="max-w-2xl font-display text-4xl font-medium tracking-tight sm:text-5xl lg:text-6xl">
+            <BrandText>{section?.title ?? "MKoS in motion"}</BrandText>
+          </h2>
+          <p className="mt-5 max-w-md text-sm leading-relaxed text-white/75 sm:text-base">
+            {section?.subtitle ??
+              "A quiet look at the house — then step into the Experience."}
+          </p>
+          <Link
+            href={section?.cta_href ?? "/experience"}
+            className="mt-8 inline-flex h-12 items-center border border-white/40 bg-white px-7 font-display text-[11px] tracking-[0.18em] text-mkos-ink uppercase transition-colors hover:bg-transparent hover:text-white"
+          >
+            {section?.cta_label ?? "Enter the Experience"}
+          </Link>
         </ScrollReveal>
       </div>
     </section>

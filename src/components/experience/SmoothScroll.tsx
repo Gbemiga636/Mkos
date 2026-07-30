@@ -19,6 +19,9 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    // Native touch scrolling is smoother on phones/tablets than Lenis.
+    if (window.matchMedia("(pointer: coarse)").matches) return;
+    if (window.matchMedia("(max-width: 767px)").matches) return;
 
     const lenis = new Lenis({
       duration: 1.2,

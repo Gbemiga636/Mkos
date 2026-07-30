@@ -12,7 +12,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { SearchOverlay } from "@/components/layout/SearchOverlay";
 import { CartDrawer } from "@/components/layout/CartDrawer";
-import { AuthModal } from "@/components/auth/AuthModal";
+import { NewsletterPopup } from "@/components/layout/NewsletterPopup";
 import { SiteAssistant } from "@/components/ai/SiteAssistant";
 import { AnalyticsTracker } from "@/components/analytics/AnalyticsTracker";
 import { EditModeProvider, useEditMode } from "@/components/cms/EditableSection";
@@ -33,9 +33,9 @@ function StorefrontChrome({ children }: { children: React.ReactNode }) {
         <Header />
         {!editMode && <SearchOverlay />}
         {!editMode && <CartDrawer />}
-        {!editMode && <AuthModal />}
         {!editMode && <SiteAssistant />}
         {!editMode && <BackToTop />}
+        {!editMode && <NewsletterPopup />}
         <PageTransition>
           <main id="main">{children}</main>
         </PageTransition>

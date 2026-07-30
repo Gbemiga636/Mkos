@@ -70,7 +70,7 @@ export function BestSellers() {
         <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
           <div>
             <ScrollReveal y={20}>
-              <p className="font-display text-[11px] tracking-[0.35em] text-white/50 uppercase">
+              <p className="font-display text-[11px] tracking-[0.35em] text-mkos-accent uppercase">
                 {section?.eyebrow ?? "Best Sellers"}
               </p>
             </ScrollReveal>

@@ -176,11 +176,9 @@ export function AboutPageClient() {
       <section className="border-t border-mkos-border bg-mkos-ink px-5 py-24 text-white sm:px-8 lg:px-12 lg:py-28">
         <div className="mx-auto max-w-[1600px]">
           <ScrollReveal y={20}>
-            <p className="font-display text-[11px] tracking-[0.35em] text-white/50 uppercase">
+            <h2 className="max-w-3xl font-display text-3xl font-medium tracking-tight sm:text-4xl">
               <BrandText>MKoS</BrandText>
-            </p>
-            <h2 className="mt-4 max-w-2xl font-display text-3xl font-medium tracking-tight sm:text-4xl">
-              Defines who we are.
+              <span className="text-white/90"> Defines who we are.</span>
             </h2>
           </ScrollReveal>
           <div className="mt-14 grid gap-x-10 gap-y-12 sm:grid-cols-2">
@@ -202,16 +200,10 @@ export function AboutPageClient() {
       <section className="px-5 py-24 sm:px-8 lg:px-12 lg:py-32">
         <div className="mx-auto max-w-[1600px]">
           <ScrollReveal y={20}>
-            <p className="font-display text-[11px] tracking-[0.35em] text-mkos-muted uppercase">
+            <h2 className="max-w-3xl font-display text-3xl font-medium tracking-tight sm:text-4xl">
               MASTER
-            </p>
-            <h2 className="mt-4 max-w-2xl font-display text-3xl font-medium tracking-tight sm:text-4xl">
-              Defines how we work.
+              <span className="text-mkos-ink/90"> Defines how we work.</span>
             </h2>
-            <p className="mt-5 max-w-2xl text-mkos-muted">
-              The MKoS MASTER Standard defines our core values—guiding every decision, every design,
-              every relationship, and every client experience.
-            </p>
           </ScrollReveal>
           <div className="mt-14 grid gap-x-10 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
             {masterPillars.map((v, i) => (
@@ -297,7 +289,7 @@ export function AboutPageClient() {
                 Studio drops, fittings, and new collections — straight from Oniru to your inbox.
               </p>
             </div>
-            <EmailSubscribe buttonLabel="Join the list" />
+            <EmailSubscribe buttonLabel="Join the list" source="about" />
           </div>
 
           <div className="mt-14 flex flex-wrap gap-4">

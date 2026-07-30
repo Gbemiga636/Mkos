@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Hero } from "@/components/home/Hero";
 import { FeaturedCollection } from "@/components/home/FeaturedCollection";
 import { NewArrivals, BestSellers } from "@/components/home/ProductRails";
@@ -12,8 +13,19 @@ import {
   FAQ,
   Marquee,
 } from "@/components/home/MoreSections";
-import { VideoShowcase } from "@/components/home/VideoShowcase";
 import { EditableSection } from "@/components/cms/EditableSection";
+import { DEFAULT_DESCRIPTION, SITE_NAME, SITE_TAGLINE, pageMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = {
+  ...pageMetadata({
+    title: SITE_NAME,
+    description: DEFAULT_DESCRIPTION,
+    path: "/",
+  }),
+  title: {
+    absolute: `${SITE_NAME} — ${SITE_TAGLINE}`,
+  },
+};
 
 export default function HomePage() {
   return (
@@ -39,12 +51,11 @@ export default function HomePage() {
       <EditableSection cmsKey="editorial" label="Editorial">
         <EditorialStory />
       </EditableSection>
-      <VideoShowcase />
+      <EditableSection cmsKey="featured_video" label="MKoS in motion">
+        <FeaturedVideo />
+      </EditableSection>
       <EditableSection cmsKey="brand_story" label="Brand story">
         <BrandStory />
-      </EditableSection>
-      <EditableSection cmsKey="featured_video" label="Featured video">
-        <FeaturedVideo />
       </EditableSection>
       <EditableSection cmsKey="carousel" label="Carousel">
         <CollectionCarousel />
