@@ -62,7 +62,7 @@ export async function POST(req: Request) {
       images: item.images ?? existing?.images ?? [],
       category_slug: item.category ?? existing?.category_slug ?? null,
       collection_slug: item.collection ?? existing?.collection_slug ?? null,
-      colors: item.colors ?? existing?.colors ?? [],
+      colors: [],
       sizes: item.sizes ?? existing?.sizes ?? [],
       material: item.material ?? existing?.material ?? "",
       stock: Number(item.stock ?? existing?.stock ?? 0),

@@ -85,7 +85,7 @@ export function cartItemKey(item: { productId: string; color: string; size: stri
 
 export function productToCartItem(
   product: Product,
-  opts: { color: string; size: string; quantity?: number }
+  opts: { size: string; quantity?: number; color?: string }
 ): Omit<CartItem, "quantity"> & { quantity?: number } {
   return {
     productId: product.id,
@@ -93,7 +93,7 @@ export function productToCartItem(
     name: product.name,
     price: product.price,
     image: product.images[0],
-    color: opts.color,
+    color: opts.color ?? "",
     size: opts.size,
     quantity: opts.quantity,
   };

@@ -30,7 +30,6 @@ function ShopContent() {
   const [sort, setSort] = useState("featured");
   const [priceMax, setPriceMax] = useState(1000000);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [color, setColor] = useState("");
   const [availability, setAvailability] = useState<"all" | "in">("all");
 
   const rtwCategories = useMemo(
@@ -82,17 +81,13 @@ function ShopContent() {
     if (filter === "bestsellers") list = list.filter((p) => p.bestSeller);
     if (filter === "trending") list = list.filter((p) => p.trending);
     list = list.filter((p) => p.price <= priceMax);
-    if (color)
-      list = list.filter((p) =>
-        p.colors.some((c) => c.name.toLowerCase().includes(color.toLowerCase()))
-      );
     if (availability === "in") list = list.filter((p) => p.stock > 0);
 
     if (sort === "price-asc") list.sort((a, b) => a.price - b.price);
     if (sort === "price-desc") list.sort((a, b) => b.price - a.price);
     if (sort === "rating") list.sort((a, b) => b.rating - a.rating);
     return list;
-  }, [products, category, filter, sort, priceMax, color, availability]);
+  }, [products, category, filter, sort, priceMax, availability]);
 
   const activeCategoryName =
     category ?
@@ -235,14 +230,6 @@ function ShopContent() {
                   <p className="mt-2 text-sm text-mkos-muted">
                     Up to ₦{priceMax.toLocaleString("en-NG")}
                   </p>
-                </FilterGroup>
-                <FilterGroup label="Color">
-                  <input
-                    value={color}
-                    onChange={(e) => setColor(e.target.value)}
-                    placeholder="e.g. Black, Ivory"
-                    className="h-11 w-full border border-mkos-border px-3 text-sm outline-none focus:shadow-[0_0_0_3px_rgba(196,92,38,0.12)]"
-                  />
                 </FilterGroup>
                 <FilterGroup label="Availability">
                   <div className="flex gap-2">

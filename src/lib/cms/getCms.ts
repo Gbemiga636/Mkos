@@ -85,7 +85,7 @@ function mapProduct(row: Record<string, unknown>): Product {
     imageFocus: parsedImages.imageFocus,
     category,
     collection,
-    colors: (row.colors as Product["colors"]) ?? [],
+    colors: [],
     sizes: (row.sizes as string[]) ?? [],
     material: String(row.material ?? ""),
     rating: Number(row.rating ?? 5),

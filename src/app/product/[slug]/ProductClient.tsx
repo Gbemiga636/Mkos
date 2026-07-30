@@ -20,7 +20,6 @@ export default function ProductClient({ product: initial }: { product: Product }
 
   const [active, setActive] = useState(0);
   const [fullscreen, setFullscreen] = useState(false);
-  const [color, setColor] = useState(product.colors[0]?.name ?? "");
   const [size, setSize] = useState(product.sizes[1] ?? product.sizes[0] ?? "");
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
@@ -57,7 +56,6 @@ export default function ProductClient({ product: initial }: { product: Product }
   }, [product.id, addRecentlyViewed]);
 
   useEffect(() => {
-    setColor(product.colors[0]?.name ?? "");
     setSize(product.sizes[1] ?? product.sizes[0] ?? "");
     setActive(0);
   }, [product]);
@@ -143,25 +141,6 @@ export default function ProductClient({ product: initial }: { product: Product }
           </p>
 
           <div className="mt-8">
-            <p className="font-display text-[11px] tracking-[0.22em] uppercase">Color — {color}</p>
-            <div className="mt-3 flex gap-3">
-              {product.colors.map((c) => (
-                <button
-                  key={c.name}
-                  type="button"
-                  aria-label={c.name}
-                  onClick={() => setColor(c.name)}
-                  className={cn(
-                    "h-9 w-9 rounded-full border-2 transition-transform",
-                    color === c.name ? "scale-110 border-mkos-ink" : "border-transparent"
-                  )}
-                  style={{ background: c.hex, boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.1)" }}
-                />
-              ))}
-            </div>
-          </div>
-
-          <div className="mt-8">
             <p className="font-display text-[11px] tracking-[0.22em] uppercase">Size</p>
             <div className="mt-3 flex flex-wrap gap-2">
               {product.sizes.map((s) => (
@@ -217,7 +196,7 @@ export default function ProductClient({ product: initial }: { product: Product }
               disabled={product.stock <= 0}
               onClick={() => {
                 if (product.stock <= 0) return;
-                addItem(productToCartItem(product, { color, size, quantity: qty }));
+                addItem(productToCartItem(product, { size, quantity: qty }));
                 setAdded(true);
                 openCart();
                 setTimeout(() => setAdded(false), 1800);
@@ -269,7 +248,7 @@ export default function ProductClient({ product: initial }: { product: Product }
                 disabled={product.stock <= 0}
                 onClick={() => {
                   if (product.stock <= 0) return;
-                  addItem(productToCartItem(product, { color, size, quantity: qty }));
+                  addItem(productToCartItem(product, { size, quantity: qty }));
                 }}
               >
                 {product.stock <= 0 ? "Sold out" : "Buy now · Checkout"}
@@ -322,11 +301,10 @@ export default function ProductClient({ product: initial }: { product: Product }
             <Button
               className="mt-4"
               onClick={() => {
-                addItem(productToCartItem(product, { color, size, quantity: 1 }));
+                addItem(productToCartItem(product, { size, quantity: 1 }));
                 fbt.forEach((p) =>
                   addItem(
                     productToCartItem(p, {
-                      color: p.colors[0].name,
                       size: p.sizes[0],
                       quantity: 1,
                     })

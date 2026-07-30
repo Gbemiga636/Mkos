@@ -105,9 +105,7 @@ export function CartDrawer() {
                             <div className="flex justify-between gap-3">
                               <div>
                                 <p className="font-display text-base">{item.name}</p>
-                                <p className="mt-1 text-xs text-mkos-muted">
-                                  {item.color} / {item.size}
-                                </p>
+                                <p className="mt-1 text-xs text-mkos-muted">Size {item.size}</p>
                               </div>
                               <p className="font-display text-sm tabular-nums">
                                 {formatPrice(item.price * item.quantity)}

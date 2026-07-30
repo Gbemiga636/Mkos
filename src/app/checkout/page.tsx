@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { useFormatPrice } from "@/lib/cms/CmsProvider";
 import { useAuth } from "@/lib/auth/AuthProvider";
-import { useUIStore } from "@/store/ui";
 import {
   DELIVERY_FEE_NOTE,
   DELIVERY_METHODS,
@@ -24,7 +23,6 @@ export default function CheckoutPage() {
   const items = useCartStore((s) => s.items);
   const formatPrice = useFormatPrice();
   const { user } = useAuth();
-  const openAuth = useUIStore((s) => s.openAuth);
   const subtotal = items.reduce((n, i) => n + i.price * i.quantity, 0);
   // Product total only — delivery is quoted separately after checkout
   const total = subtotal;
@@ -347,18 +345,6 @@ export default function CheckoutPage() {
                   exit={{ opacity: 0, x: -20 }}
                 >
                   <h2 className="font-display text-2xl">Review</h2>
-                  {!user && (
-                    <p className="mt-3 text-sm text-mkos-muted">
-                      <button
-                        type="button"
-                        className="underline underline-offset-2"
-                        onClick={() => openAuth("signin")}
-                      >
-                        Sign in
-                      </button>{" "}
-                      to save this order to your account (optional).
-                    </p>
-                  )}
                   <div className="mt-4 space-y-3 text-sm leading-relaxed text-mkos-muted">
                     <p>
                       <span className="font-display text-[10px] tracking-[0.18em] text-mkos-ink uppercase">
@@ -443,7 +429,7 @@ export default function CheckoutPage() {
                   <div className="flex-1">
                     <p className="font-display text-sm">{item.name}</p>
                     <p className="text-xs text-mkos-muted">
-                      {item.color} / {item.size} × {item.quantity}
+                      Size {item.size} × {item.quantity}
                     </p>
                   </div>
                   <p className="text-sm tabular-nums">{formatPrice(item.price * item.quantity)}</p>

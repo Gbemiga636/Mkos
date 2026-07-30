@@ -33,7 +33,6 @@ type Product = {
   trending?: boolean;
   material?: string;
   sizes?: string[];
-  colors?: { name: string; hex: string }[];
   tags?: string[];
 };
 
@@ -180,7 +179,7 @@ export default function AdminProductsPage() {
           .split(",")
           .map((s) => s.trim())
           .filter(Boolean),
-        colors: [{ name: "Default", hex: "#111111" }],
+        colors: [],
         tags: [],
       }));
       const res = await fetch("/api/admin/products", {
