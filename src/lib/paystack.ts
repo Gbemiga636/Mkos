@@ -1,5 +1,16 @@
 import { ADMIN_EMAIL } from "@/lib/admin/auth";
 
+function cleanEnv(value: string | undefined) {
+  let v = (value || "").trim();
+  if (
+    (v.startsWith('"') && v.endsWith('"')) ||
+    (v.startsWith("'") && v.endsWith("'"))
+  ) {
+    v = v.slice(1, -1).trim();
+  }
+  return v;
+}
+
 export function siteUrl() {
   return (
     process.env.NEXT_PUBLIC_SITE_URL ||
@@ -10,11 +21,11 @@ export function siteUrl() {
 }
 
 export function paystackSecret() {
-  return process.env.PAYSTACK_SECRET_KEY || "";
+  return cleanEnv(process.env.PAYSTACK_SECRET_KEY);
 }
 
 export function paystackPublicKey() {
-  return process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || "";
+  return cleanEnv(process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY);
 }
 
 export function orderNotifyEmail() {
@@ -58,9 +69,15 @@ export async function paystackInitialize(opts: {
 }) {
   const secret = paystackSecret();
   if (!secret) {
-    throw new Error("PAYSTACK_SECRET_KEY is not set");
+    throw new Error("PAYSTACK_SECRET_KEY is not set on the server");
+  }
+  if (!secret.startsWith("sk_")) {
+    throw new Error("PAYSTACK_SECRET_KEY looks wrong — it must start with sk_test_ or sk_live_");
   }
   const amountKobo = Math.round(opts.amountNaira * 100);
+  if (!Number.isFinite(amountKobo) || amountKobo < 100) {
+    throw new Error("Order total is too low for Paystack (minimum ₦1.00)");
+  }
   const res = await fetch("https://api.paystack.co/transaction/initialize", {
     method: "POST",
     headers: {
@@ -78,7 +95,13 @@ export async function paystackInitialize(opts: {
   });
   const data = (await res.json()) as PaystackInitResponse;
   if (!res.ok || !data.status || !data.data) {
-    throw new Error(data.message || "Paystack initialize failed");
+    const msg = data.message || "Paystack initialize failed";
+    if (/invalid.?key/i.test(msg)) {
+      throw new Error(
+        "Paystack rejected the secret key. Confirm PAYSTACK_SECRET_KEY in Netlify (no quotes/spaces), then Clear cache and redeploy."
+      );
+    }
+    throw new Error(msg);
   }
   return data.data;
 }
