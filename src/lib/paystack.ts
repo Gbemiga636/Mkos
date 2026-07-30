@@ -98,7 +98,7 @@ export async function paystackInitialize(opts: {
     const msg = data.message || "Paystack initialize failed";
     if (/invalid.?key/i.test(msg)) {
       throw new Error(
-        "Paystack rejected the secret key. Confirm PAYSTACK_SECRET_KEY in Netlify (no quotes/spaces), then Clear cache and redeploy."
+        "Paystack rejected this secret key for payments. Open Paystack → Settings → API Keys & Webhooks, copy a fresh Secret Key (sk_test_…), update PAYSTACK_SECRET_KEY in Netlify (no quotes), then Clear cache and redeploy."
       );
     }
     throw new Error(msg);
