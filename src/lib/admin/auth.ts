@@ -2,8 +2,9 @@ import { createHash, randomBytes } from "crypto";
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 import { createServiceClient } from "@/lib/supabase/client";
+import { ADMIN_EMAIL } from "@/lib/admin/constants";
 
-export const ADMIN_EMAIL = "mkosfashionhouse@gmail.com";
+export { ADMIN_EMAIL } from "@/lib/admin/constants";
 export const SESSION_COOKIE = "mkos_admin_session";
 /** Readable by the storefront so analytics can skip admin browsing. */
 export const ANALYTICS_OPTOUT_COOKIE = "mkos_skip_analytics";

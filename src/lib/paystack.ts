@@ -1,4 +1,7 @@
-import { ADMIN_EMAIL } from "@/lib/admin/auth";
+import { ADMIN_EMAIL } from "@/lib/admin/constants";
+import { siteUrl } from "@/lib/siteUrl";
+
+export { siteUrl };
 
 function cleanEnv(value: string | undefined) {
   let v = (value || "").trim();
@@ -9,15 +12,6 @@ function cleanEnv(value: string | undefined) {
     v = v.slice(1, -1).trim();
   }
   return v;
-}
-
-export function siteUrl() {
-  return (
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    process.env.URL ||
-    process.env.DEPLOY_PRIME_URL ||
-    "http://localhost:3000"
-  ).replace(/\/$/, "");
 }
 
 export function paystackSecret() {

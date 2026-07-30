@@ -1,4 +1,4 @@
-import { siteUrl } from "@/lib/paystack";
+import { siteUrl } from "@/lib/siteUrl";
 
 function clean(value: string | undefined) {
   let v = (value || "").trim();
