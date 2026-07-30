@@ -1,5 +1,6 @@
 import { formatPrice } from "@/lib/cms/types";
 import { DELIVERY_FEE_NOTE, deliveryMethodLabel } from "@/lib/checkout/delivery";
+import { EMAIL_LOGO_PATH, emailAssetUrl } from "@/lib/email/assets";
 
 export type OrderEmailItem = {
   name: string;
@@ -51,16 +52,17 @@ function escapeHtml(s: string) {
 
 function itemsRows(items: OrderEmailItem[], currency: string) {
   return items
-    .map(
-      (item) => `
+    .map((item) => {
+      const imageUrl = emailAssetUrl(item.image);
+      return `
       <tr>
         <td style="padding:14px 0;border-bottom:1px solid ${BORDER};">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
             <tr>
               <td width="64" valign="top" style="padding-right:14px;">
                 ${
-                  item.image
-                    ? `<img src="${escapeHtml(item.image)}" width="64" height="80" alt="" style="display:block;object-fit:cover;background:${WARM};" />`
+                  imageUrl
+                    ? `<img src="${escapeHtml(imageUrl)}" width="64" height="80" alt="${escapeHtml(item.name)}" style="display:block;border:0;outline:none;text-decoration:none;width:64px;height:80px;object-fit:cover;background:${WARM};" />`
                     : `<div style="width:64px;height:80px;background:${WARM};"></div>`
                 }
               </td>
@@ -76,8 +78,8 @@ function itemsRows(items: OrderEmailItem[], currency: string) {
             </tr>
           </table>
         </td>
-      </tr>`
-    )
+      </tr>`;
+    })
     .join("");
 }
 
@@ -88,11 +90,14 @@ function shell(opts: {
   bodyHtml: string;
   footerNote: string;
 }) {
+  const logoUrl = emailAssetUrl(EMAIL_LOGO_PATH);
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="color-scheme" content="light" />
+  <meta name="supported-color-schemes" content="light" />
   <title>${escapeHtml(opts.title)}</title>
 </head>
 <body style="margin:0;padding:0;background:${WARM};color:${INK};">
@@ -103,8 +108,12 @@ function shell(opts: {
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border:1px solid ${BORDER};">
           <tr>
             <td style="padding:28px 32px 18px;border-bottom:1px solid ${BORDER};">
-              <div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:0.28em;color:${ACCENT};">MKoS</div>
-              <div style="font-family:Georgia,'Times New Roman',serif;font-size:28px;margin-top:10px;color:${INK};">${escapeHtml(opts.title)}</div>
+              ${
+                logoUrl
+                  ? `<img src="${escapeHtml(logoUrl)}" width="120" height="48" alt="MKoS" style="display:block;border:0;outline:none;text-decoration:none;height:48px;width:auto;max-width:140px;" />`
+                  : `<div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:0.28em;color:${ACCENT};">MKoS</div>`
+              }
+              <div style="font-family:Georgia,'Times New Roman',serif;font-size:28px;margin-top:14px;color:${INK};">${escapeHtml(opts.title)}</div>
               <div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:${MUTED};margin-top:8px;">${escapeHtml(opts.eyebrow)}</div>
             </td>
           </tr>
