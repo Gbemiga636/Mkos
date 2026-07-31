@@ -164,39 +164,39 @@ async function main() {
   await supabase.from("carousel_slides").delete().neq("id", "00000000-0000-0000-0000-000000000000");
   await upsert("carousel_slides", [
     {
+      name: "Akanni Set",
+      image_url: "/images/products/akanni-set.jpg",
+      href: "/product/akanni-set",
+      sort_order: 0,
+    },
+    {
+      name: "Anike Dress",
+      image_url: "/images/products/anike-dress.jpg",
+      href: "/product/anike-dress",
+      sort_order: 1,
+    },
+    {
+      name: "Doja Pants",
+      image_url: "/images/products/doja-pants.jpg",
+      href: "/product/doja-pants",
+      sort_order: 2,
+    },
+    {
+      name: "Doja Skirt",
+      image_url: "/images/products/doja-skirt.jpg",
+      href: "/product/doja-skirt",
+      sort_order: 3,
+    },
+    {
       name: "Abeni Boubou",
       image_url: "/images/products/abeni-boubou.jpg",
       href: "/product/abeni-boubou",
-      sort_order: 0,
+      sort_order: 4,
     },
     {
       name: "Rolly Set",
       image_url: "/images/products/rolly-set.jpg",
       href: "/product/rolly-set",
-      sort_order: 1,
-    },
-    {
-      name: "Puzzle Dress",
-      image_url: "/images/products/puzzle-dress.jpg",
-      href: "/product/puzzle-dress",
-      sort_order: 2,
-    },
-    {
-      name: "Jagu Jacket",
-      image_url: "/images/products/jagu-jacket.jpg",
-      href: "/product/jagu-jacket",
-      sort_order: 3,
-    },
-    {
-      name: "Asake Pants",
-      image_url: "/images/products/asake-pants.jpg",
-      href: "/product/asake-pants",
-      sort_order: 4,
-    },
-    {
-      name: "Sheed Set",
-      image_url: "/images/products/sheed-set.jpg",
-      href: "/product/sheed-set",
       sort_order: 5,
     },
   ]);

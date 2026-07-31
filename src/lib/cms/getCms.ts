@@ -645,6 +645,9 @@ async function loadCmsSnapshot(): Promise<CmsSnapshot> {
       }
     }
     collections = collections.map((c) => {
+      if (c.slug === "bespoke") {
+        return { ...c, image: "/images/collections/bespoke-cover.jpg" };
+      }
       const img = firstProductImageByCollection.get(c.slug);
       return img ? { ...c, image: img } : c;
     });

@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import { BrandText } from "@/components/ui/BrandText";
@@ -241,6 +242,41 @@ export function BespokePageClient() {
           </div>
         </section>
       </EditableSection>
+
+      {/* Lux atelier look — Dolly Dress as inspiration (not a shop product) */}
+      <section className="relative overflow-hidden bg-mkos-ink text-white">
+        <div className="mx-auto grid max-w-[1600px] lg:grid-cols-2">
+          <div className="relative min-h-[70svh] lg:min-h-[85svh]">
+            <Image
+              src="/images/products/dolly-dress.jpg"
+              alt="MKoS lux atelier dress — bespoke inspiration"
+              fill
+              className="object-cover object-top"
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              priority={false}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-black/20 lg:bg-gradient-to-r lg:from-transparent lg:via-transparent lg:to-black/40" />
+          </div>
+          <div className="flex flex-col justify-center px-5 py-16 sm:px-10 lg:px-16 lg:py-24">
+            <ScrollReveal y={24}>
+              <p className="font-display text-[11px] tracking-[0.35em] text-mkos-accent uppercase">
+                Atelier inspiration
+              </p>
+              <h2 className="mt-5 font-display text-4xl leading-[1.05] font-medium tracking-tight sm:text-5xl lg:text-6xl">
+                Lux, made for your moment.
+              </h2>
+              <p className="mt-6 max-w-md text-base leading-relaxed text-white/70 sm:text-lg">
+                This is the feeling of a bespoke commission — a dress cut for presence, movement,
+                and the night you want remembered. Share your silhouette below, and the house will
+                craft your own.
+              </p>
+              <p className="mt-8 font-display text-[11px] tracking-[0.22em] text-white/45 uppercase">
+                Dolly Dress · atelier look
+              </p>
+            </ScrollReveal>
+          </div>
+        </div>
+      </section>
 
       <div className="mx-auto grid max-w-[1600px] gap-10 px-5 py-14 sm:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16 lg:px-12 lg:py-20">
         <aside className="lg:sticky lg:top-28 lg:self-start">
