@@ -244,24 +244,7 @@ export function BespokePageClient() {
 
       <div className="mx-auto grid max-w-[1600px] gap-10 px-5 py-14 sm:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16 lg:px-12 lg:py-20">
         <aside className="lg:sticky lg:top-28 lg:self-start">
-          <ScrollReveal y={20}>
-            <p className="font-display text-[11px] tracking-[0.28em] text-mkos-accent uppercase">
-              Atelier journey
-            </p>
-            <h2 className="mt-3 font-display text-3xl font-medium tracking-tight sm:text-4xl">
-              Who are we styling today?
-            </h2>
-            <p className="mt-4 text-sm leading-relaxed text-mkos-muted sm:text-base">
-              Four intentional steps. Your MKoS Experience begins here.
-            </p>
-            <p className="mt-4 text-sm leading-relaxed text-mkos-muted">
-              Complete your bespoke brief and upload any inspiration images. Once submitted, your
-              responses are delivered directly to our studio, where every detail is thoughtfully
-              reviewed before we begin crafting your personalized MKoS experience.
-            </p>
-          </ScrollReveal>
-
-          <div className="mt-8 h-px w-full overflow-hidden bg-mkos-border">
+          <div className="h-px w-full overflow-hidden bg-mkos-border">
             <motion.div
               className="h-full bg-mkos-ink"
               animate={{ width: `${progress}%` }}
@@ -296,6 +279,23 @@ export function BespokePageClient() {
               </li>
             ))}
           </ol>
+
+          <ScrollReveal y={20} className="mt-10">
+            <p className="font-display text-[11px] tracking-[0.28em] text-mkos-accent uppercase">
+              Atelier journey
+            </p>
+            <h2 className="mt-3 font-display text-3xl font-medium tracking-tight sm:text-4xl">
+              Who are we styling today?
+            </h2>
+            <p className="mt-4 text-sm leading-relaxed text-mkos-muted sm:text-base">
+              Four intentional steps. Your MKoS Experience begins here.
+            </p>
+            <p className="mt-4 text-sm leading-relaxed text-mkos-muted">
+              Complete your bespoke brief and upload any inspiration images. Once submitted, your
+              responses are delivered directly to our studio, where every detail is thoughtfully
+              reviewed before we begin crafting your personalized MKoS experience.
+            </p>
+          </ScrollReveal>
         </aside>
 
         <form onSubmit={onSubmit} className="border border-mkos-border bg-white p-6 sm:p-10">

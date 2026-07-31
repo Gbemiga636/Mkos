@@ -57,7 +57,19 @@ export function Footer() {
         <div className="grid gap-16 lg:grid-cols-[1.15fr_1fr]">
           <div>
             <ScrollReveal y={16} className="mt-2 max-w-lg">
-              <EmailSubscribe buttonLabel="Join" successLabel="Joined" source="footer" />
+              <p className="font-display text-[11px] tracking-[0.28em] text-mkos-accent uppercase">
+                Subscribe for new updates
+              </p>
+              <h2 className="mt-3 font-display text-2xl font-medium tracking-tight text-mkos-ink sm:text-3xl">
+                Join for new looks & updates from MKoS
+              </h2>
+              <p className="mt-3 text-sm leading-relaxed text-mkos-muted sm:text-base">
+                Be first to hear about studio drops, fittings, and fresh Ready-to-Wear from the
+                house.
+              </p>
+              <div className="mt-6">
+                <EmailSubscribe buttonLabel="Join" successLabel="Joined" source="footer" />
+              </div>
             </ScrollReveal>
 
             <div className="mt-10 max-w-md space-y-3 text-sm text-mkos-muted">
@@ -139,11 +151,21 @@ export function Footer() {
             />
           </div>
           <div className="flex flex-col gap-4 sm:items-end">
-            <div className="flex flex-wrap gap-5 text-sm text-mkos-muted">
-              <a href={IG_MAIN} target="_blank" rel="noopener noreferrer" className="hover:text-mkos-ink">
+            <div className="flex flex-wrap gap-3">
+              <a
+                href={IG_MAIN}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center border border-mkos-border bg-white px-4 py-2.5 font-display text-[11px] tracking-[0.16em] text-mkos-ink uppercase transition-colors hover:border-mkos-ink hover:bg-mkos-ink hover:text-white"
+              >
                 @shopmykindofstyle
               </a>
-              <a href={IG_MEN} target="_blank" rel="noopener noreferrer" className="hover:text-mkos-ink">
+              <a
+                href={IG_MEN}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center border border-mkos-border bg-white px-4 py-2.5 font-display text-[11px] tracking-[0.16em] text-mkos-ink uppercase transition-colors hover:border-mkos-ink hover:bg-mkos-ink hover:text-white"
+              >
                 @mkosformen
               </a>
             </div>

@@ -66,11 +66,7 @@ export function FeaturedCollection() {
         <div className="mt-16 grid gap-6 md:grid-cols-3">
           {collections.map((c, i) => {
             const href = collectionHref(c.slug);
-            const isBridal = c.slug === "bridal";
-            const cardClass = cn(
-              "fc-card group relative block overflow-hidden text-left",
-              isBridal && "cursor-default"
-            );
+            const cardClass = "fc-card group relative block overflow-hidden text-left";
             const media = (
               <div className="relative aspect-[3/4] overflow-hidden bg-mkos-warm">
                 <div
@@ -94,32 +90,11 @@ export function FeaturedCollection() {
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
 
-                {isBridal && (
-                  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/72 px-6 text-center backdrop-blur-[2px]">
-                    <p className="font-display text-[11px] tracking-[0.4em] text-mkos-accent uppercase sm:text-xs">
-                      Bridal
-                    </p>
-                    <p className="mt-4 font-display text-3xl font-medium tracking-[0.2em] text-white uppercase sm:text-4xl lg:text-5xl">
-                      Coming soon
-                    </p>
-                    <p className="mt-4 max-w-[14rem] text-sm leading-relaxed text-white/75">
-                      Luxurious bridal designs are being prepared for the house.
-                    </p>
-                  </div>
-                )}
-
-                <div
-                  className={cn(
-                    "absolute inset-x-0 bottom-0 p-6 text-white sm:p-8",
-                    isBridal ? "z-[5]" : "z-20"
-                  )}
-                >
+                <div className="absolute inset-x-0 bottom-0 z-20 p-6 text-white sm:p-8">
                   <h3 className="font-display text-2xl font-medium tracking-tight sm:text-3xl">
                     {c.name}
                   </h3>
-                  {!isBridal && (
-                    <p className="mt-2 max-w-xs text-sm text-white/70">{c.description}</p>
-                  )}
+                  <p className="mt-2 max-w-xs text-sm text-white/70">{c.description}</p>
                 </div>
               </div>
             );
@@ -131,12 +106,7 @@ export function FeaturedCollection() {
                     {media}
                   </Link>
                 ) : (
-                  <div
-                    className={cardClass}
-                    role="status"
-                    aria-label={`${c.name} — coming soon`}
-                    {...(isBridal ? {} : cursor)}
-                  >
+                  <div className={cn(cardClass, "cursor-default")} {...cursor}>
                     {media}
                   </div>
                 )}
