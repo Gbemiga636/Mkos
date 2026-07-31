@@ -18,6 +18,7 @@ export function NewArrivals() {
             eyebrow={section?.eyebrow ?? "New Arrivals"}
             title={section?.title ?? "Just arrived from the atelier."}
             subtitle={section?.subtitle ?? undefined}
+            accentEyebrow
           />
           <ScrollReveal y={20} delay={120}>
             <Button href="/shop?filter=new" variant="secondary">
@@ -27,7 +28,7 @@ export function NewArrivals() {
         </div>
         <div className="mt-14 grid grid-cols-2 gap-4 md:gap-6 lg:grid-cols-4">
           {items.map((p, i) => (
-            <ProductCard key={p.id} product={p} index={i} />
+            <ProductCard key={p.id} product={p} index={i} badge="new" />
           ))}
         </div>
       </div>
@@ -89,7 +90,7 @@ export function BestSellers() {
         <div className="mt-14 grid grid-cols-2 gap-4 md:gap-6 lg:grid-cols-4">
           {items.map((p, i) => (
             <div key={p.id} className="[&_h3]:text-white [&_p]:text-white/60 [&_.glass]:bg-white/10">
-              <ProductCard product={p} index={i} />
+              <ProductCard product={p} index={i} badge="best" />
             </div>
           ))}
         </div>

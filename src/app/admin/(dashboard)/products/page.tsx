@@ -452,8 +452,8 @@ export default function AdminProductsPage() {
               onChange={(e) => setBulkCategory(e.target.value)}
               className="h-9 border border-mkos-border bg-white px-2 text-xs"
             >
-              <option value="women-rtw">Women’s RTW</option>
-              <option value="men-rtw">Men’s RTW</option>
+              <option value="women-rtw">Women’s style</option>
+              <option value="men-rtw">Men’s style</option>
               <option value="boubou">Boubou</option>
             </select>
             <button

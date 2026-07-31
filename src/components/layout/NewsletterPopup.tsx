@@ -119,7 +119,7 @@ export function NewsletterPopup() {
                   ? "Joining…"
                   : status === "ok"
                     ? "Joined"
-                    : "Join the list"}
+                    : "Join"}
               </button>
             </form>
 
@@ -130,14 +130,6 @@ export function NewsletterPopup() {
                 {message}
               </p>
             )}
-
-            <button
-              type="button"
-              onClick={dismiss}
-              className="mt-5 w-full text-center font-display text-[10px] tracking-[0.18em] text-mkos-muted uppercase"
-            >
-              Not now
-            </button>
           </motion.div>
         </motion.div>
       )}

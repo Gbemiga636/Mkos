@@ -79,6 +79,7 @@ export function SectionHeading({
   subtitle,
   align = "left",
   tone = "light",
+  accentEyebrow = false,
 }: {
   eyebrow?: string;
   title: string;
@@ -86,6 +87,8 @@ export function SectionHeading({
   align?: "left" | "center";
   /** On dark backgrounds, small eyebrow labels use burnt orange instead of grey. */
   tone?: "light" | "dark";
+  /** Force burnt orange eyebrow on light backgrounds (e.g. New Arrivals, Lookbook). */
+  accentEyebrow?: boolean;
 }) {
   return (
     <div className={cn("max-w-3xl", align === "center" && "mx-auto text-center")}>
@@ -94,7 +97,7 @@ export function SectionHeading({
           y={16}
           className={cn(
             "mb-4 font-display text-[11px] tracking-[0.35em] uppercase",
-            tone === "dark" ? "text-mkos-accent" : "text-mkos-muted"
+            tone === "dark" || accentEyebrow ? "text-mkos-accent" : "text-mkos-muted"
           )}
         >
           <BrandText>{eyebrow}</BrandText>

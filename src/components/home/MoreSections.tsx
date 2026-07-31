@@ -112,11 +112,12 @@ export function CollectionCarousel() {
     <section ref={sectionRef} className="bg-white py-28">
       <div className="px-5 sm:px-8 lg:px-12">
         <SectionHeading
-          eyebrow={section?.eyebrow ?? "Collection Carousel"}
+          eyebrow={section?.eyebrow ?? "Lookbook"}
           title={section?.title ?? "Move through the house."}
           subtitle={
             section?.subtitle ?? "Scroll the page — or drag sideways to browse every look."
           }
+          accentEyebrow
         />
       </div>
       <div
@@ -250,7 +251,7 @@ export function BrandStory() {
         </ScrollReveal>
         <div>
           <ScrollReveal y={20}>
-            <p className="font-display text-[11px] tracking-[0.35em] text-mkos-muted uppercase">
+            <p className="font-display text-[11px] tracking-[0.35em] text-mkos-accent uppercase">
               <BrandText>{section?.eyebrow ?? "About MKoS"}</BrandText>
             </p>
           </ScrollReveal>
@@ -260,7 +261,7 @@ export function BrandStory() {
             </h2>
           </ScrollReveal>
           <ScrollReveal y={20} delay={100}>
-            <p className="mt-4 font-display text-sm tracking-[0.12em] text-mkos-accent uppercase">
+            <p className="mt-4 font-display text-sm tracking-[0.12em] text-mkos-ink uppercase">
               For Those Who Understand STYLE.
             </p>
           </ScrollReveal>

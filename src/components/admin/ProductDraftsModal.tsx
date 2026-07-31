@@ -170,8 +170,8 @@ export function ProductDraftsModal({
                     onChange={(e) => onChange(index, { category: e.target.value })}
                     className="mt-1.5 h-11 w-full border border-mkos-border bg-white px-3 text-sm outline-none"
                   >
-                    <option value="women-rtw">Women’s RTW</option>
-                    <option value="men-rtw">Men’s RTW</option>
+                    <option value="women-rtw">Women’s style</option>
+                    <option value="men-rtw">Men’s style</option>
                     <option value="boubou">Boubou</option>
                   </select>
                 </label>

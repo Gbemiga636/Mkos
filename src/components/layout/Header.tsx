@@ -137,8 +137,8 @@ export function Header() {
                 className={cn(
                   "w-auto transition-[filter,height] duration-500",
                   showDesktopNav
-                    ? "h-14 sm:h-16 lg:h-[4.5rem]"
-                    : "h-16 sm:h-20 md:h-24 lg:h-28",
+                    ? "h-16 sm:h-16 lg:h-[4.5rem]"
+                    : "h-[4.5rem] sm:h-20 md:h-24 lg:h-28",
                   onHero ? "brightness-0 invert" : "brightness-0"
                 )}
               />

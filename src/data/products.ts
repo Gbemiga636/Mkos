@@ -31,12 +31,12 @@ export type Product = {
 export const categories = [
   {
     slug: "women-rtw",
-    name: "Women’s RTW",
+    name: "Women’s style",
     description: "Ready-to-wear for women — everyday elegance and occasion silhouettes.",
   },
   {
     slug: "men-rtw",
-    name: "Men’s RTW",
+    name: "Men’s style",
     description: "Contemporary menswear blending modern utility with African heritage.",
   },
   {

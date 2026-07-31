@@ -20,8 +20,8 @@ export { RTW_CATEGORY_SLUGS };
 
 /** Category options in admin product forms (RTW + future Bespoke/Bridal tagging) */
 export const ADMIN_PRODUCT_CATEGORIES = [
-  { value: "women-rtw", label: "Women’s RTW" },
-  { value: "men-rtw", label: "Men’s RTW" },
+  { value: "women-rtw", label: "Women’s style" },
+  { value: "men-rtw", label: "Men’s style" },
   { value: "boubou", label: "Boubou" },
   { value: "women-bespoke", label: "Women’s Bespoke" },
   { value: "men-bespoke", label: "Men’s Bespoke" },

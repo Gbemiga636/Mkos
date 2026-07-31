@@ -16,10 +16,13 @@ export function ProductCard({
   product,
   index = 0,
   variant = "default",
+  badge = "auto",
 }: {
   product: Product;
   index?: number;
   variant?: "default" | "editorial" | "compact";
+  /** Force a single badge in rail sections (New Arrivals / Best Sellers). */
+  badge?: "auto" | "new" | "best" | "none";
 }) {
   const formatPrice = useFormatPrice();
   const [hovered, setHovered] = useState(false);
@@ -148,19 +151,31 @@ export function ProductCard({
             )}
           </AnimatePresence>
 
-          {(product.newArrival || product.bestSeller || product.stock <= 0) && (
-            <div className="absolute top-3 left-3 z-10 flex flex-col gap-1">
-              {product.stock <= 0 ? (
-                <span className="bg-mkos-ink px-3 py-1 font-display text-[9px] tracking-[0.2em] text-white uppercase">
-                  Sold out
-                </span>
-              ) : (
-                <span className="glass rounded-full px-3 py-1 font-display text-[9px] tracking-[0.2em] uppercase">
-                  {product.newArrival ? "New" : "Best"}
-                </span>
-              )}
-            </div>
-          )}
+          {(() => {
+            const soldOut = product.stock <= 0;
+            const showNew =
+              !soldOut &&
+              badge !== "none" &&
+              (badge === "new" || (badge === "auto" && product.newArrival && !product.bestSeller));
+            const showBest =
+              !soldOut &&
+              badge !== "none" &&
+              (badge === "best" || (badge === "auto" && product.bestSeller));
+            if (!soldOut && !showNew && !showBest) return null;
+            return (
+              <div className="absolute top-3 left-3 z-10 flex flex-col gap-1">
+                {soldOut ? (
+                  <span className="bg-mkos-ink px-3 py-1 font-display text-[9px] tracking-[0.2em] text-white uppercase">
+                    Sold out
+                  </span>
+                ) : (
+                  <span className="glass rounded-full px-3 py-1 font-display text-[9px] tracking-[0.2em] uppercase">
+                    {showBest ? "Best" : "New"}
+                  </span>
+                )}
+              </div>
+            );
+          })()}
         </motion.div>
 
         <div className="mt-4 flex items-start justify-between gap-3">

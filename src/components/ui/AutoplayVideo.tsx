@@ -21,6 +21,11 @@ type Props = Omit<
   whenVisible?: boolean;
   /** Hero / above-the-fold — preload fully and retry harder. */
   eager?: boolean;
+  /**
+   * Restart the loop this many seconds before the natural end
+   * (e.g. 7 skips a trailing outro and keeps the loop seamless).
+   */
+  loopEndOffsetSec?: number;
 };
 
 /**
@@ -32,6 +37,7 @@ export function AutoplayVideo({
   className,
   whenVisible = true,
   eager = false,
+  loopEndOffsetSec = 0,
   preload,
   ...rest
 }: Props) {
@@ -81,6 +87,15 @@ export function AutoplayVideo({
       if (!el.paused) el.pause();
     };
 
+    const onTimeUpdate = () => {
+      if (!loopEndOffsetSec || !Number.isFinite(el.duration) || el.duration <= 0) return;
+      const cut = Math.max(0.25, el.duration - loopEndOffsetSec);
+      if (el.currentTime >= cut) {
+        el.currentTime = 0;
+        tryPlay();
+      }
+    };
+
     if (eager && el.readyState === 0) {
       el.load();
     }
@@ -92,6 +107,9 @@ export function AutoplayVideo({
     el.addEventListener("loadeddata", tryPlay);
     el.addEventListener("canplay", tryPlay);
     el.addEventListener("canplaythrough", tryPlay);
+    if (loopEndOffsetSec > 0) {
+      el.addEventListener("timeupdate", onTimeUpdate);
+    }
 
     const onLoaderDone = () => {
       if (eager || !whenVisible) scheduleRetries();
@@ -129,11 +147,12 @@ export function AutoplayVideo({
       el.removeEventListener("loadeddata", tryPlay);
       el.removeEventListener("canplay", tryPlay);
       el.removeEventListener("canplaythrough", tryPlay);
+      el.removeEventListener("timeupdate", onTimeUpdate);
       window.removeEventListener(LOADER_COMPLETE_EVENT, onLoaderDone);
       document.removeEventListener("visibilitychange", onVis);
       io?.disconnect();
     };
-  }, [src, whenVisible, eager, loaderComplete]);
+  }, [src, whenVisible, eager, loaderComplete, loopEndOffsetSec]);
 
   return (
     <video
@@ -141,7 +160,7 @@ export function AutoplayVideo({
       src={src}
       autoPlay
       muted
-      loop
+      loop={loopEndOffsetSec <= 0}
       playsInline
       controls={false}
       disablePictureInPicture

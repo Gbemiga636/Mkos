@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { ScrollReveal } from "@/components/experience/ScrollReveal";
 import { AutoplayVideo } from "@/components/ui/AutoplayVideo";
 import { BrandText } from "@/components/ui/BrandText";
@@ -85,12 +84,6 @@ export function FeaturedVideo() {
             {section?.subtitle ??
               "A quiet look at the house — then step into the Experience."}
           </p>
-          <Link
-            href={section?.cta_href ?? "/experience"}
-            className="mt-8 inline-flex h-12 items-center border border-white/40 bg-white px-7 font-display text-[11px] tracking-[0.18em] text-mkos-ink uppercase transition-colors hover:bg-transparent hover:text-white"
-          >
-            {section?.cta_label ?? "Enter the Experience"}
-          </Link>
         </ScrollReveal>
       </div>
     </section>

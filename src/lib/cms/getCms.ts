@@ -117,7 +117,7 @@ function fallbackSnapshot(): CmsSnapshot {
     campaign: {
       key: "campaign",
       section: "campaign",
-      eyebrow: "Craft & Culture",
+      eyebrow: "",
       title: "Style should be personal.",
       subtitle: "",
       cta_label: "Shop Ready-to-Wear",
@@ -307,7 +307,7 @@ function fallbackSnapshot(): CmsSnapshot {
       section: "categories",
       eyebrow: "Within the collections",
       title: "Find your kind of style.",
-      subtitle: "Women’s RTW, Men’s RTW, and Boubou — within Ready-to-Wear.",
+      subtitle: "Women’s style, Men’s style, and Boubou — within the collections.",
     },
     reviews: {
       key: "reviews",
@@ -477,9 +477,14 @@ async function loadCmsSnapshot(): Promise<CmsSnapshot> {
       };
     }
     if (content.campaign) {
-      if (/Aso Oke|Clean modern tailoring/i.test(content.campaign.subtitle || "")) {
-        content.campaign.subtitle = "";
-      }
+      content.campaign = {
+        ...content.campaign,
+        eyebrow: "",
+        title: content.campaign.title?.trim() || "Style should be personal.",
+        subtitle: /Aso Oke|Clean modern tailoring/i.test(content.campaign.subtitle || "")
+          ? ""
+          : content.campaign.subtitle || "",
+      };
       // Keep campaign on the original film — mkos-in-motion belongs to Featured Film
       if (/mkos-in-motion/i.test(content.campaign.media_url || "")) {
         content.campaign.media_url = "/videos/cloth-1.mp4";
@@ -517,7 +522,7 @@ async function loadCmsSnapshot(): Promise<CmsSnapshot> {
       content.best_sellers.title = "Styles that stay with you.";
     }
     if (content.categories) {
-      content.categories.subtitle = "Women’s RTW, Men’s RTW, and Boubou — within Ready-to-Wear.";
+      content.categories.subtitle = "Women’s style, Men’s style, and Boubou — within the collections.";
     }
     if (content.shop) {
       if (/full (collection|archive)/i.test(content.shop.title || "")) {
@@ -588,7 +593,12 @@ async function loadCmsSnapshot(): Promise<CmsSnapshot> {
       const fromDb =
         categoriesRes.data?.map((c) => ({
           slug: c.slug,
-          name: c.name,
+          name:
+            c.slug === "women-rtw"
+              ? "Women’s style"
+              : c.slug === "men-rtw"
+                ? "Men’s style"
+                : c.name,
           description: c.description ?? "",
           image_url: c.image_url,
         })) ?? [];
