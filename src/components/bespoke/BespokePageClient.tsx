@@ -1,7 +1,6 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
-import Image from "next/image";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import { BrandText } from "@/components/ui/BrandText";
@@ -584,70 +583,6 @@ export function BespokePageClient() {
           </div>
         </form>
       </div>
-
-      {/* Lux dress — visual close after the brief */}
-      <section className="relative overflow-hidden bg-[#efe8df]">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,rgba(196,92,38,0.08),transparent_55%),radial-gradient(ellipse_at_80%_80%,rgba(17,17,17,0.06),transparent_50%)]" />
-        <div className="relative mx-auto max-w-[1600px] px-5 py-16 sm:px-8 lg:px-12 lg:py-28">
-          <div className="grid items-end gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)_minmax(0,0.85fr)] lg:gap-8">
-            <motion.div
-              initial={{ opacity: 0, y: 28 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-60px" }}
-              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-              className="hidden lg:block"
-            >
-              <p className="font-display text-[10px] tracking-[0.4em] text-mkos-ink/40 uppercase">
-                MKoS
-              </p>
-              <div className="mt-6 h-px w-16 bg-mkos-ink/20" />
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 48 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-80px" }}
-              transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
-              className="relative aspect-[3/4] overflow-hidden sm:aspect-[4/5]"
-            >
-              <motion.div
-                className="absolute inset-0"
-                initial={{ scale: 1.12 }}
-                whileInView={{ scale: 1 }}
-                viewport={{ once: true, margin: "-80px" }}
-                transition={{ duration: 1.45, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <Image
-                  src="/images/products/lux-dress.jpg"
-                  alt="MKoS lux dress"
-                  fill
-                  className="object-cover object-[center_18%]"
-                  sizes="(max-width: 1024px) 100vw, 55vw"
-                />
-              </motion.div>
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 36 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-60px" }}
-              transition={{ delay: 0.12, duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
-              className="relative hidden min-h-[42vh] overflow-hidden lg:block"
-            >
-              <Image
-                src="/images/products/lux-dress.jpg"
-                alt=""
-                fill
-                aria-hidden
-                className="scale-150 object-cover object-[68%_22%] opacity-90 blur-[1px]"
-                sizes="30vw"
-              />
-              <div className="absolute inset-0 bg-[#efe8df]/35 mix-blend-multiply" />
-            </motion.div>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }
