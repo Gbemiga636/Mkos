@@ -243,41 +243,6 @@ export function BespokePageClient() {
         </section>
       </EditableSection>
 
-      {/* Lux atelier look — Dolly Dress as inspiration (not a shop product) */}
-      <section className="relative overflow-hidden bg-mkos-ink text-white">
-        <div className="mx-auto grid max-w-[1600px] lg:grid-cols-2">
-          <div className="relative min-h-[70svh] lg:min-h-[85svh]">
-            <Image
-              src="/images/products/dolly-dress.jpg"
-              alt="MKoS lux atelier dress — bespoke inspiration"
-              fill
-              className="object-cover object-top"
-              sizes="(max-width: 1024px) 100vw, 50vw"
-              priority={false}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-black/20 lg:bg-gradient-to-r lg:from-transparent lg:via-transparent lg:to-black/40" />
-          </div>
-          <div className="flex flex-col justify-center px-5 py-16 sm:px-10 lg:px-16 lg:py-24">
-            <ScrollReveal y={24}>
-              <p className="font-display text-[11px] tracking-[0.35em] text-mkos-accent uppercase">
-                Atelier inspiration
-              </p>
-              <h2 className="mt-5 font-display text-4xl leading-[1.05] font-medium tracking-tight sm:text-5xl lg:text-6xl">
-                Lux, made for your moment.
-              </h2>
-              <p className="mt-6 max-w-md text-base leading-relaxed text-white/70 sm:text-lg">
-                This is the feeling of a bespoke commission — a dress cut for presence, movement,
-                and the night you want remembered. Share your silhouette below, and the house will
-                craft your own.
-              </p>
-              <p className="mt-8 font-display text-[11px] tracking-[0.22em] text-white/45 uppercase">
-                Dolly Dress · atelier look
-              </p>
-            </ScrollReveal>
-          </div>
-        </div>
-      </section>
-
       <div className="mx-auto grid max-w-[1600px] gap-10 px-5 py-14 sm:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16 lg:px-12 lg:py-20">
         <aside className="lg:sticky lg:top-28 lg:self-start">
           <ScrollReveal y={20}>
@@ -619,6 +584,70 @@ export function BespokePageClient() {
           </div>
         </form>
       </div>
+
+      {/* Lux dress — visual close after the brief */}
+      <section className="relative overflow-hidden bg-[#efe8df]">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,rgba(196,92,38,0.08),transparent_55%),radial-gradient(ellipse_at_80%_80%,rgba(17,17,17,0.06),transparent_50%)]" />
+        <div className="relative mx-auto max-w-[1600px] px-5 py-16 sm:px-8 lg:px-12 lg:py-28">
+          <div className="grid items-end gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)_minmax(0,0.85fr)] lg:gap-8">
+            <motion.div
+              initial={{ opacity: 0, y: 28 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-60px" }}
+              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+              className="hidden lg:block"
+            >
+              <p className="font-display text-[10px] tracking-[0.4em] text-mkos-ink/40 uppercase">
+                MKoS
+              </p>
+              <div className="mt-6 h-px w-16 bg-mkos-ink/20" />
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 48 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-80px" }}
+              transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
+              className="relative aspect-[3/4] overflow-hidden sm:aspect-[4/5]"
+            >
+              <motion.div
+                className="absolute inset-0"
+                initial={{ scale: 1.12 }}
+                whileInView={{ scale: 1 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 1.45, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <Image
+                  src="/images/products/lux-dress.jpg"
+                  alt="MKoS lux dress"
+                  fill
+                  className="object-cover object-[center_18%]"
+                  sizes="(max-width: 1024px) 100vw, 55vw"
+                />
+              </motion.div>
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 36 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-60px" }}
+              transition={{ delay: 0.12, duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
+              className="relative hidden min-h-[42vh] overflow-hidden lg:block"
+            >
+              <Image
+                src="/images/products/lux-dress.jpg"
+                alt=""
+                fill
+                aria-hidden
+                className="scale-150 object-cover object-[68%_22%] opacity-90 blur-[1px]"
+                sizes="30vw"
+              />
+              <div className="absolute inset-0 bg-[#efe8df]/35 mix-blend-multiply" />
+            </motion.div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
