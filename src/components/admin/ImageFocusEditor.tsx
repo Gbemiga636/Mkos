@@ -15,10 +15,19 @@ type Props = {
   value?: ImageFocus | null;
   onChange: (focus: ImageFocus) => void;
   onClose: () => void;
+  title?: string;
+  hint?: string;
 };
 
-/** Drag the image inside a 3/4 product card frame to set object-position. */
-export function ImageFocusEditor({ src, value, onChange, onClose }: Props) {
+/** Drag inside a 3/4 frame to set object-position / crop focus. */
+export function ImageFocusEditor({
+  src,
+  value,
+  onChange,
+  onClose,
+  title = "Reposition image",
+  hint = "Drag inside the frame to choose which part of the photo stays visible in the crop.",
+}: Props) {
   const frameRef = useRef<HTMLDivElement>(null);
   const [focus, setFocus] = useState<ImageFocus>(() => normalizeFocus(value));
   const dragging = useRef(false);
@@ -60,7 +69,7 @@ export function ImageFocusEditor({ src, value, onChange, onClose }: Props) {
             <p className="font-display text-[10px] tracking-[0.22em] text-mkos-accent uppercase">
               Frame position
             </p>
-            <h3 className="font-display text-lg tracking-tight">Fit the Quick View crop</h3>
+            <h3 className="font-display text-lg tracking-tight">{title}</h3>
           </div>
           <button
             type="button"
@@ -72,10 +81,7 @@ export function ImageFocusEditor({ src, value, onChange, onClose }: Props) {
         </div>
 
         <div className="space-y-5 p-5">
-          <p className="text-sm text-mkos-muted">
-            Drag inside the frame to choose which part of the photo stays visible. This matches the
-            product card / Quick View crop on the site.
-          </p>
+          <p className="text-sm text-mkos-muted">{hint}</p>
 
           <div
             ref={frameRef}
@@ -101,7 +107,7 @@ export function ImageFocusEditor({ src, value, onChange, onClose }: Props) {
             />
             <div className="pointer-events-none absolute inset-x-3 bottom-3">
               <div className="bg-white/90 px-3 py-2 text-center font-display text-[9px] tracking-[0.22em] uppercase">
-                Quick View preview
+                Live crop preview
               </div>
             </div>
           </div>

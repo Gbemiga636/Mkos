@@ -11,12 +11,14 @@ import { ScrollReveal } from "@/components/experience/ScrollReveal";
 import { useCursorLabel } from "@/hooks/useCursorLabel";
 import { useCms, useContent } from "@/lib/cms/CmsProvider";
 import { isTouchDevice } from "@/lib/video/autoplay";
+import { objectPositionCss } from "@/lib/media/imageFocus";
 import { cn } from "@/lib/utils";
 
 gsap.registerPlugin(ScrollTrigger);
 
 function collectionHref(slug: string) {
   if (slug === "bespoke") return "/bespoke";
+  if (slug === "bridal") return "/bridal";
   if (slug === "ready-to-wear") return "/shop?collection=ready-to-wear";
   return null;
 }
@@ -84,6 +86,7 @@ export function FeaturedCollection() {
                       alt={c.name}
                       fill
                       className="object-cover transition-transform duration-1000 group-hover:scale-105"
+                      style={{ objectPosition: objectPositionCss(c.imageFocus) }}
                       sizes="(max-width: 768px) 100vw, 33vw"
                     />
                   )}

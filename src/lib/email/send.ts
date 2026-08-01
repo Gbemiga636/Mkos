@@ -19,6 +19,11 @@ import {
   clientBespokeEmailHtml,
   type BespokeInquiryPayload,
 } from "@/lib/email/bespokeEmails";
+import {
+  adminBridalEmailHtml,
+  clientBridalEmailHtml,
+  type BridalBriefPayload,
+} from "@/lib/email/bridalEmails";
 import { orderNotifyEmail, resendFrom } from "@/lib/paystack";
 
 function getResend() {
@@ -231,3 +236,48 @@ export async function sendBespokeEmails(
 
   return { sent: errors.length < 2, errors };
 }
+
+/** Admin alert and client confirmation for Bridal briefs */
+export async function sendBridalEmails(brief: BridalBriefPayload) {
+  const resend = getResend();
+  if (!resend) {
+    console.warn("[email] RESEND_API_KEY missing — skipped bridal emails");
+    return { sent: false, reason: "missing_key" as const };
+  }
+
+  const from = resendFrom();
+  const adminTo = orderNotifyEmail();
+
+  const results = await Promise.allSettled([
+    resend.emails.send({
+      from,
+      to: adminTo,
+      replyTo: brief.email,
+      subject: `Bridal Brief · ${brief.primaryContactName}`,
+      html: adminBridalEmailHtml(brief),
+    }),
+    resend.emails.send({
+      from,
+      to: brief.email,
+      subject: `Your Bridal brief · MKoS`,
+      html: clientBridalEmailHtml(brief),
+    }),
+  ]);
+
+  const errors = results
+    .filter((r): r is PromiseRejectedResult => r.status === "rejected")
+    .map((r) => String(r.reason));
+
+  for (const r of results) {
+    if (r.status === "fulfilled" && r.value.error) {
+      errors.push(String(r.value.error.message || r.value.error));
+    }
+  }
+
+  if (errors.length) {
+    console.warn("[email] bridal inquiry partial failure", errors);
+  }
+
+  return { sent: errors.length < 2, errors };
+}
+

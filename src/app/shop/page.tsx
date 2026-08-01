@@ -45,7 +45,7 @@ function ShopContent() {
       return;
     }
     if (col === "bridal") {
-      router.replace("/shop");
+      router.replace("/bridal");
       return;
     }
     setCategory(params.get("category") ?? "");

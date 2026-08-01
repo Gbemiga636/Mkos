@@ -36,10 +36,8 @@ export function Header() {
           l.href !== "#signin" &&
           l.label.toLowerCase() !== "sign in" &&
           l.label.toLowerCase() !== "account" &&
-          l.label.toLowerCase() !== "bridal" &&
           l.label.toLowerCase() !== "journal" &&
           l.label.toLowerCase() !== "shop" &&
-          !l.href.includes("collection=bridal") &&
           l.href !== "/blog" &&
           l.href !== "/shop"
       )

@@ -68,7 +68,7 @@ export const collections = [
     name: "Bridal",
     description:
       "Luxurious Bridal designs — registry gowns, reception dresses, bridesmaids, grooms, and family.",
-    image: "/images/products/tammy-dress.jpg",
+    image: "/images/collections/bridal-cover.jpg",
   },
 ] as const;
 
@@ -624,7 +624,7 @@ export const faqs = [
   },
   {
     q: "Do you design for men and bridal?",
-    a: "Yes. MKoS Men offers contemporary menswear, and MKoS Bridal creates collections for brides, grooms, and wedding guests.",
+    a: "Yes. MKoS Men offers contemporary menswear, and MKoS Bridal creates collections for brides, grooms, and wedding guests. Start your Client Bridal Brief on the Bridal page.",
   },
   {
     q: "Where can I follow MKoS?",

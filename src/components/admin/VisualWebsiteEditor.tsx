@@ -4,6 +4,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useBusyStore } from "@/store/busy";
 import { cn } from "@/lib/utils";
 import { uploadMediaFile } from "@/lib/media/clientUpload";
+import { ImageFocusEditor } from "@/components/admin/ImageFocusEditor";
+import {
+  DEFAULT_IMAGE_FOCUS,
+  normalizeFocus,
+  objectPositionCss,
+  type ImageFocus,
+} from "@/lib/media/imageFocus";
 
 type Block = {
   key: string;
@@ -44,6 +51,7 @@ type CollectionRow = {
   description: string | null;
   image_url: string | null;
   video_url: string | null;
+  image_focus?: ImageFocus | null;
   is_published: boolean;
 };
 
@@ -132,6 +140,12 @@ const PAGES = [
     path: "/bespoke",
     keys: ["bespoke_video", "footer"],
   },
+  {
+    id: "bridal",
+    label: "Bridal",
+    path: "/bridal",
+    keys: ["bridal_video", "footer"],
+  },
 ] as const;
 
 const PRODUCT_FLAG: Record<string, keyof ProductRow> = {
@@ -146,7 +160,15 @@ async function uploadFile(file: File, alt = ""): Promise<string> {
   return data.url;
 }
 
-function Thumb({ src, video }: { src?: string | null; video?: boolean }) {
+function Thumb({
+  src,
+  video,
+  focus,
+}: {
+  src?: string | null;
+  video?: boolean;
+  focus?: ImageFocus | null;
+}) {
   if (!src) {
     return (
       <div className="flex h-16 w-16 items-center justify-center bg-mkos-warm text-[9px] text-mkos-muted">
@@ -158,7 +180,14 @@ function Thumb({ src, video }: { src?: string | null; video?: boolean }) {
     return <video src={src} className="h-16 w-16 object-cover" muted />;
   }
   // eslint-disable-next-line @next/next/no-img-element
-  return <img src={src} alt="" className="h-16 w-16 object-cover" />;
+  return (
+    <img
+      src={src}
+      alt=""
+      className="h-16 w-16 object-cover"
+      style={{ objectPosition: objectPositionCss(focus) }}
+    />
+  );
 }
 
 export function VisualWebsiteEditor() {
@@ -171,6 +200,13 @@ export function VisualWebsiteEditor() {
   const [draft, setDraft] = useState<Block | null>(null);
   const [status, setStatus] = useState("");
   const [device, setDevice] = useState<"desktop" | "tablet" | "mobile">("desktop");
+  const [focusEdit, setFocusEdit] = useState<{
+    kind: "collection" | "media";
+    id?: string;
+    src: string;
+    value: ImageFocus;
+    title: string;
+  } | null>(null);
 
   const page = PAGES.find((p) => p.id === pageId)!;
   const previewSrc = `${page.path}?mkos_edit=1`;
@@ -511,12 +547,35 @@ export function VisualWebsiteEditor() {
                             muted
                           />
                         ) : (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={draft.media_url}
-                            alt=""
-                            className="max-h-32 w-full object-cover"
-                          />
+                          <>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={draft.media_url}
+                              alt=""
+                              className="max-h-32 w-full object-cover"
+                              style={{
+                                objectPosition: objectPositionCss(
+                                  (draft.extra?.media_focus as ImageFocus) || DEFAULT_IMAGE_FOCUS
+                                ),
+                              }}
+                            />
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setFocusEdit({
+                                  kind: "media",
+                                  src: draft.media_url!,
+                                  value: normalizeFocus(
+                                    (draft.extra?.media_focus as ImageFocus) || DEFAULT_IMAGE_FOCUS
+                                  ),
+                                  title: "Reposition section image",
+                                })
+                              }
+                              className="mt-2 font-display text-[9px] tracking-[0.14em] text-mkos-ink uppercase"
+                            >
+                              Reposition crop
+                            </button>
+                          </>
                         )}
                       </div>
                     )}
@@ -930,7 +989,11 @@ export function VisualWebsiteEditor() {
                       .map((col) => (
                         <div key={col.id} className="space-y-2 border border-mkos-border p-2">
                           <div className="flex gap-2">
-                            <Thumb src={col.video_url || col.image_url} video={!!col.video_url} />
+                            <Thumb
+                              src={col.video_url || col.image_url}
+                              video={!!col.video_url}
+                              focus={col.image_focus}
+                            />
                             <div className="min-w-0 flex-1 space-y-1">
                               <input
                                 defaultValue={col.name}
@@ -988,6 +1051,28 @@ export function VisualWebsiteEditor() {
                                 }}
                               />
                             </label>
+                            {col.image_url && !col.video_url && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setFocusEdit({
+                                    kind: "collection",
+                                    id: col.id,
+                                    src: col.image_url!,
+                                    value: normalizeFocus(
+                                      col.image_focus ??
+                                        (col.slug === "bridal"
+                                          ? { x: 50, y: 28 }
+                                          : DEFAULT_IMAGE_FOCUS)
+                                    ),
+                                    title: `Reposition · ${col.name}`,
+                                  })
+                                }
+                                className="font-display text-[8px] tracking-[0.12em] text-mkos-ink uppercase"
+                              >
+                                Reposition
+                              </button>
+                            )}
                             <label className="cursor-pointer font-display text-[8px] tracking-[0.12em] text-mkos-accent uppercase">
                               Replace video
                               <input
@@ -1221,6 +1306,37 @@ export function VisualWebsiteEditor() {
           </div>
         </aside>
       </div>
+
+      {focusEdit && (
+        <ImageFocusEditor
+          src={focusEdit.src}
+          value={focusEdit.value}
+          title={focusEdit.title}
+          hint="Drag inside the frame to choose which part of the photo stays visible in the crop on the website."
+          onClose={() => setFocusEdit(null)}
+          onChange={async (focus) => {
+            if (focusEdit.kind === "collection" && focusEdit.id) {
+              const col = assets?.collections.find((c) => c.id === focusEdit.id);
+              if (!col) return;
+              await withBusy(async () => {
+                await mutateAsset({
+                  kind: "collection",
+                  item: { ...col, image_focus: focus },
+                });
+                setStatus("Image position saved");
+              }, "Saving position…");
+              return;
+            }
+            if (focusEdit.kind === "media" && draft) {
+              setDraft({
+                ...draft,
+                extra: { ...(draft.extra || {}), media_focus: focus },
+              });
+              setStatus("Crop updated — click Save section copy to publish");
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

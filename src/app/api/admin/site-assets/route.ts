@@ -170,26 +170,32 @@ export async function PUT(req: Request) {
           const { count } = await sb
             .from("collections")
             .select("*", { count: "exact", head: true });
-          const { data, error } = await sb
-            .from("collections")
-            .insert({
-              slug,
-              name,
-              description: item.description ?? "",
-              image_url: item.image_url || null,
-              video_url: item.video_url || null,
-              sort_order: Number(item.sort_order ?? count ?? 0),
-              is_published: item.is_published !== false,
-            })
-            .select("*")
-            .single();
+          const insertRow: Record<string, unknown> = {
+            slug,
+            name,
+            description: item.description ?? "",
+            image_url: item.image_url || null,
+            video_url: item.video_url || null,
+            sort_order: Number(item.sort_order ?? count ?? 0),
+            is_published: item.is_published !== false,
+          };
+          if (item.image_focus != null) {
+            insertRow.image_focus = item.image_focus;
+          } else if (slug === "bridal") {
+            insertRow.image_focus = { x: 50, y: 28 };
+          }
+          let { data, error } = await sb.from("collections").insert(insertRow).select("*").single();
+          if (error && /image_focus/i.test(error.message) && "image_focus" in insertRow) {
+            const { image_focus: _i, ...rest } = insertRow;
+            ({ data, error } = await sb.from("collections").insert(rest).select("*").single());
+          }
           if (error) throw error;
           await writeAudit(session.admin.id, "collection_create", "collections", data.id);
           revalidateStorefront(["/", "/shop"]);
           return NextResponse.json({ item: data });
         }
 
-        const patch = {
+        const patch: Record<string, unknown> = {
           name,
           ...(item.slug ? { slug } : {}),
           description: item.description,
@@ -198,12 +204,50 @@ export async function PUT(req: Request) {
           is_published: item.is_published !== false,
           updated_at: new Date().toISOString(),
         };
-        const { data, error } = await sb
+        if (item.image_focus != null) {
+          patch.image_focus = item.image_focus;
+        }
+        let { data, error } = await sb
           .from("collections")
           .update(patch)
           .eq("id", id)
           .select("*")
           .single();
+        if (error && /image_focus/i.test(error.message) && "image_focus" in patch) {
+          const { image_focus: _ignored, ...withoutFocus } = patch;
+          ({ data, error } = await sb
+            .from("collections")
+            .update(withoutFocus)
+            .eq("id", id)
+            .select("*")
+            .single());
+          // Persist focus on featured_collections.extra until migration is applied
+          if (!error && item.image_focus && data?.slug) {
+            const { data: block } = await sb
+              .from("site_content")
+              .select("extra")
+              .eq("key", "featured_collections")
+              .maybeSingle();
+            const extra = {
+              ...((block?.extra as Record<string, unknown>) || {}),
+              collectionFocus: {
+                ...(((block?.extra as Record<string, unknown>)?.collectionFocus as Record<
+                  string,
+                  unknown
+                >) || {}),
+                [String(data.slug)]: item.image_focus,
+              },
+            };
+            await sb.from("site_content").upsert({
+              key: "featured_collections",
+              section: "featured_collections",
+              extra,
+              is_published: true,
+              updated_at: new Date().toISOString(),
+            });
+            data = { ...data, image_focus: item.image_focus };
+          }
+        }
         if (error) throw error;
         await writeAudit(session.admin.id, "collection_update", "collections", id);
         revalidateStorefront(["/", "/shop"]);

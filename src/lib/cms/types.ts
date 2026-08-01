@@ -45,6 +45,8 @@ export type Collection = {
   description: string;
   image: string;
   video?: string;
+  /** Focal point (0–100%) for cover object-position. */
+  imageFocus?: ImageFocus;
 };
 
 export type Review = {

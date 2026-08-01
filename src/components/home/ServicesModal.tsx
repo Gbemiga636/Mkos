@@ -22,9 +22,9 @@ const SERVICES = [
   {
     id: "bridal",
     title: "Bridal",
-    description: "Luxurious bridal designs — coming soon.",
-    href: "/#collections",
-    available: false,
+    description: "Begin your Client Bridal Brief — luxurious designs for your celebration.",
+    href: "/bridal",
+    available: true,
   },
 ] as const;
 

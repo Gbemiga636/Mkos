@@ -33,7 +33,7 @@ export async function POST(req: Request) {
         { role: "system", content: STOREFRONT_SYSTEM },
         {
           role: "system",
-          content: `Live catalogue:\n${catalog}\n\nPrimary offerings: Ready-to-Wear (shop), Bespoke/Custom Wear (/bespoke atelier brief), Bridal (coming soon). Site routes: / /shop /shop?collection=ready-to-wear /bespoke /about /experience /style-brief /about#contact /account /checkout /product/{slug}. MKoS Experience at /experience. Client Style Brief at /style-brief.`,
+          content: `Live catalogue:\n${catalog}\n\nPrimary offerings: Ready-to-Wear (shop), Bespoke/Custom Wear (/bespoke atelier brief), Bridal (/bridal brief). Site routes: / /shop /shop?collection=ready-to-wear /bespoke /bridal /about /experience /style-brief /about#contact /account /checkout /product/{slug}. MKoS Experience at /experience. Client Style Brief at /style-brief.`,
         },
         ...last.map((m) => ({ role: m.role, content: m.content })),
       ],
