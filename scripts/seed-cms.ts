@@ -59,7 +59,8 @@ async function countRows(table: string): Promise<number> {
 async function existingKeys(table: string, column: string): Promise<Set<string>> {
   const { data, error } = await supabase.from(table).select(column);
   if (error) throw new Error(`${table} select: ${error.message}`);
-  return new Set((data ?? []).map((row) => String((row as Record<string, unknown>)[column])));
+  const rows = (data ?? []) as Array<Record<string, unknown>>;
+  return new Set(rows.map((row) => String(row[column] ?? "")));
 }
 
 const contentBlocks = [

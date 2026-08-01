@@ -186,7 +186,8 @@ export async function PUT(req: Request) {
           }
           let { data, error } = await sb.from("collections").insert(insertRow).select("*").single();
           if (error && /image_focus/i.test(error.message) && "image_focus" in insertRow) {
-            const { image_focus: _i, ...rest } = insertRow;
+            const rest = { ...insertRow };
+            delete rest.image_focus;
             ({ data, error } = await sb.from("collections").insert(rest).select("*").single());
           }
           if (error) throw error;
@@ -214,7 +215,8 @@ export async function PUT(req: Request) {
           .select("*")
           .single();
         if (error && /image_focus/i.test(error.message) && "image_focus" in patch) {
-          const { image_focus: _ignored, ...withoutFocus } = patch;
+          const withoutFocus = { ...patch };
+          delete withoutFocus.image_focus;
           ({ data, error } = await sb
             .from("collections")
             .update(withoutFocus)
