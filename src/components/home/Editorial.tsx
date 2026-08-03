@@ -5,37 +5,34 @@ import { ScrollReveal } from "@/components/experience/ScrollReveal";
 import { AutoplayVideo } from "@/components/ui/AutoplayVideo";
 import { BrandText } from "@/components/ui/BrandText";
 import { useContent } from "@/lib/cms/CmsProvider";
+import {
+  BRAND_PHILOSOPHY_BODY,
+  BRAND_PHILOSOPHY_TITLE,
+  FEATURED_FILM_SUBTITLE,
+} from "@/lib/brand";
 
 export function EditorialStory() {
   const editorial = useContent("editorial");
-  const lines = (() => {
-    const fromCms = editorial?.extra?.lines as string[] | undefined;
-    if (fromCms?.length) return fromCms;
-    return [
-      "Timeless by design.",
-      "MKoS fashion moves with time,",
-      "revisiting trends with intention.",
-    ];
-  })();
 
   return (
     <section className="relative overflow-hidden bg-white px-5 py-28 sm:px-8 lg:px-12">
       <div className="mx-auto max-w-[1600px]">
-        <div className="mx-auto max-w-4xl text-center lg:text-left">
+        <div className="mx-auto max-w-3xl text-center lg:mx-0 lg:text-left">
           <ScrollReveal y={24}>
             <p className="font-display text-[11px] tracking-[0.35em] text-mkos-muted uppercase">
-              {editorial?.eyebrow ?? "Editorial"}
+              Our Philosophy
             </p>
           </ScrollReveal>
-          <div className="mt-8 space-y-4">
-            {lines.map((line, i) => (
-              <ScrollReveal key={line} y={36} delay={i * 90}>
-                <p className="font-display text-3xl leading-[1.15] font-medium tracking-tight text-balance sm:text-4xl lg:text-5xl">
-                  {line}
-                </p>
-              </ScrollReveal>
-            ))}
-          </div>
+          <ScrollReveal y={32} delay={40}>
+            <h2 className="mt-6 font-display text-3xl leading-[1.1] font-medium tracking-tight text-balance sm:text-4xl lg:text-5xl">
+              {BRAND_PHILOSOPHY_TITLE}
+            </h2>
+          </ScrollReveal>
+          <ScrollReveal y={24} delay={100}>
+            <p className="mt-6 text-base leading-relaxed text-mkos-muted sm:text-lg">
+              {BRAND_PHILOSOPHY_BODY}
+            </p>
+          </ScrollReveal>
         </div>
 
         <ScrollReveal y={48} delay={120} className="mx-auto mt-14 w-full max-w-5xl sm:mt-20">
@@ -58,7 +55,6 @@ const MOTION_VIDEO = "/videos/mkos-in-motion.mp4";
 
 export function FeaturedVideo() {
   const section = useContent("featured_video");
-  // Always use the MKoS in motion film for Featured Film
   const src =
     section?.media_url && /mkos-in-motion/i.test(section.media_url)
       ? section.media_url
@@ -80,9 +76,8 @@ export function FeaturedVideo() {
           <h2 className="max-w-2xl font-display text-4xl font-medium tracking-tight sm:text-5xl lg:text-6xl">
             <BrandText>{section?.title ?? "MKoS in motion"}</BrandText>
           </h2>
-          <p className="mt-5 max-w-md text-sm leading-relaxed text-white/75 sm:text-base">
-            {section?.subtitle ??
-              "A quiet look at the house — then step into the Experience."}
+          <p className="mt-5 max-w-xl text-sm leading-relaxed text-white/75 sm:text-base">
+            {FEATURED_FILM_SUBTITLE}
           </p>
         </ScrollReveal>
       </div>

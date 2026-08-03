@@ -29,8 +29,19 @@ export const BRAND_MISSION =
 export const BRAND_VISION =
   "To become Africa’s most admired luxury fashion house, recognised globally for redefining modern African luxury through innovation, authenticity, craftsmanship, sustainability, and exceptional customer experiences.";
 
+export const BRAND_PHILOSOPHY_TITLE = "Timeless by Design.";
+
+export const BRAND_PHILOSOPHY_BODY =
+  "We believe true luxury is created with intention. Every MKoS piece is thoughtfully designed, expertly crafted, and made to transcend trends—celebrating individuality, African heritage, and timeless elegance.";
+
+export const BRAND_EXPERIENCE =
+  "Luxury is more than what you wear—it’s how you feel. Whether you’re discovering our Ready-to-Wear collections, commissioning a bespoke creation, or celebrating life’s most special moments with our bridal designs, every MKoS experience is thoughtfully curated with exceptional craftsmanship, personalised service, and timeless elegance.";
+
 export const MASTER_INTRO =
   "At MKoS, our name is more than a brand—it is our philosophy. MKoS defines who we are. MASTER defines how we work. Together, they form the MKoS MASTER Standard—the principles that guide every decision, every design, every relationship, and every client experience.";
+
+export const FEATURED_FILM_SUBTITLE =
+  "Every stitch tells a story. Step behind the scenes and experience the craftsmanship, creativity, and passion that bring every MKoS piece to life.";
 
 export const MKoS_PILLARS = [
   {
@@ -69,7 +80,7 @@ export const MASTER_PILLARS = [
   {
     letter: "S",
     title: "Sustainability",
-    text: "We believe true sustainability begins with intentional design. We create versatile, timeless styles that can be styled in multiple ways, worn across occasions, and cherished for years—encouraging conscious fashion over fast fashion while respecting our people, our craft, and our environment.",
+    text: "We believe true sustainability begins with intentional design. We create versatile, timeless pieces that can be styled in multiple ways, worn across occasions, and cherished for years—encouraging conscious fashion over fast fashion while respecting our people, our craft, and our environment.",
   },
   {
     letter: "T",

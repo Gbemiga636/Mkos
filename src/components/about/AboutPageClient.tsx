@@ -8,7 +8,10 @@ import { ContactBox, EmailSubscribe } from "@/components/ui/EmailSubscribe";
 import { ScrollReveal } from "@/components/experience/ScrollReveal";
 import { useContent } from "@/lib/cms/CmsProvider";
 import {
+  BRAND_EXPERIENCE,
   BRAND_MISSION,
+  BRAND_PHILOSOPHY_BODY,
+  BRAND_PHILOSOPHY_TITLE,
   BRAND_PROMISE,
   BRAND_VISION,
   MASTER_INTRO,
@@ -39,18 +42,16 @@ export function AboutPageClient() {
         "The MKoS MASTER Standard defines our core values: MKoS defines who we are; MASTER defines how we work.",
       ].join("\n\n");
   const paragraphs = body.split("\n\n").filter(Boolean);
-  const mission = String(section?.extra?.mission ?? BRAND_MISSION);
-  const vision = String(section?.extra?.vision ?? BRAND_VISION);
-  const promise = String(section?.extra?.promise ?? BRAND_PROMISE);
-  const masterIntro = String(section?.extra?.master_intro ?? MASTER_INTRO);
-  const mkosPillars =
-    (section?.extra?.mkos as { letter: string; title: string; text: string }[] | undefined)?.length
-      ? (section?.extra?.mkos as { letter: string; title: string; text: string }[])
-      : [...MKoS_PILLARS];
-  const masterPillars =
-    (section?.extra?.master as { letter: string; title: string; text: string }[] | undefined)?.length
-      ? (section?.extra?.master as { letter: string; title: string; text: string }[])
-      : [...MASTER_PILLARS];
+  // Brand Foundation copy is hard-coded — never driven by CMS.
+  const mission = BRAND_MISSION;
+  const vision = BRAND_VISION;
+  const promise = BRAND_PROMISE;
+  const masterIntro = MASTER_INTRO;
+  const philosophyTitle = BRAND_PHILOSOPHY_TITLE;
+  const philosophyBody = BRAND_PHILOSOPHY_BODY;
+  const experienceCopy = BRAND_EXPERIENCE;
+  const mkosPillars = [...MKoS_PILLARS];
+  const masterPillars = [...MASTER_PILLARS];
 
   return (
     <main className="bg-white">
@@ -151,8 +152,29 @@ export function AboutPageClient() {
         </div>
       </section>
 
-      {/* MASTER Standard intro */}
+      {/* Our Philosophy */}
       <section className="px-5 py-24 sm:px-8 lg:px-12 lg:py-28">
+        <div className="mx-auto max-w-[1600px]">
+          <ScrollReveal y={24}>
+            <p className="font-display text-[11px] tracking-[0.35em] text-mkos-muted uppercase">
+              Our Philosophy
+            </p>
+          </ScrollReveal>
+          <ScrollReveal y={32} delay={50}>
+            <h2 className="mt-4 max-w-3xl font-display text-3xl font-medium tracking-tight sm:text-5xl">
+              {philosophyTitle}
+            </h2>
+          </ScrollReveal>
+          <ScrollReveal y={24} delay={90}>
+            <p className="mt-6 max-w-3xl text-base leading-relaxed text-mkos-muted sm:text-lg">
+              {philosophyBody}
+            </p>
+          </ScrollReveal>
+        </div>
+      </section>
+
+      {/* MASTER Standard intro */}
+      <section className="border-t border-mkos-border px-5 py-24 sm:px-8 lg:px-12 lg:py-28">
         <div className="mx-auto max-w-[1600px]">
           <ScrollReveal y={24}>
             <p className="font-display text-[11px] tracking-[0.35em] text-mkos-muted uppercase">
@@ -219,6 +241,27 @@ export function AboutPageClient() {
               </ScrollReveal>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* The MKoS Experience */}
+      <section className="border-t border-mkos-border bg-mkos-ink px-5 py-24 text-white sm:px-8 lg:px-12 lg:py-28">
+        <div className="mx-auto max-w-[1600px]">
+          <ScrollReveal y={24}>
+            <p className="font-display text-[11px] tracking-[0.35em] text-orange-300/90 uppercase">
+              The MKoS Experience
+            </p>
+          </ScrollReveal>
+          <ScrollReveal y={32} delay={60}>
+            <p className="mt-6 max-w-3xl font-display text-2xl leading-snug tracking-tight sm:text-3xl lg:text-4xl">
+              Luxury is more than what you wear—it’s how you feel.
+            </p>
+          </ScrollReveal>
+          <ScrollReveal y={24} delay={100}>
+            <p className="mt-6 max-w-3xl text-base leading-relaxed text-white/70 sm:text-lg">
+              {experienceCopy.replace(/^Luxury is more than what you wear—it’s how you feel\.\s*/i, "")}
+            </p>
+          </ScrollReveal>
         </div>
       </section>
 
