@@ -239,17 +239,8 @@ export function BrandStory() {
 
   return (
     <section id="story" className="relative overflow-hidden bg-white px-5 py-28 sm:px-8 lg:px-12">
-      <div className="mx-auto grid max-w-[1600px] gap-16 lg:grid-cols-[1fr_1.1fr] lg:items-center">
-        <ScrollReveal y={40} className="relative aspect-[3/4] overflow-hidden bg-mkos-warm sm:aspect-[4/5]">
-          <Image
-            src={section?.media_url ?? "/images/products/abeni-boubou.jpg"}
-            alt="MKoS brand"
-            fill
-            className="object-cover"
-            sizes="(max-width: 1024px) 100vw, 45vw"
-          />
-        </ScrollReveal>
-        <div>
+      <div className="mx-auto max-w-[1600px]">
+        <div className="max-w-2xl">
           <ScrollReveal y={20}>
             <p className="font-display text-[11px] tracking-[0.35em] text-mkos-accent uppercase">
               <BrandText>{section?.eyebrow ?? "About MKoS"}</BrandText>
