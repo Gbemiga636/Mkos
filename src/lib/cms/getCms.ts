@@ -122,7 +122,7 @@ function fallbackSnapshot(): CmsSnapshot {
       subtitle: "",
       cta_label: "Shop Ready-to-Wear",
       cta_href: "/shop?collection=ready-to-wear",
-      media_url: "/videos/cloth-1.mp4",
+      media_url: "/videos/style.mp4",
       media_type: "video",
     },
     editorial: {
@@ -489,16 +489,8 @@ async function loadCmsSnapshot(): Promise<CmsSnapshot> {
         cta_href: "/shop?collection=ready-to-wear",
       };
     }
-    if (content.campaign) {
-      // Keep campaign on the original film — mkos-in-motion belongs to Featured Film
-      if (/mkos-in-motion/i.test(content.campaign.media_url || "")) {
-        content.campaign = {
-          ...content.campaign,
-          media_url: "/videos/cloth-1.mp4",
-          media_type: "video",
-        };
-      }
-    }
+    // Campaign video is hard-coded to style.mp4 in CampaignSection.
+    // Do not rewrite CMS campaign media here — preserves admin panel values.
     if (content.categories && /Custom, Men/i.test(content.categories.subtitle || "")) {
       content.categories = {
         ...content.categories,

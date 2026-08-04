@@ -86,7 +86,7 @@ const contentBlocks = [
     subtitle: "",
     cta_label: "Shop Ready-to-Wear",
     cta_href: "/shop?collection=ready-to-wear",
-    media_url: "/videos/cloth-1.mp4",
+    media_url: "/videos/style.mp4",
     media_type: "video",
     sort_order: 1,
   },
