@@ -29,6 +29,7 @@ export type ProductDraft = {
   trending: boolean;
   isPublished: boolean;
   sizes: string;
+  colors: string;
 };
 
 export function ProductDraftsModal({
@@ -256,8 +257,24 @@ export function ProductDraftsModal({
                   <input
                     value={form.sizes}
                     onChange={(e) => onChange(index, { sizes: e.target.value })}
+                    placeholder="XS, S, M, L, XL"
                     className="mt-1.5 h-11 w-full border border-mkos-border bg-white px-3 text-sm outline-none"
                   />
+                </label>
+
+                <label className="block">
+                  <span className="font-display text-[10px] tracking-[0.18em] text-mkos-muted uppercase">
+                    Colours (comma separated)
+                  </span>
+                  <input
+                    value={form.colors}
+                    onChange={(e) => onChange(index, { colors: e.target.value })}
+                    placeholder="Leave blank for no colour choice — or Blue, Tan, Black"
+                    className="mt-1.5 h-11 w-full border border-mkos-border bg-white px-3 text-sm outline-none"
+                  />
+                  <p className="mt-1.5 text-xs text-mkos-muted">
+                    Empty = no colour on the storefront. If you add colours, shoppers must pick one.
+                  </p>
                 </label>
 
                 <div className="sm:col-span-2">

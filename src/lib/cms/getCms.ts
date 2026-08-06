@@ -3,6 +3,7 @@ import { unstable_cache } from "next/cache";
 import { createServiceClient } from "@/lib/supabase/client";
 import type {
   Product,
+  ProductColor,
   Category,
   Collection,
   Review,
@@ -22,6 +23,26 @@ import {
 } from "@/data/products";
 import { BRAND_NAME, normalizeBrandText } from "@/lib/brand";
 import { parseProductImages, normalizeFocus } from "@/lib/media/imageFocus";
+
+/** Accept string[] or { name, hex }[] from DB / seeds. */
+function normalizeProductColors(raw: unknown): ProductColor[] {
+  if (!Array.isArray(raw)) return [];
+  const out: ProductColor[] = [];
+  for (const entry of raw) {
+    if (typeof entry === "string") {
+      const name = entry.trim();
+      if (name) out.push({ name, hex: "" });
+      continue;
+    }
+    if (entry && typeof entry === "object" && "name" in entry) {
+      const name = String((entry as { name?: unknown }).name ?? "").trim();
+      if (!name) continue;
+      const hex = String((entry as { hex?: unknown }).hex ?? "").trim();
+      out.push({ name, hex });
+    }
+  }
+  return out;
+}
 
 /** Legacy women/men collections → primary offerings (RTW / Bespoke / Bridal). */
 function normalizeCollectionSlug(slug: string) {
@@ -85,8 +106,10 @@ function mapProduct(row: Record<string, unknown>): Product {
     imageFocus: parsedImages.imageFocus,
     category,
     collection,
-    colors: [],
-    sizes: (row.sizes as string[]) ?? [],
+    colors: normalizeProductColors(row.colors),
+    sizes: Array.isArray(row.sizes)
+      ? (row.sizes as unknown[]).map(String).filter(Boolean)
+      : [],
     material: String(row.material ?? ""),
     rating: Number(row.rating ?? 5),
     reviews: Number(row.review_count ?? 0),

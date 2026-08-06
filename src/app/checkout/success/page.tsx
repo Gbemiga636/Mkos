@@ -192,7 +192,7 @@ function SuccessInner() {
                     <div className="min-w-0 flex-1">
                       <p className="font-display text-base">{item.name}</p>
                       <p className="mt-1 text-xs text-mkos-muted">
-                        {[item.size].filter(Boolean).join(" / ") || "Atelier piece"} · Qty{" "}
+                        {[item.color, item.size].filter(Boolean).join(" / ") || "Atelier piece"} · Qty{" "}
                         {item.quantity}
                       </p>
                     </div>

@@ -429,7 +429,10 @@ export default function CheckoutPage() {
                   <div className="flex-1">
                     <p className="font-display text-sm">{item.name}</p>
                     <p className="text-xs text-mkos-muted">
-                      Size {item.size} × {item.quantity}
+                      {[item.color && `Colour ${item.color}`, item.size && `Size ${item.size}`]
+                        .filter(Boolean)
+                        .join(" · ") || "Atelier piece"}{" "}
+                      × {item.quantity}
                     </p>
                   </div>
                   <p className="text-sm tabular-nums">{formatPrice(item.price * item.quantity)}</p>

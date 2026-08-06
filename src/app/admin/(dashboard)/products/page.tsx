@@ -33,6 +33,7 @@ type Product = {
   trending?: boolean;
   material?: string;
   sizes?: string[];
+  colors?: unknown;
   tags?: string[];
   sort_order?: number;
 };
@@ -57,7 +58,22 @@ const emptyForm = {
   trending: false,
   isPublished: true,
   sizes: "XS, S, M, L, XL",
+  colors: "",
 };
+
+/** Support string[] or { name, hex }[] from DB. */
+function colorNamesFromDb(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((entry) => {
+      if (typeof entry === "string") return entry.trim();
+      if (entry && typeof entry === "object" && "name" in entry) {
+        return String((entry as { name?: unknown }).name ?? "").trim();
+      }
+      return "";
+    })
+    .filter(Boolean);
+}
 
 export default function AdminProductsPage() {
   const withBusy = useBusyStore((s) => s.withBusy);
@@ -108,6 +124,7 @@ export default function AdminProductsPage() {
         trending: !!p.trending,
         isPublished: p.is_published !== false,
         sizes: (p.sizes ?? ["XS", "S", "M", "L", "XL"]).join(", "),
+        colors: colorNamesFromDb(p.colors).join(", "),
       },
     ]);
     setEditing(true);
@@ -182,7 +199,10 @@ export default function AdminProductsPage() {
           .split(",")
           .map((s) => s.trim())
           .filter(Boolean),
-        colors: [],
+        colors: form.colors
+          .split(",")
+          .map((c) => c.trim())
+          .filter(Boolean),
         tags: [],
       }));
       const res = await fetch("/api/admin/products", {

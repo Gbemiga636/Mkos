@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Product } from "@/lib/cms/types";
 import { ProductCard } from "@/components/product/ProductCard";
@@ -14,6 +15,7 @@ import { objectPositionCss } from "@/lib/media/imageFocus";
 import { cn } from "@/lib/utils";
 
 export default function ProductClient({ product: initial }: { product: Product }) {
+  const router = useRouter();
   const { products } = useCms();
   const formatPrice = useFormatPrice();
   const product = products.find((p) => p.id === initial.id) ?? initial;
@@ -21,14 +23,21 @@ export default function ProductClient({ product: initial }: { product: Product }
   const [active, setActive] = useState(0);
   const [fullscreen, setFullscreen] = useState(false);
   const [size, setSize] = useState(product.sizes[1] ?? product.sizes[0] ?? "");
+  const [color, setColor] = useState("");
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
+  const [pickError, setPickError] = useState("");
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useCartStore((s) => s.open);
   const toggleWish = useWishlistStore((s) => s.toggle);
   const wished = useWishlistStore((s) => s.ids.includes(product.id));
   const addRecentlyViewed = useUIStore((s) => s.addRecentlyViewed);
   const recentlyViewed = useUIStore((s) => s.recentlyViewed);
+
+  const colorOptions = product.colors ?? [];
+  const sizeOptions = product.sizes ?? [];
+  const needsColor = colorOptions.length > 0;
+  const needsSize = sizeOptions.length > 0;
 
   const related = useMemo(() => {
     if (!product) return [];
@@ -57,8 +66,24 @@ export default function ProductClient({ product: initial }: { product: Product }
 
   useEffect(() => {
     setSize(product.sizes[1] ?? product.sizes[0] ?? "");
+    setColor("");
+    setPickError("");
     setActive(0);
   }, [product]);
+
+  function canAddToBag() {
+    if (product.stock <= 0) return false;
+    if (needsColor && !color) {
+      setPickError("Please choose a colour");
+      return false;
+    }
+    if (needsSize && !size) {
+      setPickError("Please choose a size");
+      return false;
+    }
+    setPickError("");
+    return true;
+  }
 
   return (
     <div className="bg-white pt-24 pb-24">
@@ -140,24 +165,61 @@ export default function ProductClient({ product: initial }: { product: Product }
             {product.description}
           </p>
 
-          <div className="mt-8">
-            <p className="font-display text-[11px] tracking-[0.22em] uppercase">Size</p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {product.sizes.map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => setSize(s)}
-                  className={cn(
-                    "min-w-12 border px-4 py-2 font-display text-sm transition-colors",
-                    size === s ? "border-mkos-ink bg-mkos-ink text-white" : "border-mkos-border"
-                  )}
-                >
-                  {s}
-                </button>
-              ))}
+          {needsColor ? (
+            <div className="mt-8">
+              <p className="font-display text-[11px] tracking-[0.22em] uppercase">Colour</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {colorOptions.map((c) => (
+                  <button
+                    key={c.name}
+                    type="button"
+                    onClick={() => {
+                      setColor(c.name);
+                      setPickError("");
+                    }}
+                    className={cn(
+                      "min-w-12 border px-4 py-2 font-display text-sm transition-colors",
+                      color === c.name
+                        ? "border-mkos-ink bg-mkos-ink text-white"
+                        : "border-mkos-border"
+                    )}
+                  >
+                    {c.name}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          ) : null}
+
+          {needsSize ? (
+            <div className="mt-8">
+              <p className="font-display text-[11px] tracking-[0.22em] uppercase">Size</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {sizeOptions.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => {
+                      setSize(s);
+                      setPickError("");
+                    }}
+                    className={cn(
+                      "min-w-12 border px-4 py-2 font-display text-sm transition-colors",
+                      size === s ? "border-mkos-ink bg-mkos-ink text-white" : "border-mkos-border"
+                    )}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {pickError ? (
+            <p className="mt-4 text-sm text-mkos-accent" role="alert">
+              {pickError}
+            </p>
+          ) : null}
 
           <div className="mt-8 flex items-center gap-4">
             <div className="flex items-center border border-mkos-border">
@@ -195,8 +257,8 @@ export default function ProductClient({ product: initial }: { product: Product }
               cursor="ADD"
               disabled={product.stock <= 0}
               onClick={() => {
-                if (product.stock <= 0) return;
-                addItem(productToCartItem(product, { size, quantity: qty }));
+                if (!canAddToBag()) return;
+                addItem(productToCartItem(product, { size, color, quantity: qty }));
                 setAdded(true);
                 openCart();
                 setTimeout(() => setAdded(false), 1800);
@@ -240,15 +302,15 @@ export default function ProductClient({ product: initial }: { product: Product }
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto]">
               <Button
-                href={product.stock <= 0 ? undefined : "/checkout"}
                 size="lg"
                 variant="checkout"
                 className="w-full"
                 cursor="EXPLORE"
                 disabled={product.stock <= 0}
                 onClick={() => {
-                  if (product.stock <= 0) return;
-                  addItem(productToCartItem(product, { size, quantity: qty }));
+                  if (!canAddToBag()) return;
+                  addItem(productToCartItem(product, { size, color, quantity: qty }));
+                  router.push("/checkout");
                 }}
               >
                 {product.stock <= 0 ? "Sold out" : "Buy now · Checkout"}
@@ -301,11 +363,13 @@ export default function ProductClient({ product: initial }: { product: Product }
             <Button
               className="mt-4"
               onClick={() => {
-                addItem(productToCartItem(product, { size, quantity: 1 }));
+                if (!canAddToBag()) return;
+                addItem(productToCartItem(product, { size, color, quantity: 1 }));
                 fbt.forEach((p) =>
                   addItem(
                     productToCartItem(p, {
-                      size: p.sizes[0],
+                      size: p.sizes[0] ?? "",
+                      color: p.colors[0]?.name ?? "",
                       quantity: 1,
                     })
                   )
