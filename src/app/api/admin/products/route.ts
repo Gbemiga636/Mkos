@@ -125,7 +125,8 @@ export async function POST(req: Request) {
     let { data, error } = await sb.from("products").upsert(row).select("*").single();
     // Fallback if price_usd column not migrated yet
     if (error && /price_usd|schema cache/i.test(error.message)) {
-      const { price_usd: _u, ...withoutUsd } = row;
+      const withoutUsd = { ...row };
+      delete withoutUsd.price_usd;
       const res = await sb.from("products").upsert(withoutUsd).select("*").single();
       data = res.data;
       error = res.error;

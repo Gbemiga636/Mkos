@@ -43,11 +43,11 @@ export async function POST(req: Request) {
     const phone = String(body.phone || "").trim();
     const deliveryMethod = body.deliveryMethod;
     const expectedDeliveryDate = String(body.expectedDeliveryDate || "").trim();
-    let address = String(body.address || "").trim();
-    let city = String(body.city || "").trim();
-    let state = String(body.state || "").trim();
+    const address = String(body.address || "").trim();
+    const city = String(body.city || "").trim();
+    const state = String(body.state || "").trim();
     const zip = String(body.zip || "").trim();
-    let country = String(body.country || "").trim();
+    const country = String(body.country || "").trim();
     const userId = body.userId ? String(body.userId) : null;
     const items = (Array.isArray(body.items) ? body.items : []) as CheckoutItem[];
 
@@ -192,7 +192,8 @@ export async function POST(req: Request) {
 
     // Fallback if payment_provider column not yet migrated
     if (orderErr && /payment_provider|schema cache/i.test(orderErr.message)) {
-      const { payment_provider: _p, ...withoutProvider } = baseOrder;
+      const withoutProvider = { ...baseOrder };
+      delete (withoutProvider as { payment_provider?: string }).payment_provider;
       const res = await sb.from("orders").insert(withoutProvider).select("id").single();
       order = res.data;
       orderErr = res.error;
