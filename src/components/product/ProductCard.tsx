@@ -192,7 +192,7 @@ export function ProductCard({
             className="font-display text-sm tabular-nums"
             animate={{ y: hovered ? -2 : 0, color: hovered ? "#c45c26" : "#111111" }}
           >
-            {formatPrice(product.price)}
+            {formatPrice(product.price, { usd: product.priceUsd })}
           </motion.p>
         </div>
       </Link>

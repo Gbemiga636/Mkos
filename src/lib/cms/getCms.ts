@@ -101,6 +101,10 @@ function mapProduct(row: Record<string, unknown>): Product {
     description: String(row.description ?? ""),
     story: String(row.story ?? ""),
     price: Number(row.price),
+    priceUsd:
+      row.price_usd != null && Number(row.price_usd) > 0
+        ? Number(row.price_usd)
+        : undefined,
     compareAt: row.compare_at != null ? Number(row.compare_at) : undefined,
     images: parsedImages.images,
     imageFocus: parsedImages.imageFocus,
@@ -328,7 +332,7 @@ function fallbackSnapshot(): CmsSnapshot {
       eyebrow: "Collections",
       title: "Designed for Every Defining Moment.",
       subtitle:
-        "Ready-to-Wear. Bespoke. Bridal — three ways to experience MKoS: discover timeless Ready-to-Wear, expertly crafted Bespoke creations, and luxurious Bridal designs, each thoughtfully made for those who understand style.",
+        "Women’s wear. Men’s wear. Bespoke. Bridal — four ways to experience MKoS, each thoughtfully made for those who understand style.",
     },
     carousel: {
       key: "carousel",

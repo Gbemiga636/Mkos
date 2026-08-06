@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { randomBytes } from "crypto";
 import { createServiceClient } from "@/lib/supabase/client";
-import { paystackInitialize, siteUrl } from "@/lib/paystack";
+import { getStripe, siteUrl, stripeConfigured } from "@/lib/stripe";
+import { getNgnRates, convertFromNgn } from "@/lib/currency/rates";
 import type { CheckoutItem } from "@/lib/checkout/fulfill";
 import {
   DELIVERY_FEE_NOTE,
-  STUDIO_PICKUP_ADDRESS,
   deliveryMethodLabel,
   isDeliveryMethod,
 } from "@/lib/checkout/delivery";
@@ -13,8 +13,27 @@ import {
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+function toUsdCents(amountUsd: number) {
+  return Math.max(50, Math.round(amountUsd * 100));
+}
+
 export async function POST(req: Request) {
   try {
+    if (!stripeConfigured()) {
+      return NextResponse.json(
+        {
+          error:
+            "International Stripe payments are not configured yet. Add STRIPE_SECRET_KEY to the server environment.",
+        },
+        { status: 503 }
+      );
+    }
+
+    const stripe = getStripe();
+    if (!stripe) {
+      return NextResponse.json({ error: "Stripe unavailable" }, { status: 503 });
+    }
+
     const body = await req.json();
     const email = String(body.email || "")
       .trim()
@@ -41,35 +60,30 @@ export async function POST(req: Request) {
     if (!isDeliveryMethod(deliveryMethod)) {
       return NextResponse.json({ error: "Please choose a delivery method" }, { status: 400 });
     }
-    if (!expectedDeliveryDate || !/^\d{4}-\d{2}-\d{2}$/.test(expectedDeliveryDate)) {
+    if (deliveryMethod !== "international") {
       return NextResponse.json(
-        { error: "Please share a valid expected delivery / pickup date" },
+        { error: "Stripe is for international shipping only. Choose International shipping." },
         { status: 400 }
       );
     }
-
-    if (deliveryMethod === "pickup") {
-      address = STUDIO_PICKUP_ADDRESS;
-      city = city || "Lagos";
-      state = state || "Lagos";
-      country = country || "Nigeria";
-    } else if (!address || !city || !country) {
+    if (!expectedDeliveryDate || !/^\d{4}-\d{2}-\d{2}$/.test(expectedDeliveryDate)) {
+      return NextResponse.json(
+        { error: "Please share a valid expected delivery date" },
+        { status: 400 }
+      );
+    }
+    if (!address || !city || !country) {
       return NextResponse.json(
         { error: "Please complete delivery address, city, and country" },
         { status: 400 }
       );
     }
-
-    if (deliveryMethod === "international" || !/^nigeria$/i.test(country)) {
+    if (/^nigeria$/i.test(country)) {
       return NextResponse.json(
-        {
-          error:
-            "International orders are paid with Stripe. Choose International shipping and continue to Pay with Stripe.",
-        },
+        { error: "Nigeria orders use Paystack. Select Local delivery or change country." },
         { status: 400 }
       );
     }
-
     if (!items.length) {
       return NextResponse.json({ error: "Your bag is empty" }, { status: 400 });
     }
@@ -87,7 +101,6 @@ export async function POST(req: Request) {
     }
 
     const sb = createServiceClient();
-
     for (const item of items) {
       if (!item.productId) continue;
       const { data: prod } = await sb
@@ -115,29 +128,33 @@ export async function POST(req: Request) {
       }
     }
 
-    const { data: settings } = await sb
-      .from("site_settings")
-      .select("currency")
-      .eq("id", "main")
-      .maybeSingle();
-
-    const currency = settings?.currency || "NGN";
-    // Delivery is never included in the product checkout total
-    const subtotal = items.reduce((n, i) => n + Number(i.price) * Number(i.quantity), 0);
-    const shipping = 0;
-    const total = subtotal;
-
-    if (total <= 0) {
+    const { rates } = await getNgnRates();
+    const lineUsd = items.map((item) => {
+      const unitUsd =
+        item.priceUsd != null && Number(item.priceUsd) > 0
+          ? Number(item.priceUsd)
+          : convertFromNgn(Number(item.price), "USD", rates);
+      return {
+        ...item,
+        unitUsd,
+        lineUsd: unitUsd * Number(item.quantity),
+      };
+    });
+    const subtotalUsd = lineUsd.reduce((n, i) => n + i.lineUsd, 0);
+    const totalUsd = subtotalUsd;
+    if (totalUsd <= 0) {
       return NextResponse.json({ error: "Order total must be greater than zero" }, { status: 400 });
     }
 
-    const reference = `mkos_${Date.now().toString(36)}_${randomBytes(4).toString("hex")}`;
+    const reference = `mkos_st_${Date.now().toString(36)}_${randomBytes(4).toString("hex")}`;
     const customerName = `${first} ${last}`.trim();
     const methodLabel = deliveryMethodLabel(deliveryMethod);
     const notes = [
+      `Payment: Stripe (international)`,
       `Delivery method: ${methodLabel}`,
       `Expected delivery date: ${expectedDeliveryDate}`,
       DELIVERY_FEE_NOTE,
+      "U.S. orders may attract a 17% import duty collected by customs at delivery.",
     ].join("\n");
 
     const baseOrder = {
@@ -146,10 +163,10 @@ export async function POST(req: Request) {
       phone,
       status: "pending_payment",
       payment_status: "pending",
-      subtotal,
-      shipping,
-      total,
-      currency,
+      subtotal: Number(subtotalUsd.toFixed(2)),
+      shipping: 0,
+      total: Number(totalUsd.toFixed(2)),
+      currency: "USD",
       shipping_name: customerName,
       shipping_address: address,
       shipping_city: city,
@@ -158,6 +175,7 @@ export async function POST(req: Request) {
       shipping_country: country,
       shipping_phone: phone,
       paystack_reference: reference,
+      payment_provider: "stripe",
       notes,
       delivery_method: deliveryMethod,
       expected_delivery_date: expectedDeliveryDate,
@@ -172,6 +190,14 @@ export async function POST(req: Request) {
       orderErr = res.error;
     }
 
+    // Fallback if payment_provider column not yet migrated
+    if (orderErr && /payment_provider|schema cache/i.test(orderErr.message)) {
+      const { payment_provider: _p, ...withoutProvider } = baseOrder;
+      const res = await sb.from("orders").insert(withoutProvider).select("id").single();
+      order = res.data;
+      orderErr = res.error;
+    }
+
     if (orderErr && /delivery_method|expected_delivery_date|schema cache/i.test(orderErr.message)) {
       const legacy = {
         user_id: userId,
@@ -179,10 +205,10 @@ export async function POST(req: Request) {
         phone,
         status: "pending_payment",
         payment_status: "pending",
-        subtotal,
-        shipping,
-        total,
-        currency,
+        subtotal: baseOrder.subtotal,
+        shipping: 0,
+        total: baseOrder.total,
+        currency: "USD",
         shipping_name: customerName,
         shipping_address: address,
         shipping_city: city,
@@ -206,12 +232,12 @@ export async function POST(req: Request) {
     }
 
     const { error: itemsErr } = await sb.from("order_items").insert(
-      items.map((item) => ({
+      lineUsd.map((item) => ({
         order_id: order!.id,
         product_id: item.productId,
         slug: item.slug,
         name: item.name,
-        price: item.price,
+        price: Number(item.unitUsd.toFixed(2)),
         image: item.image,
         color: item.color,
         size: item.size,
@@ -224,33 +250,53 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: itemsErr.message }, { status: 500 });
     }
 
-    const callbackUrl = `${siteUrl()}/checkout/success?reference=${encodeURIComponent(reference)}`;
-
-    const paystack = await paystackInitialize({
-      email,
-      amountNaira: total,
-      reference,
-      callbackUrl,
+    const session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      customer_email: email,
+      client_reference_id: reference,
+      success_url: `${siteUrl()}/checkout/success?reference=${encodeURIComponent(reference)}&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${siteUrl()}/checkout?cancelled=1`,
+      line_items: lineUsd.map((item) => ({
+        quantity: item.quantity,
+        price_data: {
+          currency: "usd",
+          unit_amount: toUsdCents(item.unitUsd),
+          product_data: {
+            name: item.name,
+            images: item.image ? [item.image.startsWith("http") ? item.image : `${siteUrl()}${item.image}`] : undefined,
+            metadata: {
+              product_id: item.productId || "",
+              size: item.size || "",
+              color: item.color || "",
+            },
+          },
+        },
+      })),
       metadata: {
         order_id: order.id,
+        reference,
         customer_name: customerName,
         phone,
         delivery_method: deliveryMethod,
         expected_delivery_date: expectedDeliveryDate,
+        shipping_country: country,
       },
+      shipping_address_collection: undefined,
     });
+
+    if (!session.url) {
+      return NextResponse.json({ error: "Could not start Stripe Checkout" }, { status: 500 });
+    }
 
     return NextResponse.json({
       ok: true,
-      orderId: order.id,
+      provider: "stripe",
       reference,
-      authorization_url: paystack.authorization_url,
-      access_code: paystack.access_code,
+      url: session.url,
+      sessionId: session.id,
     });
   } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Checkout failed" },
-      { status: 500 }
-    );
+    const message = err instanceof Error ? err.message : "Stripe checkout failed";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

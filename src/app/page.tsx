@@ -3,6 +3,7 @@ import { Hero } from "@/components/home/Hero";
 import { FeaturedCollection } from "@/components/home/FeaturedCollection";
 import { NewArrivals, BestSellers } from "@/components/home/ProductRails";
 import { CampaignSection } from "@/components/home/CampaignSection";
+import { OurSignature } from "@/components/home/OurSignature";
 import { EditorialStory, FeaturedVideo } from "@/components/home/Editorial";
 import {
   CollectionCarousel,
@@ -42,12 +43,13 @@ export default function HomePage() {
       <EditableSection cmsKey="new_arrivals" label="New arrivals">
         <NewArrivals />
       </EditableSection>
-      <EditableSection cmsKey="best_sellers" label="Best sellers">
-        <BestSellers />
-      </EditableSection>
       <EditableSection cmsKey="campaign" label="Campaign video">
         <CampaignSection />
       </EditableSection>
+      <EditableSection cmsKey="best_sellers" label="Best sellers">
+        <BestSellers />
+      </EditableSection>
+      <OurSignature />
       <EditableSection cmsKey="editorial" label="Editorial">
         <EditorialStory />
       </EditableSection>

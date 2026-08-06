@@ -7,6 +7,7 @@ import { useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import { BrandText } from "@/components/ui/BrandText";
+import { PostPurchaseReviews } from "@/components/product/PostPurchaseReviews";
 import { useCartStore } from "@/store/cart";
 import { formatPrice } from "@/lib/cms/types";
 
@@ -20,6 +21,8 @@ type OrderPayload = {
   paid_at: string | null;
   paystack_reference: string | null;
   order_items?: {
+    product_id?: string | null;
+    slug?: string | null;
     name: string;
     quantity: number;
     price: number;
@@ -32,6 +35,7 @@ type OrderPayload = {
 function SuccessInner() {
   const params = useSearchParams();
   const reference = params.get("reference") || params.get("trxref") || "";
+  const sessionId = params.get("session_id") || "";
   const clearCart = useCartStore((s) => s.clear);
   const [status, setStatus] = useState<"loading" | "ok" | "error">("loading");
   const [message, setMessage] = useState("Confirming your payment…");
@@ -39,7 +43,7 @@ function SuccessInner() {
   const [experienceOpen, setExperienceOpen] = useState(false);
 
   useEffect(() => {
-    if (!reference) {
+    if (!reference && !sessionId) {
       setStatus("error");
       setMessage(
         "Missing payment reference. If you were charged, contact the studio with your bank receipt."
@@ -50,6 +54,21 @@ function SuccessInner() {
     let cancelled = false;
     (async () => {
       try {
+        if (sessionId || reference.startsWith("mkos_st_")) {
+          const stripeRes = await fetch("/api/checkout/stripe/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ sessionId, reference }),
+          });
+          const stripeData = await stripeRes.json();
+          if (!stripeRes.ok && !reference) {
+            if (cancelled) return;
+            setStatus("error");
+            setMessage(stripeData.error || "We couldn’t confirm this Stripe payment yet.");
+            return;
+          }
+        }
+
         const res = await fetch("/api/checkout/verify", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -80,7 +99,7 @@ function SuccessInner() {
     return () => {
       cancelled = true;
     };
-  }, [reference, clearCart]);
+  }, [reference, sessionId, clearCart]);
 
   useEffect(() => {
     if (!experienceOpen) return;
@@ -202,6 +221,18 @@ function SuccessInner() {
                   </li>
                 ))}
               </ul>
+
+              {status === "ok" && reference && order ? (
+                <PostPurchaseReviews
+                  reference={reference}
+                  email={order.email}
+                  items={(order.order_items || []).map((i) => ({
+                    productId: i.product_id,
+                    slug: i.slug,
+                    name: i.name,
+                  }))}
+                />
+              ) : null}
 
               <div className="mt-10 flex flex-wrap gap-3">
                 <Button href="/shop" size="lg">

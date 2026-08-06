@@ -14,6 +14,7 @@ export type ProductDraft = {
   name: string;
   slug: string;
   price: string;
+  priceUsd: string;
   stock: string;
   tagline: string;
   description: string;
@@ -124,15 +125,38 @@ export function ProductDraftsModal({
 
                 <label className="block">
                   <span className="font-display text-[10px] tracking-[0.18em] text-mkos-muted uppercase">
-                    Price (NGN)
+                    Price (₦ Naira)
                   </span>
                   <input
-                    required
                     type="number"
+                    min="0"
+                    step="1"
                     value={form.price}
                     onChange={(e) => onChange(index, { price: e.target.value })}
+                    placeholder="e.g. 185000"
                     className="mt-1.5 h-11 w-full border border-mkos-border bg-white px-3 text-sm outline-none"
                   />
+                  <p className="mt-1.5 text-xs text-mkos-muted">
+                    Used for Nigeria / Paystack. If only Naira is set, the site converts it to USD.
+                  </p>
+                </label>
+
+                <label className="block">
+                  <span className="font-display text-[10px] tracking-[0.18em] text-mkos-muted uppercase">
+                    Price ($ USD)
+                  </span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={form.priceUsd}
+                    onChange={(e) => onChange(index, { priceUsd: e.target.value })}
+                    placeholder="e.g. 120.00"
+                    className="mt-1.5 h-11 w-full border border-mkos-border bg-white px-3 text-sm outline-none"
+                  />
+                  <p className="mt-1.5 text-xs text-mkos-muted">
+                    Optional. When set, USD display uses this exact amount. Enter at least Naira or USD.
+                  </p>
                 </label>
 
                 <label className="block">

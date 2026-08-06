@@ -12,6 +12,7 @@ import { useWishlistStore } from "@/store/wishlist";
 import { useUIStore } from "@/store/ui";
 import { useCms, useFormatPrice } from "@/lib/cms/CmsProvider";
 import { objectPositionCss } from "@/lib/media/imageFocus";
+import { ProductReviews } from "@/components/product/ProductReviews";
 import { cn } from "@/lib/utils";
 
 export default function ProductClient({ product: initial }: { product: Product }) {
@@ -150,7 +151,9 @@ export default function ProductClient({ product: initial }: { product: Product }
           </h1>
           <p className="mt-2 text-mkos-muted">{product.tagline}</p>
           <div className="mt-5 flex items-baseline gap-3">
-            <p className="font-display text-2xl tabular-nums">{formatPrice(product.price)}</p>
+            <p className="font-display text-2xl tabular-nums">
+              {formatPrice(product.price, { usd: product.priceUsd })}
+            </p>
             {product.compareAt && (
               <p className="text-sm text-mkos-muted line-through">
                 {formatPrice(product.compareAt)}
@@ -358,7 +361,14 @@ export default function ProductClient({ product: initial }: { product: Product }
           </div>
           <div>
             <p className="font-display text-xl tabular-nums">
-              {formatPrice(product.price + fbt.reduce((n, p) => n + p.price, 0))}
+              {formatPrice(
+                product.price + fbt.reduce((n, p) => n + p.price, 0),
+                {
+                  usd:
+                    (product.priceUsd ?? 0) +
+                      fbt.reduce((n, p) => n + (p.priceUsd ?? 0), 0) || null,
+                }
+              )}
             </p>
             <Button
               className="mt-4"
@@ -381,6 +391,8 @@ export default function ProductClient({ product: initial }: { product: Product }
           </div>
         </div>
       </div>
+
+      <ProductReviews productId={product.id} productSlug={product.slug} />
 
       <div className="mx-auto mt-28 max-w-[1600px] px-5 lg:px-12">
         <h2 className="font-display text-3xl font-medium tracking-tight sm:text-4xl">

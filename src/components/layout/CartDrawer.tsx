@@ -112,7 +112,12 @@ export function CartDrawer() {
                                 </p>
                               </div>
                               <p className="font-display text-sm tabular-nums">
-                                {formatPrice(item.price * item.quantity)}
+                                {formatPrice(item.price * item.quantity, {
+                                  usd:
+                                    item.priceUsd != null
+                                      ? item.priceUsd * item.quantity
+                                      : null,
+                                })}
                               </p>
                             </div>
                             <div className="mt-auto flex items-center justify-between pt-3">
@@ -171,7 +176,9 @@ export function CartDrawer() {
                         </div>
                         <div>
                           <p className="font-display text-sm">{p.name}</p>
-                          <p className="text-xs text-mkos-muted">{formatPrice(p.price)}</p>
+                          <p className="text-xs text-mkos-muted">
+                            {formatPrice(p.price, { usd: p.priceUsd })}
+                          </p>
                         </div>
                       </Link>
                     ))}

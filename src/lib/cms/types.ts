@@ -13,6 +13,8 @@ export type Product = {
   description: string;
   story: string;
   price: number;
+  /** Optional explicit USD; when set, USD display uses this instead of FX from Naira. */
+  priceUsd?: number;
   compareAt?: number;
   images: string[];
   /** Focal points (0–100%) matching `images` — controls object-position in card frames. */

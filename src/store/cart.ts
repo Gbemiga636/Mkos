@@ -6,7 +6,10 @@ export type CartItem = {
   productId: string;
   slug: string;
   name: string;
+  /** Catalogue Naira amount (Paystack). */
   price: number;
+  /** Explicit USD when set in admin. */
+  priceUsd?: number;
   image: string;
   color: string;
   size: string;
@@ -92,6 +95,7 @@ export function productToCartItem(
     slug: product.slug,
     name: product.name,
     price: product.price,
+    priceUsd: product.priceUsd,
     image: product.images[0],
     color: opts.color ?? "",
     size: opts.size,

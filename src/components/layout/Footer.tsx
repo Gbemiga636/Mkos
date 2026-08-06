@@ -31,6 +31,7 @@ export function Footer() {
       title: "Support",
       links: [
         { href: "/#faq", label: "FAQ" },
+        { href: "/shipping", label: "Shipping & returns" },
         { href: WHATSAPP, label: "WhatsApp" },
         { href: "mailto:mkosfashionhouse@gmail.com", label: "Email" },
       ],

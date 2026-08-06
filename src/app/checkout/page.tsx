@@ -16,6 +16,7 @@ import {
   deliveryMethodLabel,
   type DeliveryMethod,
 } from "@/lib/checkout/delivery";
+import { ShippingConfidence } from "@/components/shipping/ShippingConfidence";
 
 const steps = ["Delivery", "Review", "Pay"] as const;
 
@@ -26,6 +27,9 @@ export default function CheckoutPage() {
   const subtotal = items.reduce((n, i) => n + i.price * i.quantity, 0);
   // Product total only — delivery is quoted separately after checkout
   const total = subtotal;
+  const subtotalUsd = items.every((i) => i.priceUsd != null && i.priceUsd > 0)
+    ? items.reduce((n, i) => n + (i.priceUsd ?? 0) * i.quantity, 0)
+    : null;
   const [step, setStep] = useState(0);
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState("");
@@ -46,6 +50,9 @@ export default function CheckoutPage() {
   const needsAddress =
     form.deliveryMethod === "home_delivery" || form.deliveryMethod === "international";
   const hasPricedItems = useMemo(() => items.every((i) => i.price > 0), [items]);
+  const isLocalCheckout =
+    form.deliveryMethod !== "international" && /^nigeria$/i.test(form.country || "Nigeria");
+  const payProvider = isLocalCheckout ? "paystack" : "stripe";
 
   if (items.length === 0) {
     return (
@@ -77,6 +84,7 @@ export default function CheckoutPage() {
             slug: i.slug,
             name: i.name,
             price: i.price,
+            priceUsd: i.priceUsd ?? null,
             image: i.image,
             color: i.color,
             size: i.size,
@@ -95,6 +103,52 @@ export default function CheckoutPage() {
     } finally {
       setPlacing(false);
     }
+  }
+
+  async function payWithStripe() {
+    setError("");
+    if (!hasPricedItems) {
+      setError("One or more styles are price-on-request. Message the studio to complete this order.");
+      return;
+    }
+    setPlacing(true);
+    try {
+      const res = await fetch("/api/checkout/stripe/initialize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...form,
+          deliveryMethod: "international",
+          userId: user?.id ?? null,
+          items: items.map((i) => ({
+            productId: i.productId,
+            slug: i.slug,
+            name: i.name,
+            price: i.price,
+            priceUsd: i.priceUsd ?? null,
+            image: i.image,
+            color: i.color,
+            size: i.size,
+            quantity: i.quantity,
+          })),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Could not start Stripe payment");
+        return;
+      }
+      window.location.href = data.url as string;
+    } catch {
+      setError("Network error starting Stripe. Please try again.");
+    } finally {
+      setPlacing(false);
+    }
+  }
+
+  async function pay() {
+    if (payProvider === "paystack") return payWithPaystack();
+    return payWithStripe();
   }
 
   function validateDelivery() {
@@ -388,16 +442,34 @@ export default function CheckoutPage() {
                         <span>
                           {item.name} × {item.quantity}
                         </span>
-                        <span className="tabular-nums">{formatPrice(item.price * item.quantity)}</span>
+                        <span className="tabular-nums">
+                          {formatPrice(item.price * item.quantity, {
+                            usd: item.priceUsd != null ? item.priceUsd * item.quantity : null,
+                          })}
+                        </span>
                       </li>
                     ))}
                   </ul>
                   <div className="mt-6 border border-mkos-border bg-mkos-warm/50 p-4 text-sm text-mkos-muted">
-                    <p>
-                      You’ll pay for your styles securely with{" "}
-                      <strong className="text-mkos-ink">Paystack</strong>. Delivery fees (if any)
-                      are not included in this payment and will be communicated before delivery.
-                    </p>
+                    {payProvider === "paystack" ? (
+                      <p>
+                        Nigeria local checkout — you’ll pay for your styles securely with{" "}
+                        <strong className="text-mkos-ink">Paystack</strong> in Naira. Delivery fees
+                        (if any) are not included and will be communicated before delivery.
+                      </p>
+                    ) : (
+                      <p>
+                        International checkout — you’ll pay securely with{" "}
+                        <strong className="text-mkos-ink">Stripe</strong> (USD). Shipping is quoted
+                        separately. U.S. customs may apply a 17% import duty at delivery.{" "}
+                        <a href="/shipping" className="underline underline-offset-2">
+                          Shipping details
+                        </a>
+                      </p>
+                    )}
+                  </div>
+                  <div className="mt-4">
+                    <ShippingConfidence compact />
                   </div>
                   <div className="mt-8 flex flex-wrap gap-3">
                     <Button variant="secondary" onClick={() => setStep(0)}>
@@ -407,9 +479,13 @@ export default function CheckoutPage() {
                       size="lg"
                       variant="checkout"
                       disabled={placing}
-                      onClick={payWithPaystack}
+                      onClick={pay}
                     >
-                      {placing ? "Redirecting…" : `Pay with Paystack · ${formatPrice(total)}`}
+                      {placing
+                        ? "Redirecting…"
+                        : payProvider === "paystack"
+                          ? `Pay with Paystack · ${formatPrice(total, { usd: subtotalUsd })}`
+                          : `Pay with Stripe · ${formatPrice(total, { usd: subtotalUsd })}`}
                     </Button>
                   </div>
                   {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
@@ -435,14 +511,20 @@ export default function CheckoutPage() {
                       × {item.quantity}
                     </p>
                   </div>
-                  <p className="text-sm tabular-nums">{formatPrice(item.price * item.quantity)}</p>
+                  <p className="text-sm tabular-nums">
+                    {formatPrice(item.price * item.quantity, {
+                      usd: item.priceUsd != null ? item.priceUsd * item.quantity : null,
+                    })}
+                  </p>
                 </li>
               ))}
             </ul>
             <div className="mt-6 space-y-2 border-t border-mkos-border pt-4 text-sm">
               <div className="flex justify-between">
                 <span className="text-mkos-muted">Subtotal</span>
-                <span className="tabular-nums">{formatPrice(subtotal)}</span>
+                <span className="tabular-nums">
+                  {formatPrice(subtotal, { usd: subtotalUsd })}
+                </span>
               </div>
               <div className="flex justify-between gap-4">
                 <span className="text-mkos-muted">Delivery</span>
@@ -452,7 +534,7 @@ export default function CheckoutPage() {
               </div>
               <div className="flex justify-between pt-2 font-display text-lg">
                 <span>Total due now</span>
-                <span className="tabular-nums">{formatPrice(total)}</span>
+                <span className="tabular-nums">{formatPrice(total, { usd: subtotalUsd })}</span>
               </div>
             </div>
             <p className="mt-6 text-xs leading-relaxed text-mkos-muted">{DELIVERY_FEE_NOTE}</p>

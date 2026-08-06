@@ -8,6 +8,7 @@ export type CheckoutItem = {
   slug: string;
   name: string;
   price: number;
+  priceUsd?: number | null;
   image: string;
   color: string;
   size: string;

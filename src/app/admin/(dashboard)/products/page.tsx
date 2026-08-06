@@ -22,6 +22,7 @@ type Product = {
   description?: string;
   story?: string;
   price: number;
+  price_usd?: number | null;
   stock: number;
   is_published: boolean;
   images: unknown;
@@ -43,6 +44,7 @@ const emptyForm = {
   name: "",
   slug: "",
   price: "0",
+  priceUsd: "",
   stock: "10",
   tagline: "",
   description: "",
@@ -104,6 +106,8 @@ export default function AdminProductsPage() {
         name: p.name,
         slug: p.slug,
         price: String(p.price ?? 0),
+        priceUsd:
+          p.price_usd != null && Number(p.price_usd) > 0 ? String(p.price_usd) : "",
         stock: String(p.stock ?? 0),
         tagline: p.tagline ?? "",
         description: p.description ?? "",
@@ -176,12 +180,23 @@ export default function AdminProductsPage() {
       setMsg("Add at least one product name");
       return;
     }
+    for (const d of named) {
+      const ngn = Number(d.price);
+      const usd = Number(d.priceUsd);
+      const hasNgn = Number.isFinite(ngn) && ngn > 0;
+      const hasUsd = Number.isFinite(usd) && usd > 0;
+      if (!hasNgn && !hasUsd) {
+        setMsg(`Add a Naira and/or USD price for “${d.name.trim()}”`);
+        return;
+      }
+    }
     await withBusy(async () => {
       const products = named.map((form) => ({
         id: form.id || undefined,
         name: form.name,
         slug: form.slug || undefined,
-        price: Number(form.price),
+        price: Number(form.price) || 0,
+        priceUsd: Number(form.priceUsd) > 0 ? Number(form.priceUsd) : null,
         stock: Number(form.stock),
         tagline: form.tagline,
         description: form.description,

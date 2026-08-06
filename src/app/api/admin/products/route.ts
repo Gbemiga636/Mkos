@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSessionAdmin, writeAudit } from "@/lib/admin/auth";
 import { createServiceClient } from "@/lib/supabase/client";
 import { revalidateStorefront } from "@/lib/cms/revalidate";
+import { getNgnRates } from "@/lib/currency/rates";
 
 async function requireAdmin() {
   return getSessionAdmin();
@@ -49,14 +50,39 @@ export async function POST(req: Request) {
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/(^-|-$)/g, "") || id;
 
-    const row = {
+    let priceNgn = Number(item.price ?? existing?.price ?? 0);
+    let priceUsd: number | null =
+      item.priceUsd != null && item.priceUsd !== ""
+        ? Number(item.priceUsd)
+        : existing?.price_usd != null
+          ? Number(existing.price_usd)
+          : null;
+    if (priceUsd != null && !(priceUsd > 0)) priceUsd = null;
+
+    // At least one currency required
+    if (!(priceNgn > 0) && priceUsd == null) {
+      return NextResponse.json(
+        { error: `Add a Naira and/or USD price for ${name}`, savedCount: saved.length },
+        { status: 400 }
+      );
+    }
+
+    // USD-only → derive Naira via live FX so Paystack still has a NGN amount
+    if (!(priceNgn > 0) && priceUsd != null) {
+      const { rates } = await getNgnRates();
+      const usdPerNgn = rates.USD || 0.00065;
+      priceNgn = Math.round(priceUsd / usdPerNgn);
+    }
+
+    const row: Record<string, unknown> = {
       id,
       slug,
       name,
       tagline: item.tagline ?? existing?.tagline ?? "",
       description: item.description ?? existing?.description ?? "",
       story: item.story ?? existing?.story ?? "",
-      price: Number(item.price ?? existing?.price ?? 0),
+      price: priceNgn,
+      price_usd: priceUsd,
       compare_at:
         item.compareAt != null
           ? Number(item.compareAt)
@@ -96,7 +122,14 @@ export async function POST(req: Request) {
       row.sort_order = Number(maxRow?.sort_order ?? -1) + 1;
     }
 
-    const { data, error } = await sb.from("products").upsert(row).select("*").single();
+    let { data, error } = await sb.from("products").upsert(row).select("*").single();
+    // Fallback if price_usd column not migrated yet
+    if (error && /price_usd|schema cache/i.test(error.message)) {
+      const { price_usd: _u, ...withoutUsd } = row;
+      const res = await sb.from("products").upsert(withoutUsd).select("*").single();
+      data = res.data;
+      error = res.error;
+    }
     if (error) {
       return NextResponse.json(
         { error: error.message, savedCount: saved.length },
