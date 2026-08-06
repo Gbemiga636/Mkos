@@ -11,7 +11,11 @@ export async function GET() {
   const session = await requireAdmin();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const sb = createServiceClient();
-  const { data, error } = await sb.from("products").select("*").order("sort_order");
+  const { data, error } = await sb
+    .from("products")
+    .select("*")
+    .order("sort_order")
+    .order("id");
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ products: data });
 }
@@ -72,8 +76,25 @@ export async function POST(req: Request) {
       best_seller: item.bestSeller ?? existing?.best_seller ?? false,
       trending: item.trending ?? existing?.trending ?? false,
       is_published: item.isPublished ?? existing?.is_published ?? true,
+      sort_order:
+        existing?.sort_order != null
+          ? Number(existing.sort_order)
+          : Number(item.sort_order ?? -1) >= 0
+            ? Number(item.sort_order)
+            : undefined,
       updated_at: new Date().toISOString(),
     };
+
+    // New products append after current max sort_order (never steal RTW cover by landing at 0)
+    if (row.sort_order == null) {
+      const { data: maxRow } = await sb
+        .from("products")
+        .select("sort_order")
+        .order("sort_order", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      row.sort_order = Number(maxRow?.sort_order ?? -1) + 1;
+    }
 
     const { data, error } = await sb.from("products").upsert(row).select("*").single();
     if (error) {
@@ -113,8 +134,9 @@ export async function DELETE(req: Request) {
 }
 
 /**
- * Bulk / single updates: sold out, restock, category, collection, publish
- * Body: { ids: string[], action: 'sold_out'|'restock'|'category'|'collection'|'publish'|'unpublish', value?: string|number }
+ * Bulk / single updates: sold out, restock, category, collection, publish, reorder
+ * Body: { ids: string[], action: '...', value?: string|number }
+ * Reorder: { action: 'reorder', ids: string[], scope?: 'ready-to-wear' | 'all' }
  */
 export async function PATCH(req: Request) {
   const session = await requireAdmin();
@@ -127,6 +149,79 @@ export async function PATCH(req: Request) {
 
   const sb = createServiceClient();
   const now = new Date().toISOString();
+
+  if (action === "reorder") {
+    const scope = String(body.scope || "all");
+
+    if (scope === "ready-to-wear") {
+      const { data: allRows, error: allErr } = await sb
+        .from("products")
+        .select("id, collection_slug, sort_order")
+        .order("sort_order")
+        .order("id");
+      if (allErr) return NextResponse.json({ error: allErr.message }, { status: 500 });
+
+      const all = allRows ?? [];
+      const rtwCurrent = all.filter((p) => p.collection_slug === "ready-to-wear");
+      const currentIds = new Set(rtwCurrent.map((p) => p.id));
+      if (ids.length !== rtwCurrent.length || ids.some((id) => !currentIds.has(id))) {
+        return NextResponse.json(
+          { error: "ids must include every Ready-to-Wear product exactly once" },
+          { status: 400 }
+        );
+      }
+
+      // Preserve non-RTW positions; place reordered RTW into the existing RTW slots.
+      // Then assign unique sort_order 0..n-1 so ties never shuffle randomly.
+      const queue = ids.slice();
+      const newOrder: string[] = [];
+      for (const row of all) {
+        if (row.collection_slug === "ready-to-wear") {
+          newOrder.push(queue.shift()!);
+        } else {
+          newOrder.push(row.id);
+        }
+      }
+
+      for (let i = 0; i < newOrder.length; i++) {
+        const { error } = await sb
+          .from("products")
+          .update({ sort_order: i, updated_at: now })
+          .eq("id", newOrder[i]);
+        if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+
+      await writeAudit(
+        session.admin.id,
+        "product_reorder_rtw",
+        "products",
+        ids[0] ?? "",
+        { count: ids.length, first: ids[0] }
+      );
+      revalidateStorefront(["/", "/shop", "/admin/products"]);
+      return NextResponse.json({
+        ok: true,
+        updated: ids.length,
+        scope: "ready-to-wear",
+        coverProductId: ids[0] ?? null,
+      });
+    }
+
+    // Global catalogue order — unique sort_order per index
+    for (let i = 0; i < ids.length; i++) {
+      const { error } = await sb
+        .from("products")
+        .update({ sort_order: i, updated_at: now })
+        .eq("id", ids[i]);
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    await writeAudit(session.admin.id, "product_reorder", "products", ids.join(","), {
+      count: ids.length,
+    });
+    revalidateStorefront(["/", "/shop", "/admin/products"]);
+    return NextResponse.json({ ok: true, updated: ids.length, scope: "all" });
+  }
+
   let patch: Record<string, unknown> = { updated_at: now };
 
   if (action === "sold_out") {

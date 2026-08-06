@@ -439,7 +439,7 @@ async function loadCmsSnapshot(): Promise<CmsSnapshot> {
       newsletterRes,
     ] = await Promise.all([
       supabase.from("site_settings").select("*").eq("id", "main").maybeSingle(),
-      supabase.from("products").select("*").eq("is_published", true).order("sort_order"),
+      supabase.from("products").select("*").eq("is_published", true).order("sort_order").order("id"),
       supabase.from("categories").select("*").eq("is_published", true).order("sort_order"),
       supabase.from("collections").select("*").eq("is_published", true).order("sort_order"),
       supabase.from("reviews").select("*").eq("is_published", true).order("sort_order"),

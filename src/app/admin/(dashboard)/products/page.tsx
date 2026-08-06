@@ -34,6 +34,7 @@ type Product = {
   material?: string;
   sizes?: string[];
   tags?: string[];
+  sort_order?: number;
 };
 
 const emptyForm = {
@@ -63,6 +64,8 @@ export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
+  const [collectionFilter, setCollectionFilter] = useState<"all" | "ready-to-wear">("ready-to-wear");
+  const [orderDirty, setOrderDirty] = useState(false);
   const [editing, setEditing] = useState(false);
   const [drafts, setDrafts] = useState([emptyForm]);
   const [msg, setMsg] = useState("");
@@ -258,7 +261,11 @@ export default function AdminProductsPage() {
     setLoading(true);
     const res = await fetch("/api/admin/products");
     const data = await res.json();
-    setProducts(data.products ?? []);
+    const list = ((data.products ?? []) as Product[])
+      .slice()
+      .sort((a, b) => Number(a.sort_order ?? 0) - Number(b.sort_order ?? 0));
+    setProducts(list);
+    setOrderDirty(false);
     setLoading(false);
   }
 
@@ -266,7 +273,75 @@ export default function AdminProductsPage() {
     load();
   }, []);
 
-  const filtered = products.filter((p) => p.name.toLowerCase().includes(q.toLowerCase()));
+  const filtered = products.filter((p) => {
+    const matchesQ = p.name.toLowerCase().includes(q.toLowerCase());
+    const matchesCollection =
+      collectionFilter === "all" || p.collection_slug === "ready-to-wear";
+    return matchesQ && matchesCollection;
+  });
+
+  const canReorderRtw =
+    collectionFilter === "ready-to-wear" && !q.trim() && filtered.length > 0;
+  const coverProductId =
+    canReorderRtw
+      ? filtered.find((p) => p.is_published !== false)?.id ?? filtered[0]?.id
+      : null;
+
+  function moveRtw(id: string, dir: -1 | 1) {
+    if (!canReorderRtw) return;
+    const idx = filtered.findIndex((p) => p.id === id);
+    const swap = idx + dir;
+    if (idx < 0 || swap < 0 || swap >= filtered.length) return;
+    const rtwOrder = filtered.slice();
+    const t = rtwOrder[idx];
+    rtwOrder[idx] = rtwOrder[swap];
+    rtwOrder[swap] = t;
+    // Rebuild catalogue: swap only which RTW product sits in each RTW slot.
+    const rebuilt: Product[] = [];
+    let r = 0;
+    for (const p of products) {
+      if (p.collection_slug === "ready-to-wear") {
+        rebuilt.push(rtwOrder[r++]);
+      } else {
+        rebuilt.push(p);
+      }
+    }
+    setProducts(rebuilt);
+    setOrderDirty(true);
+    setMsg("Order changed — click Save RTW order to publish.");
+  }
+
+  async function saveRtwOrder() {
+    if (!orderDirty) return;
+    // Explicit RTW order from the filtered list (not interleaved catalogue walk)
+    const rtwIds = (
+      collectionFilter === "ready-to-wear" && !q.trim()
+        ? filtered
+        : products.filter((p) => p.collection_slug === "ready-to-wear")
+    ).map((p) => p.id);
+    await withBusy(async () => {
+      const res = await fetch("/api/admin/products", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "reorder",
+          scope: "ready-to-wear",
+          ids: rtwIds,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setMsg(data.error || "Failed to save order");
+        return;
+      }
+      setOrderDirty(false);
+      setMsg(
+        "Ready-to-Wear order saved — the #1 product is now the Collections Ready-to-Wear image."
+      );
+      await load();
+    }, "Saving order…");
+  }
+
   const allFilteredSelected =
     filtered.length > 0 && filtered.every((p) => selected.includes(p.id));
 
@@ -375,7 +450,8 @@ export default function AdminProductsPage() {
             Products
           </h1>
           <p className="mt-2 text-sm text-mkos-muted">
-            Select products to bulk mark sold out, change category, or delete.
+            Select products to bulk mark sold out, change category, or delete. Reorder
+            Ready-to-Wear to choose the Collections image under the hero (#1 = cover).
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -401,6 +477,68 @@ export default function AdminProductsPage() {
           </button>
         </div>
       </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() => {
+            if (orderDirty && !confirm("Discard unsaved Ready-to-Wear order?")) return;
+            setCollectionFilter("ready-to-wear");
+            setOrderDirty(false);
+            setMsg("");
+            load();
+          }}
+          className={cn(
+            "h-9 px-4 font-display text-[10px] tracking-[0.16em] uppercase",
+            collectionFilter === "ready-to-wear"
+              ? "bg-mkos-ink text-white"
+              : "border border-mkos-border"
+          )}
+        >
+          Ready-to-Wear
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            if (orderDirty && !confirm("Discard unsaved Ready-to-Wear order?")) return;
+            setCollectionFilter("all");
+            setOrderDirty(false);
+            setMsg("");
+            load();
+          }}
+          className={cn(
+            "h-9 px-4 font-display text-[10px] tracking-[0.16em] uppercase",
+            collectionFilter === "all" ? "bg-mkos-ink text-white" : "border border-mkos-border"
+          )}
+        >
+          All products
+        </button>
+        {canReorderRtw && (
+          <>
+            <button
+              type="button"
+              disabled={!orderDirty}
+              onClick={saveRtwOrder}
+              className="h-9 bg-mkos-accent px-4 font-display text-[10px] tracking-[0.16em] text-white uppercase disabled:opacity-40"
+            >
+              Save RTW order
+            </button>
+            {orderDirty && (
+              <span className="text-xs text-mkos-accent">Unsaved order</span>
+            )}
+          </>
+        )}
+      </div>
+
+      {collectionFilter === "ready-to-wear" && (
+        <p className="border border-mkos-border bg-mkos-warm/40 px-4 py-3 text-sm text-mkos-muted">
+          Use <span className="text-mkos-ink">Up / Down</span> then{" "}
+          <span className="text-mkos-ink">Save RTW order</span>. The product at{" "}
+          <span className="text-mkos-ink">#1</span> becomes the Ready-to-Wear picture in
+          Collections under the hero. Other collections and CMS media are not changed.
+          Clear search to reorder.
+        </p>
+      )}
 
       {msg && <p className="text-sm text-mkos-accent">{msg}</p>}
 
@@ -487,16 +625,18 @@ export default function AdminProductsPage() {
         <p className="text-sm text-mkos-muted">Loading catalogue…</p>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {filtered.map((p) => {
+          {filtered.map((p, i) => {
             const isSelected = selected.includes(p.id);
             const soldOut = Number(p.stock) <= 0;
             const thumb = parseProductImages(p.images).images[0];
+            const isCover = canReorderRtw && p.id === coverProductId;
             return (
               <div
                 key={p.id}
                 className={cn(
                   "border bg-white transition-shadow",
-                  isSelected ? "border-mkos-accent shadow-[0_0_0_1px_#c45c26]" : "border-mkos-border"
+                  isSelected ? "border-mkos-accent shadow-[0_0_0_1px_#c45c26]" : "border-mkos-border",
+                  isCover && "ring-1 ring-mkos-accent"
                 )}
               >
                 <div className="relative aspect-[4/5] bg-mkos-warm">
@@ -528,6 +668,12 @@ export default function AdminProductsPage() {
                       aria-label={`Select ${p.name}`}
                     />
                   </label>
+                  {canReorderRtw && (
+                    <span className="absolute bottom-3 left-3 z-10 bg-white/95 px-2 py-1 font-display text-[9px] tracking-[0.14em] text-mkos-ink uppercase">
+                      #{i + 1}
+                      {isCover ? " · Cover" : ""}
+                    </span>
+                  )}
                   {soldOut && (
                     <span className="absolute top-3 right-3 z-10 bg-mkos-ink px-2 py-1 font-display text-[9px] tracking-[0.14em] text-white uppercase">
                       Sold out
@@ -560,6 +706,26 @@ export default function AdminProductsPage() {
                       <>Stock {p.stock}</>
                     )}
                   </p>
+                  {canReorderRtw && (
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        disabled={i === 0}
+                        onClick={() => moveRtw(p.id, -1)}
+                        className="h-9 border border-mkos-border px-3 font-display text-[9px] tracking-[0.16em] uppercase disabled:opacity-30"
+                      >
+                        Up
+                      </button>
+                      <button
+                        type="button"
+                        disabled={i === filtered.length - 1}
+                        onClick={() => moveRtw(p.id, 1)}
+                        className="h-9 border border-mkos-border px-3 font-display text-[9px] tracking-[0.16em] uppercase disabled:opacity-30"
+                      >
+                        Down
+                      </button>
+                    </div>
+                  )}
                   <div className="flex flex-wrap gap-2 pt-1">
                     <button
                       type="button"
