@@ -142,7 +142,9 @@ export async function PATCH(req: Request) {
   const session = await requireAdmin();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const body = await req.json();
-  const ids = Array.isArray(body.ids) ? body.ids.map(String).filter(Boolean) : [];
+  const ids: string[] = Array.isArray(body.ids)
+    ? body.ids.map((value: unknown) => String(value)).filter(Boolean)
+    : [];
   const action = String(body.action || "");
   if (!ids.length) return NextResponse.json({ error: "ids required" }, { status: 400 });
   if (!action) return NextResponse.json({ error: "action required" }, { status: 400 });
@@ -163,8 +165,11 @@ export async function PATCH(req: Request) {
 
       const all = allRows ?? [];
       const rtwCurrent = all.filter((p) => p.collection_slug === "ready-to-wear");
-      const currentIds = new Set(rtwCurrent.map((p) => p.id));
-      if (ids.length !== rtwCurrent.length || ids.some((id) => !currentIds.has(id))) {
+      const currentIds = new Set(rtwCurrent.map((p) => String(p.id)));
+      if (
+        ids.length !== rtwCurrent.length ||
+        ids.some((id: string) => !currentIds.has(id))
+      ) {
         return NextResponse.json(
           { error: "ids must include every Ready-to-Wear product exactly once" },
           { status: 400 }
