@@ -25,12 +25,18 @@ export function GlobalSpinner() {
       const target = e.target as HTMLElement | null;
       if (!target) return;
 
+      // Skip loaders for opt-out controls (currency drop-up, hearts, etc.)
+      if (target.closest("[data-no-busy]")) return;
+
       // Hearts / in-card controls inside links — never treat as navigation
       if (target.closest("button, [data-no-nav]")) {
         const interactive = target.closest("button, [data-no-nav]") as HTMLElement;
         if (interactive.tagName === "BUTTON" || interactive.hasAttribute("data-no-nav")) {
-          // Still pulse busy for submit buttons outside links
-          if (!target.closest("a") && interactive.matches("button, [type='submit'], [data-busy]")) {
+          // Only pulse for explicit submit / data-busy — not every button (e.g. currency)
+          if (
+            !target.closest("a") &&
+            interactive.matches("[type='submit'], [data-busy]")
+          ) {
             if (!(interactive as HTMLButtonElement).disabled) pulse();
           }
           return;

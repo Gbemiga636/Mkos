@@ -57,6 +57,7 @@ export function CurrencySwitcher() {
   return (
     <div
       ref={rootRef}
+      data-no-busy
       className="fixed bottom-5 left-4 z-[70] sm:bottom-8 sm:left-8"
     >
       <AnimatePresence>
@@ -77,6 +78,7 @@ export function CurrencySwitcher() {
                 </p>
                 <button
                   type="button"
+                  data-no-busy
                   onClick={() => {
                     setOpen(false);
                     setQ("");
@@ -105,6 +107,7 @@ export function CurrencySwitcher() {
                     role="option"
                     aria-selected={selected}
                     disabled={!available}
+                    data-no-busy
                     onClick={() => {
                       setCurrency(c.code);
                       setOpen(false);
@@ -140,15 +143,13 @@ export function CurrencySwitcher() {
 
       <button
         type="button"
+        data-no-busy
         aria-expanded={open}
         aria-haspopup="listbox"
         onClick={() => setOpen((v) => !v)}
-        className="flex h-11 items-center gap-2 border border-white/20 bg-mkos-ink px-3.5 text-white shadow-lg sm:h-12 sm:px-4"
+        className="flex h-9 items-center gap-1.5 border border-white/20 bg-mkos-ink px-2.5 text-white shadow-lg sm:h-10 sm:px-3"
         aria-label="Change currency"
       >
-        <span className="font-display text-[10px] tracking-[0.2em] uppercase opacity-70">
-          Currency
-        </span>
         <span className="font-display text-sm tracking-wide">{currency}</span>
         <svg
           className={cn(
