@@ -7,6 +7,7 @@ import { BrandText } from "@/components/ui/BrandText";
 import { AutoplayVideo } from "@/components/ui/AutoplayVideo";
 import { ScrollReveal } from "@/components/experience/ScrollReveal";
 import { EditableSection } from "@/components/cms/EditableSection";
+import { BespokeVideoCarousel } from "@/components/bespoke/BespokeVideoCarousel";
 import { cn } from "@/lib/utils";
 import { useContent } from "@/lib/cms/CmsProvider";
 
@@ -583,6 +584,8 @@ export function BespokePageClient() {
           </div>
         </form>
       </div>
+
+      <BespokeVideoCarousel />
     </div>
   );
 }
