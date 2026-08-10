@@ -8,6 +8,7 @@ export type OrderEmailItem = {
   price: number;
   color?: string | null;
   size?: string | null;
+  sizingMode?: "size" | "length" | null;
   image?: string | null;
 };
 
@@ -69,7 +70,16 @@ function itemsRows(items: OrderEmailItem[], currency: string) {
               <td valign="top">
                 <div style="font-family:Georgia,'Times New Roman',serif;font-size:16px;color:${INK};">${escapeHtml(item.name)}</div>
                 <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:${MUTED};margin-top:4px;letter-spacing:0.08em;text-transform:uppercase;">
-                  ${escapeHtml([item.color, item.size].filter(Boolean).join(" · ") || "Atelier piece")} · Qty ${item.quantity}
+                  ${escapeHtml(
+                    [
+                      item.color,
+                      item.size
+                        ? `${item.sizingMode === "length" ? "Length" : "Size"} ${item.size}`
+                        : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ") || "Atelier piece"
+                  )} · Qty ${item.quantity}
                 </div>
               </td>
               <td valign="top" align="right" style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:${INK};white-space:nowrap;">

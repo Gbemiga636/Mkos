@@ -94,6 +94,15 @@ export async function POST(req: Request) {
       collection_slug: item.collection ?? existing?.collection_slug ?? null,
       colors: item.colors ?? existing?.colors ?? [],
       sizes: item.sizes ?? existing?.sizes ?? [],
+      sizing_mode:
+        String(item.sizingMode ?? existing?.sizing_mode ?? "size") === "length"
+          ? "length"
+          : "size",
+      sizing_note:
+        String(item.sizingMode ?? existing?.sizing_mode ?? "size") === "length"
+          ? String(item.sizingNote ?? existing?.sizing_note ?? "One size fits all").trim() ||
+            "One size fits all"
+          : null,
       material: item.material ?? existing?.material ?? "",
       stock: Number(item.stock ?? existing?.stock ?? 0),
       tags: item.tags ?? existing?.tags ?? [],
@@ -123,10 +132,21 @@ export async function POST(req: Request) {
     }
 
     let { data, error } = await sb.from("products").upsert(row).select("*").single();
+    // Fallback if sizing columns not migrated yet
+    if (error && /sizing_mode|sizing_note|schema cache/i.test(error.message)) {
+      const withoutSizing = { ...row };
+      delete withoutSizing.sizing_mode;
+      delete withoutSizing.sizing_note;
+      const res = await sb.from("products").upsert(withoutSizing).select("*").single();
+      data = res.data;
+      error = res.error;
+    }
     // Fallback if price_usd column not migrated yet
     if (error && /price_usd|schema cache/i.test(error.message)) {
       const withoutUsd = { ...row };
       delete withoutUsd.price_usd;
+      delete withoutUsd.sizing_mode;
+      delete withoutUsd.sizing_note;
       const res = await sb.from("products").upsert(withoutUsd).select("*").single();
       data = res.data;
       error = res.error;

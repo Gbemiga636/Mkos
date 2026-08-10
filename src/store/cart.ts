@@ -13,6 +13,8 @@ export type CartItem = {
   image: string;
   color: string;
   size: string;
+  /** How `size` should be labelled in bag / checkout / emails. */
+  sizingMode?: "size" | "length";
   quantity: number;
 };
 
@@ -88,7 +90,12 @@ export function cartItemKey(item: { productId: string; color: string; size: stri
 
 export function productToCartItem(
   product: Product,
-  opts: { size: string; quantity?: number; color?: string }
+  opts: {
+    size: string;
+    quantity?: number;
+    color?: string;
+    sizingMode?: "size" | "length";
+  }
 ): Omit<CartItem, "quantity"> & { quantity?: number } {
   return {
     productId: product.id,
@@ -99,6 +106,9 @@ export function productToCartItem(
     image: product.images[0],
     color: opts.color ?? "",
     size: opts.size,
+    sizingMode:
+      opts.sizingMode ??
+      (product.sizingMode === "length" ? "length" : "size"),
     quantity: opts.quantity,
   };
 }

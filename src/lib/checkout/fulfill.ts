@@ -12,6 +12,7 @@ export type CheckoutItem = {
   image: string;
   color: string;
   size: string;
+  sizingMode?: "size" | "length" | null;
   quantity: number;
 };
 
@@ -91,6 +92,7 @@ export async function fulfillPaidOrder(opts: {
     price: number;
     color: string | null;
     size: string | null;
+    sizing_mode?: string | null;
     image: string | null;
   }[];
 
@@ -127,6 +129,7 @@ export async function fulfillPaidOrder(opts: {
       price: Number(i.price),
       color: i.color,
       size: i.size,
+      sizingMode: i.sizing_mode === "length" ? "length" : "size",
       image: i.image,
     })),
     subtotal: Number(order.subtotal),

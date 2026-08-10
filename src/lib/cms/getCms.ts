@@ -114,6 +114,8 @@ function mapProduct(row: Record<string, unknown>): Product {
     sizes: Array.isArray(row.sizes)
       ? (row.sizes as unknown[]).map(String).filter(Boolean)
       : [],
+    sizingMode: row.sizing_mode === "length" ? "length" : "size",
+    sizingNote: String(row.sizing_note ?? "").trim() || undefined,
     material: String(row.material ?? ""),
     rating: Number(row.rating ?? 5),
     reviews: Number(row.review_count ?? 0),

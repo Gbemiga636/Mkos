@@ -29,6 +29,8 @@ export type ProductDraft = {
   bestSeller: boolean;
   trending: boolean;
   isPublished: boolean;
+  sizingMode: "size" | "length";
+  sizingNote: string;
   sizes: string;
   colors: string;
 };
@@ -274,19 +276,99 @@ export function ProductDraftsModal({
                   />
                 </label>
 
-                <label className="block">
-                  <span className="font-display text-[10px] tracking-[0.18em] text-mkos-muted uppercase">
-                    Sizes (comma separated)
-                  </span>
-                  <input
-                    value={form.sizes}
-                    onChange={(e) => onChange(index, { sizes: e.target.value })}
-                    placeholder="XS, S, M, L, XL"
-                    className="mt-1.5 h-11 w-full border border-mkos-border bg-white px-3 text-sm outline-none"
-                  />
-                </label>
+                <div className="sm:col-span-2">
+                  <p className="font-display text-[10px] tracking-[0.18em] text-mkos-muted uppercase">
+                    Fitting options
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        onChange(index, {
+                          sizingMode: "size",
+                          sizes:
+                            form.sizingMode === "size"
+                              ? form.sizes
+                              : form.sizes || "XS, S, M, L, XL",
+                        })
+                      }
+                      className={`h-9 px-4 font-display text-[10px] tracking-[0.16em] uppercase ${
+                        form.sizingMode !== "length"
+                          ? "bg-mkos-ink text-white"
+                          : "border border-mkos-border"
+                      }`}
+                    >
+                      Size (XS–XL)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        onChange(index, {
+                          sizingMode: "length",
+                          sizingNote: form.sizingNote?.trim() || "One size fits all",
+                          sizes:
+                            form.sizingMode === "length"
+                              ? form.sizes
+                              : form.sizes || "50, 55, 60, 65",
+                        })
+                      }
+                      className={`h-9 px-4 font-display text-[10px] tracking-[0.16em] uppercase ${
+                        form.sizingMode === "length"
+                          ? "bg-mkos-ink text-white"
+                          : "border border-mkos-border"
+                      }`}
+                    >
+                      Length
+                    </button>
+                  </div>
+                </div>
 
-                <label className="block">
+                {form.sizingMode === "length" ? (
+                  <>
+                    <label className="block sm:col-span-2">
+                      <span className="font-display text-[10px] tracking-[0.18em] text-mkos-muted uppercase">
+                        Length note
+                      </span>
+                      <input
+                        value={form.sizingNote}
+                        onChange={(e) => onChange(index, { sizingNote: e.target.value })}
+                        placeholder="One size fits all"
+                        className="mt-1.5 h-11 w-full border border-mkos-border bg-white px-3 text-sm outline-none"
+                      />
+                      <p className="mt-1.5 text-xs text-mkos-muted">
+                        Shown above the length buttons on the product page (e.g. One size fits all).
+                      </p>
+                    </label>
+                    <label className="block sm:col-span-2">
+                      <span className="font-display text-[10px] tracking-[0.18em] text-mkos-muted uppercase">
+                        Lengths available (comma separated)
+                      </span>
+                      <input
+                        value={form.sizes}
+                        onChange={(e) => onChange(index, { sizes: e.target.value })}
+                        placeholder="50, 55, 60, 65"
+                        className="mt-1.5 h-11 w-full border border-mkos-border bg-white px-3 text-sm outline-none"
+                      />
+                      <p className="mt-1.5 text-xs text-mkos-muted">
+                        Shoppers must pick one length. Leave blank for note-only (no length choice).
+                      </p>
+                    </label>
+                  </>
+                ) : (
+                  <label className="block sm:col-span-2">
+                    <span className="font-display text-[10px] tracking-[0.18em] text-mkos-muted uppercase">
+                      Sizes (comma separated)
+                    </span>
+                    <input
+                      value={form.sizes}
+                      onChange={(e) => onChange(index, { sizes: e.target.value })}
+                      placeholder="XS, S, M, L, XL"
+                      className="mt-1.5 h-11 w-full border border-mkos-border bg-white px-3 text-sm outline-none"
+                    />
+                  </label>
+                )}
+
+                <label className="block sm:col-span-2">
                   <span className="font-display text-[10px] tracking-[0.18em] text-mkos-muted uppercase">
                     Colours (comma separated)
                   </span>

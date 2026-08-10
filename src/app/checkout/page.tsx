@@ -88,6 +88,7 @@ export default function CheckoutPage() {
             image: i.image,
             color: i.color,
             size: i.size,
+            sizingMode: i.sizingMode ?? null,
             quantity: i.quantity,
           })),
         }),
@@ -129,6 +130,7 @@ export default function CheckoutPage() {
             image: i.image,
             color: i.color,
             size: i.size,
+            sizingMode: i.sizingMode ?? null,
             quantity: i.quantity,
           })),
         }),
@@ -505,7 +507,11 @@ export default function CheckoutPage() {
                   <div className="flex-1">
                     <p className="font-display text-sm">{item.name}</p>
                     <p className="text-xs text-mkos-muted">
-                      {[item.color && `Colour ${item.color}`, item.size && `Size ${item.size}`]
+                      {[
+                        item.color && `Colour ${item.color}`,
+                        item.size &&
+                          `${item.sizingMode === "length" ? "Length" : "Size"} ${item.size}`,
+                      ]
                         .filter(Boolean)
                         .join(" · ") || "Atelier piece"}{" "}
                       × {item.quantity}

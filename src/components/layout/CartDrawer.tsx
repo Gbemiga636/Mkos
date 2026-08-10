@@ -106,7 +106,11 @@ export function CartDrawer() {
                               <div>
                                 <p className="font-display text-base">{item.name}</p>
                                 <p className="mt-1 text-xs text-mkos-muted">
-                                  {[item.color && `Colour ${item.color}`, item.size && `Size ${item.size}`]
+                                  {[
+                                    item.color && `Colour ${item.color}`,
+                                    item.size &&
+                                      `${item.sizingMode === "length" ? "Length" : "Size"} ${item.size}`,
+                                  ]
                                     .filter(Boolean)
                                     .join(" · ") || "Atelier piece"}
                                 </p>

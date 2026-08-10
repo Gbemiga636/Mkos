@@ -34,6 +34,8 @@ type Product = {
   trending?: boolean;
   material?: string;
   sizes?: string[];
+  sizing_mode?: string | null;
+  sizing_note?: string | null;
   colors?: unknown;
   tags?: string[];
   sort_order?: number;
@@ -59,6 +61,8 @@ const emptyForm = {
   bestSeller: false,
   trending: false,
   isPublished: true,
+  sizingMode: "size" as "size" | "length",
+  sizingNote: "One size fits all",
   sizes: "XS, S, M, L, XL",
   colors: "",
 };
@@ -127,7 +131,12 @@ export default function AdminProductsPage() {
         bestSeller: !!p.best_seller,
         trending: !!p.trending,
         isPublished: p.is_published !== false,
-        sizes: (p.sizes ?? ["XS", "S", "M", "L", "XL"]).join(", "),
+        sizingMode: p.sizing_mode === "length" ? "length" : "size",
+        sizingNote: (p.sizing_note || "One size fits all").trim() || "One size fits all",
+        sizes:
+          p.sizing_mode === "length"
+            ? (p.sizes ?? []).join(", ")
+            : (p.sizes ?? ["XS", "S", "M", "L", "XL"]).join(", "),
         colors: colorNamesFromDb(p.colors).join(", "),
       },
     ]);
@@ -210,6 +219,11 @@ export default function AdminProductsPage() {
         bestSeller: form.bestSeller,
         trending: form.trending,
         isPublished: form.isPublished,
+        sizingMode: form.sizingMode === "length" ? "length" : "size",
+        sizingNote:
+          form.sizingMode === "length"
+            ? form.sizingNote.trim() || "One size fits all"
+            : null,
         sizes: form.sizes
           .split(",")
           .map((s) => s.trim())

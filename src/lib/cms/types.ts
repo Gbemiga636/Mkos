@@ -23,6 +23,10 @@ export type Product = {
   collection: string;
   colors: ProductColor[];
   sizes: string[];
+  /** `size` = XS/S/M… · `length` = one-size note + length options */
+  sizingMode?: "size" | "length";
+  /** Custom note for length mode (default One size fits all). */
+  sizingNote?: string;
   material: string;
   rating: number;
   reviews: number;

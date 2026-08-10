@@ -232,19 +232,24 @@ export async function POST(req: Request) {
       );
     }
 
-    const { error: itemsErr } = await sb.from("order_items").insert(
-      lineUsd.map((item) => ({
-        order_id: order!.id,
-        product_id: item.productId,
-        slug: item.slug,
-        name: item.name,
-        price: Number(item.unitUsd.toFixed(2)),
-        image: item.image,
-        color: item.color,
-        size: item.size,
-        quantity: item.quantity,
-      }))
-    );
+    const orderItemRows = lineUsd.map((item) => ({
+      order_id: order!.id,
+      product_id: item.productId,
+      slug: item.slug,
+      name: item.name,
+      price: Number(item.unitUsd.toFixed(2)),
+      image: item.image,
+      color: item.color,
+      size: item.size,
+      sizing_mode: item.sizingMode === "length" ? "length" : "size",
+      quantity: item.quantity,
+    }));
+
+    let { error: itemsErr } = await sb.from("order_items").insert(orderItemRows);
+    if (itemsErr && /sizing_mode|schema cache/i.test(itemsErr.message)) {
+      const withoutMode = orderItemRows.map(({ sizing_mode: _m, ...rest }) => rest);
+      ({ error: itemsErr } = await sb.from("order_items").insert(withoutMode));
+    }
 
     if (itemsErr) {
       await sb.from("orders").delete().eq("id", order.id);

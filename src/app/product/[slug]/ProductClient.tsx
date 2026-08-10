@@ -37,6 +37,8 @@ export default function ProductClient({ product: initial }: { product: Product }
 
   const colorOptions = product.colors ?? [];
   const sizeOptions = product.sizes ?? [];
+  const isLengthMode = product.sizingMode === "length";
+  const lengthNote = (product.sizingNote || "One size fits all").trim() || "One size fits all";
   const needsColor = colorOptions.length > 0;
   const needsSize = sizeOptions.length > 0;
 
@@ -66,7 +68,12 @@ export default function ProductClient({ product: initial }: { product: Product }
   }, [product.id, addRecentlyViewed]);
 
   useEffect(() => {
-    setSize(product.sizes[1] ?? product.sizes[0] ?? "");
+    // Length mode requires an explicit pick; size mode can preselect.
+    if (product.sizingMode === "length") {
+      setSize("");
+    } else {
+      setSize(product.sizes[1] ?? product.sizes[0] ?? "");
+    }
     setColor("");
     setPickError("");
     setActive(0);
@@ -79,7 +86,7 @@ export default function ProductClient({ product: initial }: { product: Product }
       return false;
     }
     if (needsSize && !size) {
-      setPickError("Please choose a size");
+      setPickError(isLengthMode ? "Please choose a length" : "Please choose a size");
       return false;
     }
     setPickError("");
@@ -194,27 +201,36 @@ export default function ProductClient({ product: initial }: { product: Product }
             </div>
           ) : null}
 
-          {needsSize ? (
+          {isLengthMode || needsSize ? (
             <div className="mt-8">
-              <p className="font-display text-[11px] tracking-[0.22em] uppercase">Size</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {sizeOptions.map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => {
-                      setSize(s);
-                      setPickError("");
-                    }}
-                    className={cn(
-                      "min-w-12 border px-4 py-2 font-display text-sm transition-colors",
-                      size === s ? "border-mkos-ink bg-mkos-ink text-white" : "border-mkos-border"
-                    )}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
+              {isLengthMode ? (
+                <>
+                  <p className="font-display text-[11px] tracking-[0.22em] uppercase">Length</p>
+                  <p className="mt-3 text-sm leading-relaxed text-mkos-muted">{lengthNote}</p>
+                </>
+              ) : (
+                <p className="font-display text-[11px] tracking-[0.22em] uppercase">Size</p>
+              )}
+              {needsSize ? (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {sizeOptions.map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => {
+                        setSize(s);
+                        setPickError("");
+                      }}
+                      className={cn(
+                        "min-w-12 border px-4 py-2 font-display text-sm transition-colors",
+                        size === s ? "border-mkos-ink bg-mkos-ink text-white" : "border-mkos-border"
+                      )}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
             </div>
           ) : null}
 
