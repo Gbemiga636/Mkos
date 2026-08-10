@@ -403,7 +403,7 @@ export function ProductDraftsModal({
                     </label>
                   </div>
                   <p className="mb-3 text-xs text-mkos-muted">
-                    After upload, tap Position to frame the photo for the product card / Quick View.
+                    After upload, tap Position to frame the photo, then Save product so it sticks.
                   </p>
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                     {form.images.map((src, i) => {

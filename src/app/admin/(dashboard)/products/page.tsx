@@ -175,8 +175,8 @@ export default function AdminProductsPage() {
       );
       setMsg(
         data.wasCompressed
-          ? `Compressed ${data.originalSize} → ${data.compressedSize}`
-          : "Image uploaded"
+          ? `Compressed ${data.originalSize} → ${data.compressedSize}. Click Save product to keep it.`
+          : "Image uploaded — click Save product to keep it."
       );
     }, "Compressing & uploading…");
   }

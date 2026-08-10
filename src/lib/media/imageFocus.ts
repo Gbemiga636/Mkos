@@ -48,22 +48,31 @@ export function parseProductImages(raw: unknown): { images: string[]; imageFocus
     }
   }
 
-  // Prefer non-webp when both exist (legacy behavior)
-  const jpgPreferred = images
-    .map((src, i) => ({ src, focus: imageFocus[i] }))
-    .filter((e) => !e.src.toLowerCase().endsWith(".webp"));
-  const preferred = jpgPreferred.length
-    ? jpgPreferred
-    : images.map((src, i) => ({ src, focus: imageFocus[i] }));
+  // Drop legacy duplicate .webp only when the same basename also exists as jpg/png/etc.
+  // Do NOT drop all webps whenever any non-webp remains — admin uploads are always .webp.
+  const basenameKey = (src: string) => {
+    const path = src.split("?")[0].toLowerCase();
+    const file = path.split("/").pop() || path;
+    return file.replace(/\.(webp|jpe?g|png|gif|avif|heic)$/i, "");
+  };
+  const nonWebpBases = new Set(
+    images
+      .filter((src) => !src.toLowerCase().split("?")[0].endsWith(".webp"))
+      .map(basenameKey)
+      .filter(Boolean)
+  );
 
   const seen = new Set<string>();
   const outImages: string[] = [];
   const outFocus: ImageFocus[] = [];
-  for (const e of preferred) {
-    if (seen.has(e.src)) continue;
-    seen.add(e.src);
-    outImages.push(e.src);
-    outFocus.push(e.focus);
+  for (let i = 0; i < images.length; i++) {
+    const src = images[i];
+    const isWebp = src.toLowerCase().split("?")[0].endsWith(".webp");
+    if (isWebp && nonWebpBases.has(basenameKey(src))) continue;
+    if (seen.has(src)) continue;
+    seen.add(src);
+    outImages.push(src);
+    outFocus.push(imageFocus[i]);
   }
   return { images: outImages, imageFocus: outFocus };
 }
