@@ -33,7 +33,7 @@ export function Footer() {
         { href: "/#faq", label: "FAQ" },
         { href: "/shipping", label: "Shipping & returns" },
         { href: WHATSAPP, label: "WhatsApp" },
-        { href: "mailto:mkosfashionhouse@gmail.com", label: "Email" },
+        { href: "mailto:styleme@mykindofstyle.com", label: "Email" },
       ],
     },
     {
@@ -99,8 +99,8 @@ export function Footer() {
                 </span>
               </a>
               <p>
-                <a href="mailto:mkosfashionhouse@gmail.com" className="hover:text-mkos-ink">
-                  mkosfashionhouse@gmail.com
+                <a href="mailto:styleme@mykindofstyle.com" className="hover:text-mkos-ink">
+                  styleme@mykindofstyle.com
                 </a>
               </p>
               <p>

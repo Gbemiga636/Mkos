@@ -59,15 +59,14 @@ export async function POST(req: Request) {
           : null;
     if (priceUsd != null && !(priceUsd > 0)) priceUsd = null;
 
-    // At least one currency required
-    if (!(priceNgn > 0) && priceUsd == null) {
+    if (priceUsd == null) {
       return NextResponse.json(
-        { error: `Add a Naira and/or USD price for ${name}`, savedCount: saved.length },
+        { error: `Add a USD price for ${name}`, savedCount: saved.length },
         { status: 400 }
       );
     }
 
-    // USD-only → derive Naira via live FX so Paystack still has a NGN amount
+    // Keep a derived NGN amount in products.price for legacy FX display conversions
     if (!(priceNgn > 0) && priceUsd != null) {
       const { rates } = await getNgnRates();
       const usdPerNgn = rates.USD || 0.00065;

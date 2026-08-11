@@ -24,12 +24,51 @@ import {
   clientBridalEmailHtml,
   type BridalBriefPayload,
 } from "@/lib/email/bridalEmails";
-import { orderNotifyEmail, resendFrom } from "@/lib/paystack";
+import { orderNotifyEmails, resendFrom } from "@/lib/paystack";
 
 function getResend() {
   const key = process.env.RESEND_API_KEY;
   if (!key) return null;
   return new Resend(key);
+}
+
+type SendResult = PromiseSettledResult<{ error: unknown }>;
+
+async function sendAdminAlert(
+  resend: Resend,
+  opts: {
+    from: string;
+    replyTo?: string;
+    subject: string;
+    html: string;
+    attachments?: { filename: string; content: Buffer }[];
+  }
+): Promise<SendResult[]> {
+  const recipients = orderNotifyEmails();
+  return Promise.allSettled(
+    recipients.map((to) =>
+      resend.emails.send({
+        from: opts.from,
+        to,
+        replyTo: opts.replyTo,
+        subject: opts.subject,
+        html: opts.html,
+        attachments: opts.attachments,
+      })
+    )
+  ) as Promise<SendResult[]>;
+}
+
+function collectErrors(results: SendResult[]) {
+  const errors: string[] = [];
+  for (const r of results) {
+    if (r.status === "rejected") errors.push(String(r.reason));
+    if (r.status === "fulfilled" && r.value.error) {
+      const err = r.value.error as { message?: string };
+      errors.push(String(err.message || r.value.error));
+    }
+  }
+  return errors;
 }
 
 export async function sendOrderEmails(order: OrderEmailPayload) {
@@ -40,41 +79,30 @@ export async function sendOrderEmails(order: OrderEmailPayload) {
   }
 
   const from = resendFrom();
-  const adminTo = orderNotifyEmail();
   const customerHtml = customerOrderEmailHtml(order);
   const adminHtml = adminOrderEmailHtml(order);
 
-  const results = await Promise.allSettled([
+  const results = (await Promise.allSettled([
     resend.emails.send({
       from,
       to: order.email,
       subject: `Order confirmed · ${order.reference} · MKoS`,
       html: customerHtml,
     }),
-    resend.emails.send({
-      from,
-      to: adminTo,
-      replyTo: order.email,
-      subject: `New paid order · ${order.reference} · ${order.customerName}`,
-      html: adminHtml,
-    }),
-  ]);
+    ...orderNotifyEmails().map((to) =>
+      resend.emails.send({
+        from,
+        to,
+        replyTo: order.email,
+        subject: `New paid order · ${order.reference} · ${order.customerName}`,
+        html: adminHtml,
+      })
+    ),
+  ])) as SendResult[];
 
-  const errors = results
-    .filter((r): r is PromiseRejectedResult => r.status === "rejected")
-    .map((r) => String(r.reason));
-
-  for (const r of results) {
-    if (r.status === "fulfilled" && r.value.error) {
-      errors.push(String(r.value.error.message || r.value.error));
-    }
-  }
-
-  if (errors.length) {
-    console.warn("[email] partial failure", errors);
-  }
-
-  return { sent: errors.length < 2, errors };
+  const errors = collectErrors(results);
+  if (errors.length) console.warn("[email] partial failure", errors);
+  return { sent: errors.length === 0, errors };
 }
 
 /** Admin alert + client confirmation for MKoS Experience inquiries */
@@ -86,7 +114,6 @@ export async function sendExperienceInquiryEmails(inquiry: ExperienceInquiryPayl
   }
 
   const from = resendFrom();
-  const adminTo = orderNotifyEmail();
   const isGlam = inquiry.kind === "full_glam";
   const adminSubject = isGlam
     ? `Full Glam consultation · ${inquiry.fullName}`
@@ -95,37 +122,25 @@ export async function sendExperienceInquiryEmails(inquiry: ExperienceInquiryPayl
     ? `Your Full Glam request · MKoS`
     : `Your MKoS Experience preference · MKoS`;
 
-  const results = await Promise.allSettled([
-    resend.emails.send({
-      from,
-      to: adminTo,
-      replyTo: inquiry.email,
-      subject: adminSubject,
-      html: adminExperienceEmailHtml(inquiry),
-    }),
+  const adminResults = await sendAdminAlert(resend, {
+    from,
+    replyTo: inquiry.email,
+    subject: adminSubject,
+    html: adminExperienceEmailHtml(inquiry),
+  });
+
+  const clientResults = (await Promise.allSettled([
     resend.emails.send({
       from,
       to: inquiry.email,
       subject: clientSubject,
       html: clientExperienceEmailHtml(inquiry),
     }),
-  ]);
+  ])) as SendResult[];
 
-  const errors = results
-    .filter((r): r is PromiseRejectedResult => r.status === "rejected")
-    .map((r) => String(r.reason));
-
-  for (const r of results) {
-    if (r.status === "fulfilled" && r.value.error) {
-      errors.push(String(r.value.error.message || r.value.error));
-    }
-  }
-
-  if (errors.length) {
-    console.warn("[email] experience inquiry partial failure", errors);
-  }
-
-  return { sent: errors.length < 2, errors };
+  const errors = collectErrors([...adminResults, ...clientResults]);
+  if (errors.length) console.warn("[email] experience inquiry partial failure", errors);
+  return { sent: errors.length === 0, errors };
 }
 
 export type StyleBriefAttachment = {
@@ -145,44 +160,31 @@ export async function sendStyleBriefEmails(
   }
 
   const from = resendFrom();
-  const adminTo = orderNotifyEmail();
   const resendAttachments = attachments.map((a) => ({
     filename: a.filename,
     content: a.content,
   }));
 
-  const results = await Promise.allSettled([
-    resend.emails.send({
-      from,
-      to: adminTo,
-      replyTo: brief.email,
-      subject: `Client Style Brief · ${brief.fullName}`,
-      html: adminStyleBriefEmailHtml(brief),
-      attachments: resendAttachments.length ? resendAttachments : undefined,
-    }),
+  const adminResults = await sendAdminAlert(resend, {
+    from,
+    replyTo: brief.email,
+    subject: `Client Style Brief · ${brief.fullName}`,
+    html: adminStyleBriefEmailHtml(brief),
+    attachments: resendAttachments.length ? resendAttachments : undefined,
+  });
+
+  const clientResults = (await Promise.allSettled([
     resend.emails.send({
       from,
       to: brief.email,
       subject: `Your Client Style Brief · MKoS`,
       html: clientStyleBriefEmailHtml(brief),
     }),
-  ]);
+  ])) as SendResult[];
 
-  const errors = results
-    .filter((r): r is PromiseRejectedResult => r.status === "rejected")
-    .map((r) => String(r.reason));
-
-  for (const r of results) {
-    if (r.status === "fulfilled" && r.value.error) {
-      errors.push(String(r.value.error.message || r.value.error));
-    }
-  }
-
-  if (errors.length) {
-    console.warn("[email] style brief partial failure", errors);
-  }
-
-  return { sent: errors.length < 2, errors };
+  const errors = collectErrors([...adminResults, ...clientResults]);
+  if (errors.length) console.warn("[email] style brief partial failure", errors);
+  return { sent: errors.length === 0, errors };
 }
 
 /** Admin alert (+ attachments) and client confirmation for Bespoke / Custom Wear */
@@ -197,44 +199,31 @@ export async function sendBespokeEmails(
   }
 
   const from = resendFrom();
-  const adminTo = orderNotifyEmail();
   const resendAttachments = attachments.map((a) => ({
     filename: a.filename,
     content: a.content,
   }));
 
-  const results = await Promise.allSettled([
-    resend.emails.send({
-      from,
-      to: adminTo,
-      replyTo: brief.email,
-      subject: `Bespoke / Custom Wear · ${brief.fullName}`,
-      html: adminBespokeEmailHtml(brief),
-      attachments: resendAttachments.length ? resendAttachments : undefined,
-    }),
+  const adminResults = await sendAdminAlert(resend, {
+    from,
+    replyTo: brief.email,
+    subject: `Bespoke / Custom Wear · ${brief.fullName}`,
+    html: adminBespokeEmailHtml(brief),
+    attachments: resendAttachments.length ? resendAttachments : undefined,
+  });
+
+  const clientResults = (await Promise.allSettled([
     resend.emails.send({
       from,
       to: brief.email,
       subject: `Your Bespoke brief · MKoS`,
       html: clientBespokeEmailHtml(brief),
     }),
-  ]);
+  ])) as SendResult[];
 
-  const errors = results
-    .filter((r): r is PromiseRejectedResult => r.status === "rejected")
-    .map((r) => String(r.reason));
-
-  for (const r of results) {
-    if (r.status === "fulfilled" && r.value.error) {
-      errors.push(String(r.value.error.message || r.value.error));
-    }
-  }
-
-  if (errors.length) {
-    console.warn("[email] bespoke inquiry partial failure", errors);
-  }
-
-  return { sent: errors.length < 2, errors };
+  const errors = collectErrors([...adminResults, ...clientResults]);
+  if (errors.length) console.warn("[email] bespoke inquiry partial failure", errors);
+  return { sent: errors.length === 0, errors };
 }
 
 /** Admin alert and client confirmation for Bridal briefs */
@@ -246,38 +235,24 @@ export async function sendBridalEmails(brief: BridalBriefPayload) {
   }
 
   const from = resendFrom();
-  const adminTo = orderNotifyEmail();
 
-  const results = await Promise.allSettled([
-    resend.emails.send({
-      from,
-      to: adminTo,
-      replyTo: brief.email,
-      subject: `Bridal Brief · ${brief.primaryContactName}`,
-      html: adminBridalEmailHtml(brief),
-    }),
+  const adminResults = await sendAdminAlert(resend, {
+    from,
+    replyTo: brief.email,
+    subject: `Bridal Brief · ${brief.primaryContactName}`,
+    html: adminBridalEmailHtml(brief),
+  });
+
+  const clientResults = (await Promise.allSettled([
     resend.emails.send({
       from,
       to: brief.email,
       subject: `Your Bridal brief · MKoS`,
       html: clientBridalEmailHtml(brief),
     }),
-  ]);
+  ])) as SendResult[];
 
-  const errors = results
-    .filter((r): r is PromiseRejectedResult => r.status === "rejected")
-    .map((r) => String(r.reason));
-
-  for (const r of results) {
-    if (r.status === "fulfilled" && r.value.error) {
-      errors.push(String(r.value.error.message || r.value.error));
-    }
-  }
-
-  if (errors.length) {
-    console.warn("[email] bridal inquiry partial failure", errors);
-  }
-
-  return { sent: errors.length < 2, errors };
+  const errors = collectErrors([...adminResults, ...clientResults]);
+  if (errors.length) console.warn("[email] bridal inquiry partial failure", errors);
+  return { sent: errors.length === 0, errors };
 }
-

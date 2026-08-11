@@ -1,4 +1,3 @@
-import { ADMIN_EMAIL } from "@/lib/admin/constants";
 import { siteUrl } from "@/lib/siteUrl";
 
 export { siteUrl };
@@ -22,8 +21,20 @@ export function paystackPublicKey() {
   return cleanEnv(process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY);
 }
 
+/** House inbox for orders + atelier forms. Comma-separated OK. */
+export function orderNotifyEmails(): string[] {
+  const raw = (
+    process.env.ORDER_NOTIFY_EMAIL ||
+    "styleme@mykindofstyle.com"
+  )
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter((s) => s.includes("@"));
+  return raw.length ? raw : ["styleme@mykindofstyle.com"];
+}
+
 export function orderNotifyEmail() {
-  return process.env.ORDER_NOTIFY_EMAIL || ADMIN_EMAIL;
+  return orderNotifyEmails()[0];
 }
 
 export function resendFrom() {

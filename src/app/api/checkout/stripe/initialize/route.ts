@@ -6,6 +6,7 @@ import { getNgnRates, convertFromNgn } from "@/lib/currency/rates";
 import type { CheckoutItem } from "@/lib/checkout/fulfill";
 import {
   DELIVERY_FEE_NOTE,
+  STUDIO_PICKUP_ADDRESS,
   deliveryMethodLabel,
   isDeliveryMethod,
 } from "@/lib/checkout/delivery";
@@ -23,7 +24,7 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           error:
-            "International Stripe payments are not configured yet. Add STRIPE_SECRET_KEY to the server environment.",
+            "Stripe payments are not configured yet. Add STRIPE_SECRET_KEY to the server environment.",
         },
         { status: 503 }
       );
@@ -60,27 +61,17 @@ export async function POST(req: Request) {
     if (!isDeliveryMethod(deliveryMethod)) {
       return NextResponse.json({ error: "Please choose a delivery method" }, { status: 400 });
     }
-    if (deliveryMethod !== "international") {
-      return NextResponse.json(
-        { error: "Stripe is for international shipping only. Choose International shipping." },
-        { status: 400 }
-      );
-    }
     if (!expectedDeliveryDate || !/^\d{4}-\d{2}-\d{2}$/.test(expectedDeliveryDate)) {
       return NextResponse.json(
         { error: "Please share a valid expected delivery date" },
         { status: 400 }
       );
     }
-    if (!address || !city || !country) {
+    const needsAddress =
+      deliveryMethod === "home_delivery" || deliveryMethod === "international";
+    if (needsAddress && (!address || !city || !country)) {
       return NextResponse.json(
         { error: "Please complete delivery address, city, and country" },
-        { status: 400 }
-      );
-    }
-    if (/^nigeria$/i.test(country)) {
-      return NextResponse.json(
-        { error: "Nigeria orders use Paystack. Select Local delivery or change country." },
         { status: 400 }
       );
     }
@@ -89,10 +80,12 @@ export async function POST(req: Request) {
     }
 
     for (const item of items) {
-      if (!item.name || !item.quantity || item.price == null) {
+      if (!item.name || !item.quantity) {
         return NextResponse.json({ error: "Invalid cart item" }, { status: 400 });
       }
-      if (Number(item.price) <= 0) {
+      const hasUsd = item.priceUsd != null && Number(item.priceUsd) > 0;
+      const hasNgn = Number(item.price) > 0;
+      if (!hasUsd && !hasNgn) {
         return NextResponse.json(
           { error: `${item.name} is price-on-request — contact the studio to order.` },
           { status: 400 }
@@ -150,12 +143,17 @@ export async function POST(req: Request) {
     const customerName = `${first} ${last}`.trim();
     const methodLabel = deliveryMethodLabel(deliveryMethod);
     const notes = [
-      `Payment: Stripe (international)`,
+      `Payment: Stripe (USD)`,
       `Delivery method: ${methodLabel}`,
       `Expected delivery date: ${expectedDeliveryDate}`,
       DELIVERY_FEE_NOTE,
       "U.S. orders may attract a 17% import duty collected by customs at delivery.",
     ].join("\n");
+
+    const shippingAddress =
+      deliveryMethod === "pickup" ? STUDIO_PICKUP_ADDRESS : address;
+    const shippingCity = deliveryMethod === "pickup" ? "Lagos" : city;
+    const shippingCountry = deliveryMethod === "pickup" ? "Nigeria" : country;
 
     const baseOrder = {
       user_id: userId,
@@ -168,11 +166,11 @@ export async function POST(req: Request) {
       total: Number(totalUsd.toFixed(2)),
       currency: "USD",
       shipping_name: customerName,
-      shipping_address: address,
-      shipping_city: city,
+      shipping_address: shippingAddress,
+      shipping_city: shippingCity,
       shipping_state: state,
       shipping_postal: zip,
-      shipping_country: country,
+      shipping_country: shippingCountry,
       shipping_phone: phone,
       paystack_reference: reference,
       payment_provider: "stripe",

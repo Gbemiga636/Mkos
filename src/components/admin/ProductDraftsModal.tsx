@@ -125,25 +125,7 @@ export function ProductDraftsModal({
                   />
                 </label>
 
-                <label className="block">
-                  <span className="font-display text-[10px] tracking-[0.18em] text-mkos-muted uppercase">
-                    Price (₦ Naira)
-                  </span>
-                  <input
-                    type="number"
-                    min="0"
-                    step="1"
-                    value={form.price}
-                    onChange={(e) => onChange(index, { price: e.target.value })}
-                    placeholder="e.g. 185000"
-                    className="mt-1.5 h-11 w-full border border-mkos-border bg-white px-3 text-sm outline-none"
-                  />
-                  <p className="mt-1.5 text-xs text-mkos-muted">
-                    Used for Nigeria / Paystack. If only Naira is set, the site converts it to USD.
-                  </p>
-                </label>
-
-                <label className="block">
+                <label className="block sm:col-span-2">
                   <span className="font-display text-[10px] tracking-[0.18em] text-mkos-muted uppercase">
                     Price ($ USD)
                   </span>
@@ -151,13 +133,14 @@ export function ProductDraftsModal({
                     type="number"
                     min="0"
                     step="0.01"
+                    required
                     value={form.priceUsd}
                     onChange={(e) => onChange(index, { priceUsd: e.target.value })}
                     placeholder="e.g. 120.00"
                     className="mt-1.5 h-11 w-full border border-mkos-border bg-white px-3 text-sm outline-none"
                   />
                   <p className="mt-1.5 text-xs text-mkos-muted">
-                    Optional. When set, USD display uses this exact amount. Enter at least Naira or USD.
+                    Catalogue and checkout are USD-only (Stripe).
                   </p>
                 </label>
 

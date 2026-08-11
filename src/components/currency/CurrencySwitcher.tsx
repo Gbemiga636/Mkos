@@ -98,7 +98,7 @@ export function CurrencySwitcher() {
             </div>
             <div className="max-h-[min(42vh,17.5rem)] overflow-y-auto overscroll-contain sm:max-h-[min(48vh,20rem)]">
               {filtered.map((c) => {
-                const available = c.code === "NGN" || Boolean(rates[c.code]);
+                const available = Boolean(rates[c.code]);
                 const selected = currency === c.code;
                 return (
                   <button

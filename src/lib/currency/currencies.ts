@@ -8,7 +8,6 @@ export const WORLD_CURRENCIES: CurrencyOption[] = [
   { code: "USD", name: "US Dollar" },
   { code: "EUR", name: "Euro" },
   { code: "GBP", name: "British Pound" },
-  { code: "NGN", name: "Nigerian Naira" },
   { code: "CAD", name: "Canadian Dollar" },
   { code: "AUD", name: "Australian Dollar" },
   { code: "NZD", name: "New Zealand Dollar" },

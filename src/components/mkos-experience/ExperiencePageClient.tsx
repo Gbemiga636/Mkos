@@ -232,10 +232,10 @@ export function ExperiencePageClient() {
               </p>
               <p>
                 <a
-                  href="mailto:mkosfashionhouse@gmail.com"
+                  href="mailto:styleme@mykindofstyle.com"
                   className="!text-mkos-ink underline underline-offset-4 hover:text-mkos-ink"
                 >
-                  mkosfashionhouse@gmail.com
+                  styleme@mykindofstyle.com
                 </a>
               </p>
             </div>

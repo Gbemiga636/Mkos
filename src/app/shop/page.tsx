@@ -28,7 +28,7 @@ function ShopContent() {
   const [category, setCategory] = useState(params.get("category") ?? "");
   const [filter, setFilter] = useState(params.get("filter") ?? "");
   const [sort, setSort] = useState("featured");
-  const [priceMax, setPriceMax] = useState(1000000);
+  const [priceMax, setPriceMax] = useState(800);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [availability, setAvailability] = useState<"all" | "in">("all");
 
@@ -75,16 +75,19 @@ function ShopContent() {
   }
 
   const filtered = useMemo(() => {
+    const usdOf = (p: (typeof products)[number]) =>
+      p.priceUsd != null && p.priceUsd > 0 ? p.priceUsd : p.price / 1500;
+
     let list = products.filter((p) => p.collection === "ready-to-wear" || !p.collection);
     if (category) list = list.filter((p) => p.category === category);
     if (filter === "new") list = list.filter((p) => p.newArrival);
     if (filter === "bestsellers") list = list.filter((p) => p.bestSeller);
     if (filter === "trending") list = list.filter((p) => p.trending);
-    list = list.filter((p) => p.price <= priceMax);
+    list = list.filter((p) => usdOf(p) <= priceMax);
     if (availability === "in") list = list.filter((p) => p.stock > 0);
 
-    if (sort === "price-asc") list.sort((a, b) => a.price - b.price);
-    if (sort === "price-desc") list.sort((a, b) => b.price - a.price);
+    if (sort === "price-asc") list.sort((a, b) => usdOf(a) - usdOf(b));
+    if (sort === "price-desc") list.sort((a, b) => usdOf(b) - usdOf(a));
     if (sort === "rating") list.sort((a, b) => b.rating - a.rating);
     return list;
   }, [products, category, filter, sort, priceMax, availability]);
@@ -220,15 +223,15 @@ function ShopContent() {
                 <FilterGroup label="Price">
                   <input
                     type="range"
-                    min={100000}
-                    max={1000000}
-                    step={10000}
+                    min={50}
+                    max={800}
+                    step={10}
                     value={priceMax}
                     onChange={(e) => setPriceMax(Number(e.target.value))}
                     className="w-full accent-orange-700"
                   />
                   <p className="mt-2 text-sm text-mkos-muted">
-                    Up to ₦{priceMax.toLocaleString("en-NG")}
+                    Up to ${priceMax.toLocaleString("en-US")}
                   </p>
                 </FilterGroup>
                 <FilterGroup label="Availability">

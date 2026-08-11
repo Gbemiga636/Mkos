@@ -110,8 +110,8 @@ export function clientStyleBriefEmailHtml(p: StyleBriefPayload) {
 
   return shell(
     "We received your style brief",
-    "Thank you for choosing MKoS. We’ve received your Client Style Brief and will be in touch as we begin creating a piece that reflects you beautifully.",
+    "Thank you for choosing MKoS. We’ve received your Client Style Brief and will reach out to you as we begin creating a piece that reflects you beautifully.",
     rows,
-    "Showroom · Oniru, Victoria Island, Lagos · @shopmykindofstyle · mkosfashionhouse@gmail.com"
+    "Showroom · Oniru, Victoria Island, Lagos · @shopmykindofstyle · styleme@mykindofstyle.com"
   );
 }

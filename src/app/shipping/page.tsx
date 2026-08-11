@@ -27,18 +27,17 @@ export default function ShippingPage() {
 
         <div className="mt-12 space-y-10">
           <section>
-            <h2 className="font-display text-2xl tracking-tight">Local (Nigeria)</h2>
+            <h2 className="font-display text-2xl tracking-tight">Checkout</h2>
             <p className="mt-3 text-sm leading-relaxed text-mkos-muted">
-              Pay securely with Paystack in Naira. Choose studio pickup in Oniru or home delivery
-              via our dispatch partners — delivery fees are quoted by location before dispatch.
+              All orders are paid securely with Stripe in USD — for Nigeria pickup / home delivery
+              and for international shipping. Delivery fees are quoted by location before dispatch.
             </p>
           </section>
           <section>
-            <h2 className="font-display text-2xl tracking-tight">International</h2>
+            <h2 className="font-display text-2xl tracking-tight">International shipping</h2>
             <p className="mt-3 text-sm leading-relaxed text-mkos-muted">
-              International orders are paid with Stripe. Shipping is quoted before your parcel
-              leaves the studio. Duties and taxes in your country are not collected by MKoS at
-              checkout.
+              Shipping is quoted before your parcel leaves the studio. Duties and taxes in your
+              country are not collected by MKoS at checkout.
             </p>
           </section>
           <section>

@@ -23,7 +23,7 @@ const IG_MAIN = "https://www.instagram.com/shopmykindofstyle";
 const IG_MEN = "https://www.instagram.com/mkosformen";
 const WHATSAPP = "https://wa.me/2348143173661";
 const WHATSAPP_2 = "https://wa.me/2348104643052";
-const EMAIL = "mailto:mkosfashionhouse@gmail.com";
+const EMAIL = "mailto:styleme@mykindofstyle.com";
 
 const fade = {
   initial: { opacity: 0, y: 28 },
@@ -284,7 +284,7 @@ export function AboutPageClient() {
           <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <ContactBox
               label="Email"
-              value="mkosfashionhouse@gmail.com"
+              value="styleme@mykindofstyle.com"
               href={EMAIL}
               hint="Orders, fittings & collaborations"
             />

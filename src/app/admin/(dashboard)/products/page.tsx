@@ -190,12 +190,9 @@ export default function AdminProductsPage() {
       return;
     }
     for (const d of named) {
-      const ngn = Number(d.price);
       const usd = Number(d.priceUsd);
-      const hasNgn = Number.isFinite(ngn) && ngn > 0;
-      const hasUsd = Number.isFinite(usd) && usd > 0;
-      if (!hasNgn && !hasUsd) {
-        setMsg(`Add a Naira and/or USD price for “${d.name.trim()}”`);
+      if (!Number.isFinite(usd) || usd <= 0) {
+        setMsg(`Add a USD price for “${d.name.trim()}”`);
         return;
       }
     }
@@ -204,7 +201,7 @@ export default function AdminProductsPage() {
         id: form.id || undefined,
         name: form.name,
         slug: form.slug || undefined,
-        price: Number(form.price) || 0,
+        price: 0,
         priceUsd: Number(form.priceUsd) > 0 ? Number(form.priceUsd) : null,
         stock: Number(form.stock),
         tagline: form.tagline,
@@ -748,7 +745,10 @@ export default function AdminProductsPage() {
                     </span>
                   </div>
                   <p className="text-sm tabular-nums text-mkos-muted">
-                    {formatPrice(Number(p.price))} ·{" "}
+                    {p.price_usd != null && Number(p.price_usd) > 0
+                      ? `$${Number(p.price_usd).toFixed(2)}`
+                      : formatPrice(Number(p.price))}{" "}
+                    ·{" "}
                     {soldOut ? (
                       <span className="text-mkos-accent">Sold out</span>
                     ) : (

@@ -104,6 +104,6 @@ export function clientExperienceEmailHtml(p: ExperienceInquiryPayload) {
     title,
     intro,
     rows,
-    "Studio · Oniru, Lagos · WhatsApp 08143173661 · mkosfashionhouse@gmail.com"
+    "Studio · Oniru, Lagos · WhatsApp 08143173661 · styleme@mykindofstyle.com"
   );
 }

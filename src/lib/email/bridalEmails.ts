@@ -144,8 +144,8 @@ export function clientBridalEmailHtml(p: BridalBriefPayload) {
 
   return shell(
     "Your Bridal brief is with the house",
-    "Thank you for choosing MKoS. Your bridal brief will be personally reviewed by our atelier. We’ll contact you to schedule your consultation and begin creating a look that celebrates your story.",
+    "Thank you for choosing MKoS. Your bridal brief will be personally reviewed by our atelier. We’ll reach out to you to schedule your consultation and begin creating a look that celebrates your story.",
     rows,
-    "Showroom · Oniru, Victoria Island, Lagos · @shopmykindofstyle · mkosfashionhouse@gmail.com"
+    "Showroom · Oniru, Victoria Island, Lagos · @shopmykindofstyle · styleme@mykindofstyle.com"
   );
 }

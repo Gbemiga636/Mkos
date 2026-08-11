@@ -39,7 +39,7 @@ const MUTED = "#6b6b6b";
 const WARM = "#f7f3ef";
 const BORDER = "#e8e2dc";
 
-function money(n: number, currency = "NGN") {
+function money(n: number, currency = "USD") {
   return formatPrice(n, currency);
 }
 
