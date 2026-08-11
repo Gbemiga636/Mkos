@@ -161,10 +161,9 @@ function TextArea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
   );
 }
 
-function SectionTitle({ n, title }: { n: string; title: string }) {
+function SectionTitle({ title }: { title: string }) {
   return (
-    <div className="mb-6 flex items-baseline gap-3 border-b border-mkos-border pb-3">
-      <span className="font-display text-[11px] tracking-[0.28em] text-mkos-accent uppercase">{n}</span>
+    <div className="mb-6 border-b border-mkos-border pb-3">
       <h3 className="font-display text-xl tracking-tight text-mkos-ink sm:text-2xl">{title}</h3>
     </div>
   );
@@ -342,16 +341,11 @@ export function BridalPageClient() {
                   type="button"
                   onClick={() => setStep(i)}
                   className={cn(
-                    "flex w-full items-start gap-4 text-left transition-colors",
+                    "w-full text-left transition-colors",
                     i === step ? "text-mkos-ink" : "text-mkos-muted hover:text-mkos-ink"
                   )}
                 >
-                  <span className="mt-1 font-display text-[10px] tracking-[0.22em] uppercase">
-                    0{i + 1}
-                  </span>
-                  <span>
-                    <span className="block font-display text-lg tracking-tight">{s.label}</span>
-                  </span>
+                  <span className="block font-display text-lg tracking-tight">{s.label}</span>
                 </button>
               </li>
             ))}
@@ -404,7 +398,7 @@ export function BridalPageClient() {
         <form onSubmit={onSubmit} className="border border-mkos-border bg-white p-6 sm:p-10">
           {/* Step 0 — About You */}
           <div className={step === 0 ? "space-y-8" : "hidden"}>
-            <SectionTitle n="01" title="About You" />
+            <SectionTitle title="About You" />
             <div>
               <FieldLabel>Primary contact name</FieldLabel>
               <TextInput name="primaryContactName" required={step === 0} autoComplete="name" />
@@ -446,7 +440,7 @@ export function BridalPageClient() {
           {/* Step 1 — Who & Styling */}
           <div className={step === 1 ? "space-y-10" : "hidden"}>
             <div>
-              <SectionTitle n="02" title="Who are we styling?" />
+              <SectionTitle title="Who are we styling?" />
               <div className="flex flex-wrap gap-2">
                 {STYLING_FOR.map((t) => (
                   <Chip
@@ -467,7 +461,7 @@ export function BridalPageClient() {
             </div>
 
             <div>
-              <SectionTitle n="03" title="Styling experience" />
+              <SectionTitle title="Styling experience" />
               <div className="space-y-6">
                 {STYLING_EXPERIENCE.map((block) => (
                   <div key={block.group}>
@@ -493,7 +487,7 @@ export function BridalPageClient() {
 
           {/* Step 2 — Celebration */}
           <div className={step === 2 ? "space-y-8" : "hidden"}>
-            <SectionTitle n="04" title="Your celebration" />
+            <SectionTitle title="Your celebration" />
             <div>
               <FieldLabel>Wedding date</FieldLabel>
               <TextInput name="weddingDate" type="date" />
@@ -568,7 +562,7 @@ export function BridalPageClient() {
           {/* Step 3 — Materials + Party + Experience */}
           <div className={step === 3 ? "space-y-10" : "hidden"}>
             <div>
-              <SectionTitle n="05" title="Your materials" />
+              <SectionTitle title="Your materials" />
               <FieldLabel>Who will provide the fabrics/materials?</FieldLabel>
               <div className="mt-3 space-y-2">
                 {FABRIC_PROVIDERS.map((f) => (
@@ -615,7 +609,7 @@ export function BridalPageClient() {
             </div>
 
             <div>
-              <SectionTitle n="06" title="Your bridal party" />
+              <SectionTitle title="Your bridal party" />
               <p className="mb-4 text-sm text-mkos-muted">How many people are we styling?</p>
               <div className="grid gap-6 sm:grid-cols-3">
                 <div>
@@ -646,7 +640,7 @@ export function BridalPageClient() {
             </div>
 
             <div>
-              <SectionTitle n="07" title="Your MKoS experience" />
+              <SectionTitle title="Your MKoS experience" />
               <div className="space-y-2">
                 {EXPERIENCES.map((ex) => (
                   <label
@@ -674,7 +668,7 @@ export function BridalPageClient() {
           {/* Step 4 — Consultation + Planner + Submit */}
           <div className={step === 4 ? "space-y-10" : "hidden"}>
             <div>
-              <SectionTitle n="08" title="Consultation & fittings" />
+              <SectionTitle title="Consultation & fittings" />
               <FieldLabel>How would you like to begin?</FieldLabel>
               <div className="mt-3 flex flex-wrap gap-2">
                 {CONSULTATION.map((c) => (
@@ -726,7 +720,7 @@ export function BridalPageClient() {
             </div>
 
             <div>
-              <SectionTitle n="09" title="Wedding planner / coordinator" />
+              <SectionTitle title="Wedding planner / coordinator" />
               <p className="mb-4 text-xs text-mkos-muted">Optional</p>
               <div className="grid gap-6 sm:grid-cols-2">
                 <div>
@@ -749,7 +743,7 @@ export function BridalPageClient() {
             </div>
 
             <div>
-              <SectionTitle n="10" title="How did you hear about MKoS?" />
+              <SectionTitle title="How did you hear about MKoS?" />
               <div className="flex flex-wrap gap-2">
                 {HEAR.map((h) => (
                   <Chip
@@ -770,7 +764,7 @@ export function BridalPageClient() {
             </div>
 
             <div>
-              <SectionTitle n="11" title="Additional notes" />
+              <SectionTitle title="Additional notes" />
               <TextArea
                 name="additionalNotes"
                 placeholder="Anything you’d like our atelier to know before your consultation…"

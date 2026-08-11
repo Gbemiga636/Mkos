@@ -260,20 +260,15 @@ export function BespokePageClient() {
                   type="button"
                   onClick={() => setStep(i)}
                   className={cn(
-                    "flex w-full items-start gap-4 text-left transition-colors",
+                    "w-full text-left transition-colors",
                     i === step ? "text-mkos-ink" : "text-mkos-muted hover:text-mkos-ink"
                   )}
                 >
-                  <span className="mt-1 font-display text-[10px] tracking-[0.22em] uppercase">
-                    0{i + 1}
-                  </span>
-                  <span>
-                    <span className="block font-display text-lg tracking-tight">
-                      {s.label}
-                      <span className="font-body text-sm font-normal tracking-normal text-mkos-muted">
-                        {" "}
-                        – {s.detail}
-                      </span>
+                  <span className="block font-display text-lg tracking-tight">
+                    {s.label}
+                    <span className="font-body text-sm font-normal tracking-normal text-mkos-muted">
+                      {" "}
+                      – {s.detail}
                     </span>
                   </span>
                 </button>
