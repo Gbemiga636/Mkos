@@ -140,7 +140,7 @@ export function ProductDraftsModal({
                     className="mt-1.5 h-11 w-full border border-mkos-border bg-white px-3 text-sm outline-none"
                   />
                   <p className="mt-1.5 text-xs text-mkos-muted">
-                    Catalogue and checkout are USD-only (Stripe).
+                    Catalogue and checkout are USD-only (Flutterwave).
                   </p>
                 </label>
 

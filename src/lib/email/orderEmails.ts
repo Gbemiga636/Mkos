@@ -235,7 +235,7 @@ export function adminOrderEmailHtml(order: OrderEmailPayload) {
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${WARM};margin-bottom:22px;">
       <tr>
         <td style="padding:16px 18px;">
-          <div style="font-family:Arial,Helvetica,sans-serif;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:${MUTED};">Paystack reference</div>
+          <div style="font-family:Arial,Helvetica,sans-serif;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:${MUTED};">Payment reference</div>
           <div style="font-family:Georgia,'Times New Roman',serif;font-size:18px;margin-top:6px;">${escapeHtml(order.reference)}</div>
           <div style="font-family:Arial,Helvetica,sans-serif;font-size:13px;margin-top:10px;color:${INK};">
             <strong>${escapeHtml(order.customerName)}</strong><br/>
@@ -296,7 +296,7 @@ export function adminOrderEmailHtml(order: OrderEmailPayload) {
     title: "New order paid",
     eyebrow: "Admin alert",
     bodyHtml: body,
-    footerNote: "Sent automatically from the MKoS storefront when Paystack confirms payment.",
+    footerNote: "Sent automatically from the MKoS storefront when Flutterwave confirms payment.",
   });
 }
 

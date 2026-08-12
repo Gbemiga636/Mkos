@@ -72,7 +72,7 @@ const CONTENT_OPTIONS = [
 
 const DELIVERY_OPTIONS = [
   { value: "pickup", label: "Pick Up" },
-  { value: "local", label: "Local Delivery" },
+  { value: "local", label: "Local Delivery (Local Orders Only)" },
   { value: "international", label: "International Shipping" },
 ] as const;
 

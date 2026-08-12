@@ -32,7 +32,7 @@ export default function EmailPreviewPage() {
             Order email templates
           </h1>
           <p className="mt-2 max-w-xl text-sm text-mkos-muted">
-            Preview of the emails Resend sends after Paystack confirms payment — one to the
+            Preview of the emails Resend sends after Flutterwave confirms payment — one to the
             customer, one to the house.
           </p>
         </div>
@@ -66,7 +66,7 @@ export default function EmailPreviewPage() {
               Trigger
             </span>
             <br />
-            Paystack success (verify API + webhook)
+            Flutterwave success (verify API + webhook)
           </p>
           <p>
             <span className="font-display text-[10px] tracking-[0.16em] text-mkos-ink uppercase">

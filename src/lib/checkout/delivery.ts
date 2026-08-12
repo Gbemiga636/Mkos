@@ -3,12 +3,14 @@ export type DeliveryMethod = "pickup" | "home_delivery" | "international";
 export const DELIVERY_METHODS: {
   value: DeliveryMethod;
   label: string;
+  note?: string;
   short: string;
 }[] = [
   { value: "pickup", label: "Pickup", short: "Pickup at the Oniru studio" },
   {
     value: "home_delivery",
     label: "Home delivery",
+    note: "(Local Orders Only)",
     short: "Dispatch riders — fee quoted by location",
   },
   {

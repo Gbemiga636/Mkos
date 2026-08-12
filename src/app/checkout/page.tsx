@@ -69,7 +69,7 @@ export default function CheckoutPage() {
     );
   }
 
-  async function payWithStripe() {
+  async function payWithFlutterwave() {
     setError("");
     if (!hasPricedItems) {
       setError("One or more styles are price-on-request. Message the studio to complete this order.");
@@ -77,7 +77,7 @@ export default function CheckoutPage() {
     }
     setPlacing(true);
     try {
-      const res = await fetch("/api/checkout/stripe/initialize", {
+      const res = await fetch("/api/checkout/flutterwave/initialize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -99,19 +99,19 @@ export default function CheckoutPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "Could not start Stripe payment");
+        setError(data.error || "Could not start Flutterwave payment");
         return;
       }
       window.location.href = data.url as string;
     } catch {
-      setError("Network error starting Stripe. Please try again.");
+      setError("Network error starting Flutterwave. Please try again.");
     } finally {
       setPlacing(false);
     }
   }
 
   async function pay() {
-    return payWithStripe();
+    return payWithFlutterwave();
   }
 
   function validateDelivery() {
@@ -229,6 +229,14 @@ export default function CheckoutPage() {
                           >
                             <span className="font-display text-sm tracking-[0.08em] uppercase">
                               {m.label}
+                              {m.note ? (
+                                <>
+                                  {" "}
+                                  <strong className="font-semibold normal-case tracking-normal">
+                                    {m.note}
+                                  </strong>
+                                </>
+                              ) : null}
                             </span>
                             <span
                               className={cn(
@@ -416,8 +424,8 @@ export default function CheckoutPage() {
                   <div className="mt-6 border border-mkos-border bg-mkos-warm/50 p-4 text-sm text-mkos-muted">
                     <p>
                       You’ll pay securely with{" "}
-                      <strong className="text-mkos-ink">Stripe</strong> in USD. Delivery fees (if
-                      any) are quoted separately before dispatch. U.S. customs may apply a 17%
+                      <strong className="text-mkos-ink">Flutterwave</strong> in USD. Delivery fees
+                      (if any) are quoted separately before dispatch. U.S. customs may apply a 17%
                       import duty at delivery.{" "}
                       <a href="/shipping" className="underline underline-offset-2">
                         Shipping details
@@ -439,7 +447,7 @@ export default function CheckoutPage() {
                     >
                       {placing
                         ? "Redirecting…"
-                        : `Pay with Stripe · ${formatPrice(total, { usd: subtotalUsd })}`}
+                        : `Pay with Flutterwave · ${formatPrice(total, { usd: subtotalUsd })}`}
                     </Button>
                   </div>
                   {error && <p className="mt-3 text-sm text-red-600">{error}</p>}

@@ -35,8 +35,13 @@ type OrderPayload = {
 
 function SuccessInner() {
   const params = useSearchParams();
-  const reference = params.get("reference") || params.get("trxref") || "";
-  const sessionId = params.get("session_id") || "";
+  const reference =
+    params.get("reference") || params.get("tx_ref") || params.get("trxref") || "";
+  const sessionId =
+    params.get("session_id") ||
+    params.get("checkout_session_id") ||
+    params.get("checkoutId") ||
+    "";
   const clearCart = useCartStore((s) => s.clear);
   const [status, setStatus] = useState<"loading" | "ok" | "error">("loading");
   const [message, setMessage] = useState("Confirming your payment…");
@@ -55,25 +60,10 @@ function SuccessInner() {
     let cancelled = false;
     (async () => {
       try {
-        if (sessionId || reference.startsWith("mkos_st_")) {
-          const stripeRes = await fetch("/api/checkout/stripe/verify", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ sessionId, reference }),
-          });
-          const stripeData = await stripeRes.json();
-          if (!stripeRes.ok && !reference) {
-            if (cancelled) return;
-            setStatus("error");
-            setMessage(stripeData.error || "We couldn’t confirm this Stripe payment yet.");
-            return;
-          }
-        }
-
-        const res = await fetch("/api/checkout/verify", {
+        const res = await fetch("/api/checkout/flutterwave/verify", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ reference }),
+          body: JSON.stringify({ sessionId, reference }),
         });
         const data = await res.json();
         if (cancelled) return;

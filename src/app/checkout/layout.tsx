@@ -3,7 +3,7 @@ import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
   title: "Checkout",
-  description: "Secure checkout for your MKoS order — Paystack payment, studio pickup or delivery.",
+  description: "Secure checkout for your MKoS order — Flutterwave payment, studio pickup or delivery.",
   path: "/checkout",
   noIndex: true,
 });

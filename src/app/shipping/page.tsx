@@ -29,8 +29,9 @@ export default function ShippingPage() {
           <section>
             <h2 className="font-display text-2xl tracking-tight">Checkout</h2>
             <p className="mt-3 text-sm leading-relaxed text-mkos-muted">
-              All orders are paid securely with Stripe in USD — for Nigeria pickup / home delivery
-              and for international shipping. Delivery fees are quoted by location before dispatch.
+              All orders are paid securely with Flutterwave in USD — for Nigeria pickup / home
+              delivery and for international shipping. Delivery fees are quoted by location before
+              dispatch.
             </p>
           </section>
           <section>
