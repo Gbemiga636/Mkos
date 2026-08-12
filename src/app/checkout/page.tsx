@@ -16,9 +16,13 @@ import {
   deliveryMethodLabel,
   type DeliveryMethod,
 } from "@/lib/checkout/delivery";
-import { ShippingConfidence } from "@/components/shipping/ShippingConfidence";
+import {
+  flutterwaveEncryptCard,
+  flutterwaveEncryptSecret,
+} from "@/lib/flutterwaveEncrypt";
 
 const steps = ["Delivery", "Review", "Pay"] as const;
+const FLW_ENCRYPTION_KEY = process.env.NEXT_PUBLIC_FLUTTERWAVE_ENCRYPTION_KEY || "";
 
 export default function CheckoutPage() {
   const items = useCartStore((s) => s.items);
@@ -32,7 +36,19 @@ export default function CheckoutPage() {
     : null;
   const [step, setStep] = useState(0);
   const [placing, setPlacing] = useState(false);
+  const [paying, setPaying] = useState(false);
   const [error, setError] = useState("");
+  const [payRef, setPayRef] = useState("");
+  const [testMode, setTestMode] = useState(false);
+  const [chargeId, setChargeId] = useState("");
+  const [authStep, setAuthStep] = useState<"card" | "pin" | "otp">("card");
+  const [card, setCard] = useState({
+    number: "",
+    expiry: "",
+    cvv: "",
+    pin: "",
+    otp: "",
+  });
   const [form, setForm] = useState({
     email: "",
     first: "",
@@ -102,11 +118,97 @@ export default function CheckoutPage() {
         setError(data.error || "Could not start Flutterwave payment");
         return;
       }
+      if (data.payOnSite || !data.url) {
+        setPayRef(String(data.reference || ""));
+        setTestMode(Boolean(data.testMode));
+        setAuthStep("card");
+        setChargeId("");
+        setStep(2);
+        return;
+      }
       window.location.href = data.url as string;
     } catch {
       setError("Network error starting Flutterwave. Please try again.");
     } finally {
       setPlacing(false);
+    }
+  }
+
+  async function chargeCard() {
+    setError("");
+    if (!payRef) {
+      setError("Payment session expired. Go back and try again.");
+      return;
+    }
+    setPaying(true);
+    try {
+      const expiry = card.expiry.replace(/\s/g, "");
+      const [month, year] = expiry.split("/");
+      const payload: Record<string, unknown> = { reference: payRef };
+      if (authStep === "pin") {
+        payload.chargeId = chargeId;
+        if (FLW_ENCRYPTION_KEY) {
+          const enc = await flutterwaveEncryptSecret({
+            encryptionKey: FLW_ENCRYPTION_KEY,
+            value: card.pin,
+          });
+          payload.encryptedPin = { nonce: enc.nonce, encrypted_pin: enc.encrypted };
+        }
+        payload.pin = card.pin;
+      } else if (authStep === "otp") {
+        payload.chargeId = chargeId;
+        if (FLW_ENCRYPTION_KEY) {
+          const enc = await flutterwaveEncryptSecret({
+            encryptionKey: FLW_ENCRYPTION_KEY,
+            value: card.otp,
+          });
+          payload.encryptedOtp = { nonce: enc.nonce, encrypted_otp: enc.encrypted };
+        }
+        payload.otp = card.otp;
+      } else {
+        if (!FLW_ENCRYPTION_KEY) {
+          setError(
+            "Missing NEXT_PUBLIC_FLUTTERWAVE_ENCRYPTION_KEY. Add your Flutterwave Encryption Key and restart the dev server."
+          );
+          return;
+        }
+        payload.encrypted = await flutterwaveEncryptCard({
+          encryptionKey: FLW_ENCRYPTION_KEY,
+          cardNumber: card.number,
+          expiryMonth: month || "",
+          expiryYear: year || "",
+          cvv: card.cvv,
+        });
+      }
+      const res = await fetch("/api/checkout/flutterwave/charge", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Payment failed");
+        return;
+      }
+      if (data.redirect) {
+        window.location.href = data.redirect as string;
+        return;
+      }
+      if (data.requires === "pin") {
+        setChargeId(String(data.chargeId || ""));
+        setAuthStep("pin");
+        return;
+      }
+      if (data.requires === "otp") {
+        setChargeId(String(data.chargeId || ""));
+        setAuthStep("otp");
+        return;
+      }
+      setError(data.error || "Payment is still pending. Please try again.");
+    } catch {
+      setError("Network error completing payment. Please try again.");
+    } finally {
+      setPaying(false);
     }
   }
 
@@ -432,9 +534,6 @@ export default function CheckoutPage() {
                       </a>
                     </p>
                   </div>
-                  <div className="mt-4">
-                    <ShippingConfidence compact />
-                  </div>
                   <div className="mt-8 flex flex-wrap gap-3">
                     <Button variant="secondary" onClick={() => setStep(0)}>
                       Back
@@ -446,8 +545,102 @@ export default function CheckoutPage() {
                       onClick={pay}
                     >
                       {placing
-                        ? "Redirecting…"
+                        ? "Preparing payment…"
                         : `Pay with Flutterwave · ${formatPrice(total, { usd: subtotalUsd })}`}
+                    </Button>
+                  </div>
+                  {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+                </motion.div>
+              )}
+
+              {step === 2 && (
+                <motion.div
+                  key="pay"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                >
+                  <h2 className="font-display text-2xl">Pay</h2>
+                  <p className="mt-2 text-sm text-mkos-muted">
+                    Card details are encrypted and charged securely through Flutterwave.
+                  </p>
+                  {testMode ? (
+                    <p className="mt-3 border border-mkos-border bg-mkos-warm/50 p-3 text-xs leading-relaxed text-mkos-muted">
+                      Test mode — try Mastercard{" "}
+                      <span className="font-mono text-mkos-ink">5531886652142950</span>, expiry{" "}
+                      <span className="font-mono text-mkos-ink">09/32</span>, CVV{" "}
+                      <span className="font-mono text-mkos-ink">564</span>. PIN{" "}
+                      <span className="font-mono text-mkos-ink">3310</span> / OTP{" "}
+                      <span className="font-mono text-mkos-ink">123456</span> if asked.
+                    </p>
+                  ) : null}
+
+                  {authStep === "card" ? (
+                    <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                      <Field
+                        className="sm:col-span-2"
+                        label="Card number"
+                        value={card.number}
+                        onChange={(v) =>
+                          setCard((c) => ({ ...c, number: formatCardNumber(v) }))
+                        }
+                      />
+                      <Field
+                        label="Expiry (MM/YY)"
+                        value={card.expiry}
+                        onChange={(v) => setCard((c) => ({ ...c, expiry: formatExpiry(v) }))}
+                      />
+                      <Field
+                        label="CVV"
+                        value={card.cvv}
+                        onChange={(v) =>
+                          setCard((c) => ({ ...c, cvv: v.replace(/\D/g, "").slice(0, 4) }))
+                        }
+                      />
+                    </div>
+                  ) : authStep === "pin" ? (
+                    <div className="mt-6">
+                      <Field
+                        label="Card PIN"
+                        value={card.pin}
+                        onChange={(v) =>
+                          setCard((c) => ({ ...c, pin: v.replace(/\D/g, "").slice(0, 4) }))
+                        }
+                      />
+                    </div>
+                  ) : (
+                    <div className="mt-6">
+                      <Field
+                        label="OTP"
+                        value={card.otp}
+                        onChange={(v) =>
+                          setCard((c) => ({ ...c, otp: v.replace(/\D/g, "").slice(0, 8) }))
+                        }
+                      />
+                    </div>
+                  )}
+
+                  <div className="mt-8 flex flex-wrap gap-3">
+                    <Button
+                      variant="secondary"
+                      onClick={() => {
+                        if (authStep === "card") setStep(1);
+                        else setAuthStep("card");
+                      }}
+                    >
+                      Back
+                    </Button>
+                    <Button
+                      size="lg"
+                      variant="checkout"
+                      disabled={paying}
+                      onClick={chargeCard}
+                    >
+                      {paying
+                        ? "Processing…"
+                        : authStep === "card"
+                          ? `Pay · ${formatPrice(total, { usd: subtotalUsd })}`
+                          : "Authorize payment"}
                     </Button>
                   </div>
                   {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
@@ -515,6 +708,20 @@ export default function CheckoutPage() {
       </div>
     </div>
   );
+}
+
+function formatCardNumber(value: string) {
+  return value
+    .replace(/\D/g, "")
+    .slice(0, 19)
+    .replace(/(.{4})/g, "$1 ")
+    .trim();
+}
+
+function formatExpiry(value: string) {
+  const digits = value.replace(/\D/g, "").slice(0, 4);
+  if (digits.length <= 2) return digits;
+  return `${digits.slice(0, 2)}/${digits.slice(2)}`;
 }
 
 function Field({

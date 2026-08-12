@@ -236,9 +236,6 @@ function SuccessInner() {
                 <Button href="/shop" size="lg">
                   Continue shopping
                 </Button>
-                <Button href="/account" variant="secondary" size="lg">
-                  View account
-                </Button>
                 <Button
                   type="button"
                   variant="ghost"

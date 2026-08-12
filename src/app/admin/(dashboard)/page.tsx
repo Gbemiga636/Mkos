@@ -73,7 +73,6 @@ async function getOverview() {
   const orderRows = (orders.data ?? []).filter(
     (o) => o.payment_status === "paid" || o.status === "paid" || o.status === "completed"
   );
-  const revenue = orderRows.reduce((n, o) => n + Number(o.total || 0), 0);
   const allOrders = orders.data ?? [];
   const pending = allOrders.filter(
     (o) => o.status === "placed" || o.status === "pending" || o.payment_status === "pending"
@@ -105,7 +104,6 @@ async function getOverview() {
     liveCount: uniqueLive.size,
     liveSessions: live.data ?? [],
     productsCount: products.data?.length ?? 0,
-    revenue,
     ordersCount: orderRows.length,
     pending,
     completed: orderRows.length,
@@ -134,7 +132,6 @@ export default async function AdminDashboardPage() {
       liveCount: 0,
       liveSessions: [],
       productsCount: 0,
-      revenue: 0,
       ordersCount: 0,
       pending: 0,
       completed: 0,

@@ -1,4 +1,4 @@
-import { randomUUID } from "crypto";
+import { randomBytes, randomUUID } from "crypto";
 
 function cleanEnv(value: string | undefined) {
   let v = (value || "").trim();
@@ -101,11 +101,20 @@ async function flwFetch<T>(
   const data = (await res.json().catch(() => ({}))) as T & {
     status?: string;
     message?: string;
-    error?: { message?: string };
+    error?: {
+      message?: string;
+      validation_errors?: { field_name?: string; message?: string }[];
+    };
   };
   if (!res.ok) {
+    const details = data.error?.validation_errors
+      ?.map((v) => `${v.field_name}: ${v.message}`)
+      .filter(Boolean)
+      .join("; ");
     throw new Error(
-      data.error?.message || data.message || `Flutterwave ${path} failed (${res.status})`
+      [data.error?.message, details, data.message, `Flutterwave ${path} failed (${res.status})`]
+        .filter(Boolean)
+        .join(" — ")
     );
   }
   return data;
@@ -180,7 +189,7 @@ export async function flutterwaveCreateCheckoutSession(opts: {
     }),
   });
   const created = normalizeCheckoutSession(res.data);
-  if (created.checkout_url) return created;
+  if (isUsableHostedCheckoutUrl(created.checkout_url)) return created;
   let merged = created;
   if (created.id) {
     try {
@@ -190,18 +199,196 @@ export async function flutterwaveCreateCheckoutSession(opts: {
       /* retrieve is best-effort */
     }
   }
-  if (!merged.checkout_url && merged.id) {
-    merged.checkout_url = flutterwaveHostedCheckoutUrl(merged.id);
+  if (!isUsableHostedCheckoutUrl(merged.checkout_url)) {
+    merged.checkout_url = undefined;
   }
   return merged;
 }
 
-export function flutterwaveHostedCheckoutUrl(sessionId: string) {
-  const sandbox = flutterwaveBaseUrl().includes("developersandbox");
-  if (sandbox) {
-    return `https://developer-sandbox-ui-sit.flutterwave.cloud/checkout?session_id=${encodeURIComponent(sessionId)}`;
+/** Flutterwave's sandbox hosted UI sits behind Azure Front Door and currently 504s. */
+export function isUsableHostedCheckoutUrl(url?: string | null) {
+  if (!url) return false;
+  try {
+    const parsed = new URL(url);
+    if (!/^https?:$/i.test(parsed.protocol)) return false;
+    const host = parsed.hostname.toLowerCase();
+    if (host.includes("developer-sandbox-ui-sit.flutterwave.cloud")) return false;
+    return true;
+  } catch {
+    return false;
   }
-  return `https://checkout.flutterwave.com/v4/checkout?session_id=${encodeURIComponent(sessionId)}`;
+}
+
+export function flutterwaveIsSandbox() {
+  return flutterwaveBaseUrl().includes("developersandbox");
+}
+
+function encryptionKeyBytes() {
+  const raw = flutterwaveEncryptionKey();
+  if (!raw) throw new Error("Flutterwave encryption key is not configured.");
+  // Flutterwave docs: Base64-decode the dashboard Encryption Key into a 32-byte AES key.
+  const decoded = Buffer.from(raw, "base64");
+  if (decoded.length !== 32) {
+    throw new Error(
+      `Flutterwave encryption key must Base64-decode to 32 bytes (got ${decoded.length}). Re-copy Encryption Key from the dashboard and quote it in .env.local.`
+    );
+  }
+  return new Uint8Array(decoded);
+}
+
+/** Same algorithm as Flutterwave's documented encryptAES helper. */
+export async function flutterwaveEncryptField(plain: string, nonce: string) {
+  if (nonce.length !== 12) throw new Error("Encryption nonce must be 12 characters.");
+  const subtle = globalThis.crypto?.subtle;
+  if (!subtle) throw new Error("Crypto API is not available in this environment.");
+  const key = await subtle.importKey("raw", encryptionKeyBytes(), { name: "AES-GCM" }, false, [
+    "encrypt",
+  ]);
+  const encrypted = await subtle.encrypt(
+    { name: "AES-GCM", iv: new TextEncoder().encode(nonce) },
+    key,
+    new TextEncoder().encode(String(plain))
+  );
+  return Buffer.from(encrypted).toString("base64");
+}
+
+async function encryptCardPayload(opts: {
+  cardNumber: string;
+  expiryMonth: string;
+  expiryYear: string;
+  cvv: string;
+}) {
+  const nonce = flutterwaveNonce();
+  return {
+    nonce,
+    encrypted_card_number: await flutterwaveEncryptField(opts.cardNumber, nonce),
+    encrypted_expiry_month: await flutterwaveEncryptField(opts.expiryMonth, nonce),
+    encrypted_expiry_year: await flutterwaveEncryptField(opts.expiryYear, nonce),
+    encrypted_cvv: await flutterwaveEncryptField(opts.cvv, nonce),
+  };
+}
+
+export function flutterwaveNonce() {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const bytes = randomBytes(12);
+  let nonce = "";
+  for (const byte of bytes) nonce += chars[byte % chars.length];
+  return nonce;
+}
+
+export async function flutterwaveCreateCardPaymentMethod(
+  opts:
+    | {
+        cardNumber: string;
+        expiryMonth: string;
+        expiryYear: string;
+        cvv: string;
+      }
+    | {
+        nonce: string;
+        encrypted_card_number: string;
+        encrypted_expiry_month: string;
+        encrypted_expiry_year: string;
+        encrypted_cvv: string;
+      }
+) {
+  const card =
+    "encrypted_card_number" in opts
+      ? {
+          nonce: opts.nonce,
+          encrypted_card_number: opts.encrypted_card_number,
+          encrypted_expiry_month: opts.encrypted_expiry_month,
+          encrypted_expiry_year: opts.encrypted_expiry_year,
+          encrypted_cvv: opts.encrypted_cvv,
+        }
+      : await encryptCardPayload(opts);
+
+  try {
+    const res = await flwFetch<{ data: { id: string } }>("/payment-methods", {
+      method: "POST",
+      body: JSON.stringify({ type: "card", card }),
+    });
+    if (!res.data?.id) throw new Error("Could not save the card with Flutterwave.");
+    return res.data.id;
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Card encryption failed";
+    if (/decrypt|encryption/i.test(message)) {
+      throw new Error(
+        "Flutterwave could not decrypt the card. Re-copy your Encryption Key from the Flutterwave dashboard into FLUTTERWAVE_ENCRYPTION_KEY (and NEXT_PUBLIC_FLUTTERWAVE_ENCRYPTION_KEY), keep it quoted, then restart the dev server."
+      );
+    }
+    throw err instanceof Error ? err : new Error(message);
+  }
+}
+
+export type FlutterwaveNextAction = {
+  type?: string;
+  authorization?: { type?: string };
+  redirect_url?: { url?: string };
+};
+
+export type FlutterwaveCharge = {
+  id: string;
+  amount?: number;
+  currency?: string;
+  reference?: string;
+  status?: string;
+  next_action?: FlutterwaveNextAction;
+};
+
+export async function flutterwaveCreateCharge(opts: {
+  amountUsd: number;
+  reference: string;
+  customerId: string;
+  paymentMethodId: string;
+  redirectUrl: string;
+}) {
+  const res = await flwFetch<{ data: FlutterwaveCharge }>("/charges", {
+    method: "POST",
+    body: JSON.stringify({
+      amount: Number(opts.amountUsd.toFixed(2)),
+      currency: "USD",
+      reference: opts.reference,
+      customer_id: opts.customerId,
+      payment_method_id: opts.paymentMethodId,
+      redirect_url: opts.redirectUrl,
+    }),
+  });
+  return res.data;
+}
+
+export async function flutterwaveAuthorizeCharge(
+  chargeId: string,
+  authorization:
+    | { type: "pin"; pin: string }
+    | { type: "otp"; otp: string }
+) {
+  const nonce = flutterwaveNonce();
+  const body =
+    authorization.type === "pin"
+      ? {
+          authorization: {
+            type: "pin",
+            pin: {
+              nonce,
+              encrypted_pin: await flutterwaveEncryptField(authorization.pin, nonce),
+            },
+          },
+        }
+      : {
+          authorization: {
+            type: "otp",
+            otp: {
+              nonce,
+              encrypted_otp: await flutterwaveEncryptField(authorization.otp, nonce),
+            },
+          },
+        };
+  const res = await flwFetch<{ data: FlutterwaveCharge }>(
+    `/charges/${encodeURIComponent(chargeId)}`,
+    { method: "PUT", body: JSON.stringify(body) }
+  );
+  return res.data;
 }
 
 function normalizeCheckoutSession(
@@ -220,14 +407,6 @@ export async function flutterwaveGetCheckoutSession(id: string) {
   );
   return res.data;
 }
-
-export type FlutterwaveCharge = {
-  id: string;
-  amount?: number;
-  currency?: string;
-  reference?: string;
-  status?: string;
-};
 
 export async function flutterwaveGetCharge(id: string) {
   const res = await flwFetch<{ data: FlutterwaveCharge }>(

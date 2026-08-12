@@ -3,7 +3,6 @@
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { useEffect } from "react";
 import Link from "next/link";
-import { formatPrice } from "@/lib/cms/types";
 
 function AnimatedNumber({ value }: { value: number }) {
   const mv = useMotionValue(0);
@@ -23,7 +22,6 @@ type Data = {
   liveCount: number;
   liveSessions: { session_id: string; path: string | null; last_seen_at: string }[];
   productsCount: number;
-  revenue: number;
   ordersCount: number;
   pending: number;
   completed: number;
@@ -47,7 +45,6 @@ export function DashboardClient({ data }: { data: Data }) {
     { label: "This month", value: data.visitorsMonth, hint: "Unique visitors · 30 days" },
     { label: "Live now", value: data.liveCount, hint: "Unique people active" },
     { label: "Orders", value: data.ordersCount, hint: `${data.pending} pending` },
-    { label: "Revenue", value: data.revenue, hint: "Paid orders", money: true },
     { label: "Conversion", value: data.conversionRate, hint: "Orders ÷ visitors today" },
     { label: "Products", value: data.productsCount, hint: "Published" },
   ];
@@ -93,12 +90,8 @@ export function DashboardClient({ data }: { data: Data }) {
               {c.label}
             </p>
             <p className="mt-3 font-display text-3xl tracking-tight">
-              {c.money
-                ? c.value > 0
-                  ? formatPrice(c.value)
-                  : "₦0"
-                : <AnimatedNumber value={c.value} />}
-              {!c.money && c.label === "Conversion" ? "%" : null}
+              <AnimatedNumber value={c.value} />
+              {c.label === "Conversion" ? "%" : null}
             </p>
             <p className="mt-2 text-xs text-mkos-muted">{c.hint}</p>
           </motion.div>

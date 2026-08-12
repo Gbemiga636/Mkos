@@ -14,6 +14,8 @@ import {
   flutterwaveConfigured,
   flutterwaveCreateCheckoutSession,
   flutterwaveCreateCustomer,
+  flutterwaveIsSandbox,
+  isUsableHostedCheckoutUrl,
 } from "@/lib/flutterwave";
 
 export const runtime = "nodejs";
@@ -250,31 +252,45 @@ export async function POST(req: Request) {
     }
 
     const customer = await flutterwaveCreateCustomer({ email, first, last, phone });
-    const session = await flutterwaveCreateCheckoutSession({
-      amountUsd: totalUsd,
-      reference,
-      customerId: customer.id,
-      redirectUrl: `${siteUrl()}/checkout/success?reference=${encodeURIComponent(reference)}`,
-    });
-
-    if (!session.checkout_url) {
-      await sb.from("orders").delete().eq("id", order.id);
-      return NextResponse.json({ error: "Could not start Flutterwave Checkout" }, { status: 500 });
+    let session: { id?: string; checkout_url?: string } = {};
+    try {
+      session = await flutterwaveCreateCheckoutSession({
+        amountUsd: totalUsd,
+        reference,
+        customerId: customer.id,
+        redirectUrl: `${siteUrl()}/checkout/success?reference=${encodeURIComponent(reference)}`,
+      });
+    } catch {
+      /* Hosted checkout is optional — on-site card charge still works. */
     }
 
-    if (session.id) {
-      await sb
-        .from("orders")
-        .update({ notes: `${notes}\nFlutterwave session: ${session.id}` })
-        .eq("id", order.id);
-    }
+    const hostedUrl = isUsableHostedCheckoutUrl(session.checkout_url)
+      ? session.checkout_url
+      : null;
+    const payOnSite = !hostedUrl;
+
+    await sb
+      .from("orders")
+      .update({
+        notes: [
+          notes,
+          session.id ? `Flutterwave session: ${session.id}` : null,
+          `Flutterwave customer: ${customer.id}`,
+        ]
+          .filter(Boolean)
+          .join("\n"),
+      })
+      .eq("id", order.id);
 
     return NextResponse.json({
       ok: true,
       provider: "flutterwave",
       reference,
-      url: session.checkout_url,
-      sessionId: session.id,
+      url: hostedUrl,
+      sessionId: session.id || null,
+      payOnSite,
+      testMode: flutterwaveIsSandbox(),
+      amount: Number(totalUsd.toFixed(2)),
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Flutterwave checkout failed";
