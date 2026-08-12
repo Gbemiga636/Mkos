@@ -18,8 +18,13 @@ export function CartDrawer() {
   const formatPrice = useFormatPrice();
   const stylesCount = items.reduce((n, i) => n + i.quantity, 0);
   const subtotalValue = items.reduce((n, i) => n + i.price * i.quantity, 0);
+  const subtotalUsd = items.every((i) => i.priceUsd != null && i.priceUsd > 0)
+    ? items.reduce((n, i) => n + (i.priceUsd ?? 0) * i.quantity, 0)
+    : null;
   const spring = useSpring(subtotalValue, { stiffness: 80, damping: 20 });
-  const display = useTransform(spring, (v) => formatPrice(Math.round(v)));
+  const display = useTransform(spring, (v) =>
+    formatPrice(Math.round(v), { usd: subtotalUsd })
+  );
 
   useEffect(() => {
     spring.set(subtotalValue);

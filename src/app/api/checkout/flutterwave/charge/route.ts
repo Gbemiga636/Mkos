@@ -9,12 +9,14 @@ import {
   flutterwaveCreateCustomer,
   flutterwaveGetCharge,
   flutterwavePaymentSucceeded,
+  flutterwaveConfigured,
   isUsableHostedCheckoutUrl,
   type FlutterwaveCharge,
 } from "@/lib/flutterwave";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 function digits(value: string, max: number) {
   return String(value || "").replace(/\D/g, "").slice(0, max);
@@ -72,6 +74,16 @@ async function fulfillIfPaid(charge: FlutterwaveCharge, expectedTotal: number) {
 
 export async function POST(req: Request) {
   try {
+    if (!flutterwaveConfigured()) {
+      return NextResponse.json(
+        {
+          error:
+            "Flutterwave is not configured on the server. Add FLUTTERWAVE_CLIENT_ID and FLUTTERWAVE_CLIENT_SECRET in Netlify, then redeploy.",
+        },
+        { status: 503 }
+      );
+    }
+
     const body = await req.json();
     const reference = String(body.reference || "").trim();
     const chargeId = String(body.chargeId || "").trim();

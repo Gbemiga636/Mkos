@@ -13,7 +13,19 @@ async function encryptAES(data: string, token: string, nonce: string): Promise<s
   if (nonce.length !== 12) {
     throw new Error("Nonce must be exactly 12 characters long");
   }
-  const decodedKeyBytes = Uint8Array.from(atob(token), (c) => c.charCodeAt(0));
+  let decodedKeyBytes: Uint8Array;
+  try {
+    decodedKeyBytes = Uint8Array.from(atob(token.trim()), (c) => c.charCodeAt(0));
+  } catch {
+    throw new Error(
+      "Invalid Flutterwave encryption key format. Re-copy it from the dashboard into Netlify (quoted) and redeploy."
+    );
+  }
+  if (decodedKeyBytes.length !== 32) {
+    throw new Error(
+      "Flutterwave encryption key must decode to 32 bytes. Check NEXT_PUBLIC_FLUTTERWAVE_ENCRYPTION_KEY on Netlify and redeploy."
+    );
+  }
   const key = await crypto.subtle.importKey(
     "raw",
     decodedKeyBytes,
@@ -26,7 +38,13 @@ async function encryptAES(data: string, token: string, nonce: string): Promise<s
     key,
     new TextEncoder().encode(data)
   );
-  return btoa(String.fromCharCode(...new Uint8Array(encryptedData)));
+  return btoa(bytesToBinary(new Uint8Array(encryptedData)));
+}
+
+function bytesToBinary(bytes: Uint8Array) {
+  let binary = "";
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]!);
+  return binary;
 }
 
 export async function flutterwaveEncryptCard(opts: {

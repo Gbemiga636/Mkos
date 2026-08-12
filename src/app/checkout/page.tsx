@@ -168,7 +168,7 @@ export default function CheckoutPage() {
       } else {
         if (!FLW_ENCRYPTION_KEY) {
           setError(
-            "Missing NEXT_PUBLIC_FLUTTERWAVE_ENCRYPTION_KEY. Add your Flutterwave Encryption Key and restart the dev server."
+            "Payment encryption is not configured. Add NEXT_PUBLIC_FLUTTERWAVE_ENCRYPTION_KEY in Netlify (quoted), then trigger a new deploy."
           );
           return;
         }
@@ -185,9 +185,20 @@ export default function CheckoutPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const data = await res.json();
+      const raw = await res.text();
+      let data: { error?: string; redirect?: string; requires?: string; chargeId?: string } = {};
+      try {
+        data = raw ? JSON.parse(raw) : {};
+      } catch {
+        setError(
+          res.ok
+            ? "Unexpected payment response from the server."
+            : `Payment server error (${res.status}). Check Netlify env vars and redeploy.`
+        );
+        return;
+      }
       if (!res.ok) {
-        setError(data.error || "Payment failed");
+        setError(data.error || `Payment failed (${res.status})`);
         return;
       }
       if (data.redirect) {
@@ -205,8 +216,10 @@ export default function CheckoutPage() {
         return;
       }
       setError(data.error || "Payment is still pending. Please try again.");
-    } catch {
-      setError("Network error completing payment. Please try again.");
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Payment could not be completed. Please try again.";
+      setError(message);
     } finally {
       setPaying(false);
     }
