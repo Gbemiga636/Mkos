@@ -2,11 +2,11 @@ import { NextResponse } from "next/server";
 import { fulfillPaidOrder } from "@/lib/checkout/fulfill";
 import { createServiceClient } from "@/lib/supabase/client";
 import {
-  flutterwaveFindChargeByReference,
-  flutterwaveGetCharge,
-  flutterwaveGetCheckoutSession,
-  flutterwavePaymentSucceeded,
-} from "@/lib/flutterwave";
+  flutterwaveV3Succeeded,
+  flutterwaveV3Verify,
+  flutterwaveV3VerifyByReference,
+  type FlutterwaveV3Payment,
+} from "@/lib/flutterwaveV3";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,46 +26,26 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const reference = String(body.reference || "").trim();
-    const sessionId = String(body.sessionId || body.checkout_session_id || "").trim();
-    const chargeId = String(body.chargeId || body.id || "").trim();
-    if (!reference && !sessionId && !chargeId) {
+    const transactionId = String(body.transactionId || body.transaction_id || "").trim();
+    if (!reference && !transactionId) {
       return NextResponse.json({ error: "reference required" }, { status: 400 });
     }
 
-    let status = "";
-    let amount: number | undefined;
-    let resolvedRef = reference;
-
-    if (chargeId) {
-      const charge = await flutterwaveGetCharge(chargeId);
-      status = charge.status || "";
-      amount = charge.amount;
-      resolvedRef = charge.reference || resolvedRef;
-    }
-
-    if (!flutterwavePaymentSucceeded(status) && sessionId) {
+    let payment: FlutterwaveV3Payment | null = null;
+    if (transactionId) {
       try {
-        const session = await flutterwaveGetCheckoutSession(sessionId);
-        status = session.status || status;
-        amount = session.amount ?? amount;
-        resolvedRef = session.reference || resolvedRef;
+        payment = await flutterwaveV3Verify(transactionId);
       } catch {
-        /* session lookup is optional */
+        /* fall back to reference lookup below */
       }
     }
-
-    if (!flutterwavePaymentSucceeded(status) && resolvedRef) {
-      try {
-        const charge = await flutterwaveFindChargeByReference(resolvedRef);
-        if (charge) {
-          status = charge.status || status;
-          amount = charge.amount ?? amount;
-          resolvedRef = charge.reference || resolvedRef;
-        }
-      } catch {
-        /* charges query shape varies in sandbox */
-      }
+    if (!payment && reference) {
+      payment = await flutterwaveV3VerifyByReference(reference);
     }
+
+    const status = payment?.status || "";
+    const amount = payment?.amount;
+    const resolvedRef = payment?.tx_ref || reference;
 
     if (!resolvedRef) {
       return NextResponse.json({ error: "Missing order reference" }, { status: 400 });
@@ -79,10 +59,13 @@ export async function POST(req: Request) {
       .maybeSingle();
 
     if (!pending) {
-      return NextResponse.json({ error: "Order not found for this payment reference" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Order not found for this payment reference" },
+        { status: 404 }
+      );
     }
 
-    if (!flutterwavePaymentSucceeded(status) && pending.payment_status !== "paid") {
+    if (!flutterwaveV3Succeeded(status) && pending.payment_status !== "paid") {
       return NextResponse.json(
         { error: "Payment not completed yet", status: status || "pending" },
         { status: 402 }

@@ -10,13 +10,7 @@ import {
   deliveryMethodLabel,
   isDeliveryMethod,
 } from "@/lib/checkout/delivery";
-import {
-  flutterwaveConfigured,
-  flutterwaveCreateCheckoutSession,
-  flutterwaveCreateCustomer,
-  flutterwaveIsSandbox,
-  isUsableHostedCheckoutUrl,
-} from "@/lib/flutterwave";
+import { flutterwaveV3Configured, flutterwaveV3Initialize } from "@/lib/flutterwaveV3";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,11 +18,11 @@ export const maxDuration = 60;
 
 export async function POST(req: Request) {
   try {
-    if (!flutterwaveConfigured()) {
+    if (!flutterwaveV3Configured()) {
       return NextResponse.json(
         {
           error:
-            "Flutterwave is not configured yet. Add FLUTTERWAVE_CLIENT_ID and FLUTTERWAVE_CLIENT_SECRET.",
+            "Flutterwave is not configured yet. Add FLUTTERWAVE_SECRET_KEY to the server environment.",
         },
         { status: 503 }
       );
@@ -252,45 +246,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: itemsErr.message }, { status: 500 });
     }
 
-    const customer = await flutterwaveCreateCustomer({ email, first, last, phone });
-    let session: { id?: string; checkout_url?: string } = {};
-    try {
-      session = await flutterwaveCreateCheckoutSession({
-        amountUsd: totalUsd,
-        reference,
-        customerId: customer.id,
-        redirectUrl: `${siteUrl()}/checkout/success?reference=${encodeURIComponent(reference)}`,
-      });
-    } catch {
-      /* Hosted checkout is optional — on-site card charge still works. */
-    }
-
-    const hostedUrl = isUsableHostedCheckoutUrl(session.checkout_url)
-      ? session.checkout_url
-      : null;
-    const payOnSite = !hostedUrl;
-
-    await sb
-      .from("orders")
-      .update({
-        notes: [
-          notes,
-          session.id ? `Flutterwave session: ${session.id}` : null,
-          `Flutterwave customer: ${customer.id}`,
-        ]
-          .filter(Boolean)
-          .join("\n"),
-      })
-      .eq("id", order.id);
+    const { link } = await flutterwaveV3Initialize({
+      txRef: reference,
+      amount: totalUsd,
+      currency: "USD",
+      redirectUrl: `${siteUrl()}/checkout/success?reference=${encodeURIComponent(reference)}`,
+      customer: { email, name: customerName, phonenumber: phone },
+      title: "My Kind of Style",
+      meta: { order_id: order.id, reference },
+    });
 
     return NextResponse.json({
       ok: true,
       provider: "flutterwave",
       reference,
-      url: hostedUrl,
-      sessionId: session.id || null,
-      payOnSite,
-      testMode: flutterwaveIsSandbox(),
+      url: link,
+      payOnSite: false,
       amount: Number(totalUsd.toFixed(2)),
     });
   } catch (err) {

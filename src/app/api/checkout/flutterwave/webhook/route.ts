@@ -1,38 +1,28 @@
-import { createHmac, timingSafeEqual } from "crypto";
 import { NextResponse } from "next/server";
 import { fulfillPaidOrder } from "@/lib/checkout/fulfill";
 import {
-  flutterwaveGetCharge,
-  flutterwavePaymentSucceeded,
-  flutterwaveWebhookSecret,
-} from "@/lib/flutterwave";
+  flutterwaveV3Succeeded,
+  flutterwaveV3Verify,
+  flutterwaveV3WebhookHash,
+} from "@/lib/flutterwaveV3";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function validSignature(rawBody: string, signature: string | null, secret: string) {
-  if (!secret || !signature) return !secret;
-  const hash = createHmac("sha256", secret).update(rawBody).digest("base64");
-  const a = Buffer.from(hash);
-  const b = Buffer.from(signature);
-  if (a.length !== b.length) return false;
-  return timingSafeEqual(a, b);
-}
-
 export async function POST(req: Request) {
   const rawBody = await req.text();
-  const signature = req.headers.get("flutterwave-signature");
-  const secret = flutterwaveWebhookSecret();
+  const secret = flutterwaveV3WebhookHash();
+  const signature = req.headers.get("verif-hash");
 
-  if (secret && !validSignature(rawBody, signature, secret)) {
+  if (secret && signature !== secret) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
   }
 
   let event: {
-    type?: string;
+    event?: string;
     data?: {
-      id?: string;
-      reference?: string;
+      id?: number | string;
+      tx_ref?: string;
       status?: string;
       amount?: number;
     };
@@ -44,25 +34,25 @@ export async function POST(req: Request) {
   }
 
   try {
-    const type = String(event.type || "");
-    if (type === "charge.completed" || type === "charge.succeeded") {
+    const type = String(event.event || "");
+    if (type === "charge.completed") {
       const data = event.data || {};
       let status = data.status;
       let amount = data.amount;
-      let reference = data.reference;
+      let reference = data.tx_ref;
 
       if (data.id) {
         try {
-          const charge = await flutterwaveGetCharge(data.id);
-          status = charge.status || status;
-          amount = charge.amount ?? amount;
-          reference = charge.reference || reference;
+          const payment = await flutterwaveV3Verify(data.id);
+          status = payment.status || status;
+          amount = payment.amount ?? amount;
+          reference = payment.tx_ref || reference;
         } catch {
-          /* use webhook payload if re-query fails */
+          /* fall back to webhook payload if re-verify fails */
         }
       }
 
-      if (reference && flutterwavePaymentSucceeded(status)) {
+      if (reference && flutterwaveV3Succeeded(status)) {
         await fulfillPaidOrder({
           reference,
           amountKobo: amount != null ? Math.round(Number(amount) * 100) : undefined,

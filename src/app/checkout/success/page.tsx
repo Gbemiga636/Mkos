@@ -37,11 +37,8 @@ function SuccessInner() {
   const params = useSearchParams();
   const reference =
     params.get("reference") || params.get("tx_ref") || params.get("trxref") || "";
-  const sessionId =
-    params.get("session_id") ||
-    params.get("checkout_session_id") ||
-    params.get("checkoutId") ||
-    "";
+  const transactionId =
+    params.get("transaction_id") || params.get("transactionId") || "";
   const clearCart = useCartStore((s) => s.clear);
   const [status, setStatus] = useState<"loading" | "ok" | "error">("loading");
   const [message, setMessage] = useState("Confirming your payment…");
@@ -49,7 +46,7 @@ function SuccessInner() {
   const [experienceOpen, setExperienceOpen] = useState(false);
 
   useEffect(() => {
-    if (!reference && !sessionId) {
+    if (!reference && !transactionId) {
       setStatus("error");
       setMessage(
         "Missing payment reference. If you were charged, contact the studio with your bank receipt."
@@ -63,7 +60,7 @@ function SuccessInner() {
         const res = await fetch("/api/checkout/flutterwave/verify", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sessionId, reference }),
+          body: JSON.stringify({ transactionId, reference }),
         });
         const data = await res.json();
         if (cancelled) return;
@@ -90,7 +87,7 @@ function SuccessInner() {
     return () => {
       cancelled = true;
     };
-  }, [reference, sessionId, clearCart]);
+  }, [reference, transactionId, clearCart]);
 
   useEffect(() => {
     if (!experienceOpen) return;
