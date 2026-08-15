@@ -20,7 +20,6 @@ import { AuthProvider } from "@/lib/auth/AuthProvider";
 import { CmsProvider } from "@/lib/cms/CmsProvider";
 import { CurrencyProvider } from "@/components/currency/CurrencyProvider";
 import { CurrencySwitcher } from "@/components/currency/CurrencySwitcher";
-import { UsDutyNotice } from "@/components/shipping/UsDutyNotice";
 import type { CmsSnapshot } from "@/lib/cms/types";
 
 function StorefrontChrome({ children }: { children: React.ReactNode }) {
@@ -40,7 +39,6 @@ function StorefrontChrome({ children }: { children: React.ReactNode }) {
         {!editMode && <BackToTop />}
         {!editMode && <NewsletterPopup />}
         {!editMode && <CurrencySwitcher />}
-        {!editMode && <UsDutyNotice />}
         <PageTransition>
           <main id="main">{children}</main>
         </PageTransition>

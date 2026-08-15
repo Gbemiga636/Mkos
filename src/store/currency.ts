@@ -10,8 +10,6 @@ import {
 type CurrencyState = {
   currency: string;
   setCurrency: (code: string) => void;
-  usNoticeDismissed: boolean;
-  dismissUsNotice: () => void;
 };
 
 export const useCurrencyStore = create<CurrencyState>()(
@@ -23,8 +21,6 @@ export const useCurrencyStore = create<CurrencyState>()(
         if (!isKnownCurrency(next)) return;
         set({ currency: next });
       },
-      usNoticeDismissed: false,
-      dismissUsNotice: () => set({ usNoticeDismissed: true }),
     }),
     { name: "mkos-currency-v1" }
   )

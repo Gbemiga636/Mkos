@@ -16,6 +16,7 @@ import {
   deliveryMethodLabel,
   type DeliveryMethod,
 } from "@/lib/checkout/delivery";
+import { UsDutyNotice } from "@/components/shipping/UsDutyNotice";
 
 const steps = ["Delivery", "Review", "Pay"] as const;
 
@@ -428,13 +429,10 @@ export default function CheckoutPage() {
                     <p>
                       You’ll pay securely with{" "}
                       <strong className="text-mkos-ink">Flutterwave</strong> in USD. Delivery fees
-                      (if any) are quoted separately before dispatch. U.S. customs may apply a 17%
-                      import duty at delivery.{" "}
-                      <a href="/shipping" className="underline underline-offset-2">
-                        Shipping details
-                      </a>
+                      (if any) are quoted separately before dispatch.
                     </p>
                   </div>
+                  <UsDutyNotice className="mt-4" />
                   <div className="mt-8 flex flex-wrap gap-3">
                     <Button variant="secondary" onClick={() => setStep(0)}>
                       Back
