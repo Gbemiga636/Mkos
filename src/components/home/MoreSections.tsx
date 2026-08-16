@@ -227,8 +227,8 @@ export function CategoryGrid() {
 
 export function BrandStory() {
   const section = useContent("brand_story");
-  const rawBody = section?.body ?? "";
-  const body = /MASTER|Mastery/i.test(rawBody) ? rawBody : BRAND_STORY_BODY;
+  const rawBody = (section?.body ?? "").trim();
+  const body = rawBody || BRAND_STORY_BODY;
   const firstParagraph = body.split("\n\n").filter(Boolean)[0] ?? "";
   // Homepage teaser: end at “authenticity” — full story lives on /about
   const authenticityMatch = firstParagraph.match(/^([\s\S]*?\bauthenticity\b[^.]*\.?)/i);

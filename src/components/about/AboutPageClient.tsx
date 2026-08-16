@@ -34,7 +34,7 @@ const fade = {
 export function AboutPageClient() {
   const section = useContent("brand_story");
   const rawBody = section?.body ?? "";
-  const body = /MASTER|Mastery/i.test(rawBody)
+  const body = rawBody.trim()
     ? rawBody
     : [
         "MKoS (My Kind of Style) is a Nigerian contemporary fashion brand dedicated to creating timeless luxury fashion for individuals who appreciate exceptional craftsmanship, refined style, and cultural authenticity.",
@@ -42,14 +42,14 @@ export function AboutPageClient() {
         "The MKoS MASTER Standard defines our core values: MKoS defines who we are; MASTER defines how we work.",
       ].join("\n\n");
   const paragraphs = body.split("\n\n").filter(Boolean);
-  // Brand Foundation copy is hard-coded — never driven by CMS.
-  const mission = BRAND_MISSION;
-  const vision = BRAND_VISION;
-  const promise = BRAND_PROMISE;
-  const masterIntro = MASTER_INTRO;
-  const philosophyTitle = BRAND_PHILOSOPHY_TITLE;
-  const philosophyBody = BRAND_PHILOSOPHY_BODY;
-  const experienceCopy = BRAND_EXPERIENCE;
+  const extra = (section?.extra || {}) as Record<string, unknown>;
+  const mission = String(extra.mission || BRAND_MISSION);
+  const vision = String(extra.vision || BRAND_VISION);
+  const promise = String(extra.promise || BRAND_PROMISE);
+  const masterIntro = String(extra.master_intro || MASTER_INTRO);
+  const philosophyTitle = String(extra.philosophy_title || section?.subtitle || BRAND_PHILOSOPHY_TITLE);
+  const philosophyBody = String(extra.philosophy_body || BRAND_PHILOSOPHY_BODY);
+  const experienceCopy = String(extra.experience || BRAND_EXPERIENCE);
   const mkosPillars = [...MKoS_PILLARS];
   const masterPillars = [...MASTER_PILLARS];
 

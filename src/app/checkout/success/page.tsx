@@ -10,6 +10,7 @@ import { BrandText } from "@/components/ui/BrandText";
 import { PostPurchaseReviews } from "@/components/product/PostPurchaseReviews";
 import { useCartStore } from "@/store/cart";
 import { formatPrice } from "@/lib/cms/types";
+import { clearCheckoutDraft } from "@/lib/checkout/draft";
 
 type OrderPayload = {
   id: string;
@@ -39,13 +40,29 @@ function SuccessInner() {
     params.get("reference") || params.get("tx_ref") || params.get("trxref") || "";
   const transactionId =
     params.get("transaction_id") || params.get("transactionId") || "";
+  const flwStatus = (params.get("status") || "").toLowerCase();
   const clearCart = useCartStore((s) => s.clear);
-  const [status, setStatus] = useState<"loading" | "ok" | "error">("loading");
+  const [status, setStatus] = useState<"loading" | "ok" | "error" | "cancelled">("loading");
   const [message, setMessage] = useState("Confirming your payment…");
   const [order, setOrder] = useState<OrderPayload | null>(null);
   const [experienceOpen, setExperienceOpen] = useState(false);
 
   useEffect(() => {
+    if (
+      flwStatus === "cancelled" ||
+      flwStatus === "canceled" ||
+      flwStatus === "failed" ||
+      flwStatus === "abandoned"
+    ) {
+      setStatus("cancelled");
+      setMessage(
+        flwStatus === "failed"
+          ? "Payment failed. Your bag and details are still saved — you can try again."
+          : "Payment was cancelled. Your bag and details are still saved — you can try again."
+      );
+      return;
+    }
+
     if (!reference && !transactionId) {
       setStatus("error");
       setMessage(
@@ -65,12 +82,21 @@ function SuccessInner() {
         const data = await res.json();
         if (cancelled) return;
         if (!res.ok) {
+          // Treat "not completed" as a soft cancel so the customer can retry.
+          if (res.status === 402) {
+            setStatus("cancelled");
+            setMessage(
+              "Payment wasn’t completed. Your bag and details are still saved — you can try again."
+            );
+            return;
+          }
           setStatus("error");
           setMessage(data.error || "We couldn’t confirm this payment yet.");
           return;
         }
         setOrder(data.order);
         clearCart();
+        clearCheckoutDraft();
         setStatus("ok");
         setMessage("Payment confirmed.");
         window.setTimeout(() => {
@@ -87,7 +113,7 @@ function SuccessInner() {
     return () => {
       cancelled = true;
     };
-  }, [reference, transactionId, clearCart]);
+  }, [reference, transactionId, flwStatus, clearCart]);
 
   useEffect(() => {
     if (!experienceOpen) return;
@@ -116,6 +142,38 @@ function SuccessInner() {
           </div>
         )}
 
+        {status === "cancelled" && (
+          <div className="border border-mkos-border bg-white p-8 text-center sm:p-12">
+            <p className="font-display text-[11px] tracking-[0.28em] text-mkos-accent uppercase">
+              Payment cancelled
+            </p>
+            <h1 className="mt-4 font-display text-3xl font-medium tracking-tight sm:text-4xl">
+              No charge was made
+            </h1>
+            <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-mkos-muted">
+              {message}
+            </p>
+            {reference && (
+              <p className="mt-4 font-display text-xs tracking-[0.14em] text-mkos-muted uppercase">
+                Ref · {reference}
+              </p>
+            )}
+            <div className="mt-8 flex flex-wrap justify-center gap-3">
+              <Button href="/checkout?resume=1" size="lg">
+                Try payment again
+              </Button>
+              <Button href="/shop" variant="secondary">
+                Continue shopping
+              </Button>
+            </div>
+            <p className="mx-auto mt-6 max-w-sm text-xs leading-relaxed text-mkos-muted">
+              Tip: Apple Pay only works on supported Apple devices with a card in Wallet, and must
+              be enabled on the Flutterwave account. Card, bank transfer and USSD still work from
+              the same Flutterwave page.
+            </p>
+          </div>
+        )}
+
         {status === "error" && (
           <div className="border border-mkos-border bg-white p-8 text-center sm:p-12">
             <p className="font-display text-[11px] tracking-[0.28em] text-mkos-accent uppercase">
@@ -133,8 +191,11 @@ function SuccessInner() {
               </p>
             )}
             <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <Button href="/about#contact">Contact studio</Button>
-              <Button href="/shop" variant="secondary">
+              <Button href="/checkout?resume=1">Try payment again</Button>
+              <Button href="/about#contact" variant="secondary">
+                Contact studio
+              </Button>
+              <Button href="/shop" variant="ghost">
                 Continue shopping
               </Button>
             </div>

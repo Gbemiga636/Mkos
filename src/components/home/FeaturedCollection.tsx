@@ -67,7 +67,7 @@ export function FeaturedCollection() {
           bespokeMeta?.description ||
           "Made for your moment — custom creation with the atelier.",
         href: "/bespoke",
-        image: "/images/collections/bespoke-cover.jpg",
+        image: bespokeMeta?.image || "/images/collections/bespoke-cover.jpg",
         imageFocus: bespokeMeta?.imageFocus,
       },
       {
@@ -77,7 +77,7 @@ export function FeaturedCollection() {
           bridalMeta?.description ||
           "Luxurious bridal designs shaped for your celebration.",
         href: "/bridal",
-        image: "/images/collections/bridal-cover.jpg",
+        image: bridalMeta?.image || "/images/collections/bridal-cover.jpg",
         imageFocus: bridalMeta?.imageFocus ?? { x: 50, y: 28 },
       },
     ];

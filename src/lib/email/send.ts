@@ -11,19 +11,17 @@ import {
 } from "@/lib/email/experienceEmails";
 import {
   adminStyleBriefEmailHtml,
-  clientStyleBriefEmailHtml,
   type StyleBriefPayload,
 } from "@/lib/email/styleBriefEmails";
 import {
   adminBespokeEmailHtml,
-  clientBespokeEmailHtml,
   type BespokeInquiryPayload,
 } from "@/lib/email/bespokeEmails";
 import {
   adminBridalEmailHtml,
-  clientBridalEmailHtml,
   type BridalBriefPayload,
 } from "@/lib/email/bridalEmails";
+import { clientBriefConfirmationHtml } from "@/lib/email/briefConfirmation";
 import { orderNotifyEmails, resendFrom } from "@/lib/paystack";
 
 function getResend() {
@@ -178,7 +176,10 @@ export async function sendStyleBriefEmails(
       from,
       to: brief.email,
       subject: `Your Client Style Brief · MKoS`,
-      html: clientStyleBriefEmailHtml(brief),
+      html: clientBriefConfirmationHtml({
+        name: brief.fullName,
+        service: "Client Style Brief",
+      }),
     }),
   ])) as SendResult[];
 
@@ -217,7 +218,10 @@ export async function sendBespokeEmails(
       from,
       to: brief.email,
       subject: `Your Bespoke brief · MKoS`,
-      html: clientBespokeEmailHtml(brief),
+      html: clientBriefConfirmationHtml({
+        name: brief.fullName,
+        service: "Bespoke / Custom Wear",
+      }),
     }),
   ])) as SendResult[];
 
@@ -248,7 +252,10 @@ export async function sendBridalEmails(brief: BridalBriefPayload) {
       from,
       to: brief.email,
       subject: `Your Bridal brief · MKoS`,
-      html: clientBridalEmailHtml(brief),
+      html: clientBriefConfirmationHtml({
+        name: brief.primaryContactName,
+        service: "Client Bridal Brief",
+      }),
     }),
   ])) as SendResult[];
 

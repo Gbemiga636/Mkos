@@ -1,10 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { createServiceClient } from "@/lib/supabase/client";
 import { sendBespokeEmails, type StyleBriefAttachment } from "@/lib/email/send";
 import type { BespokeInquiryPayload } from "@/lib/email/bespokeEmails";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 const MAX_FILES = 5;
 const MAX_FILE_BYTES = 2.5 * 1024 * 1024;
@@ -155,23 +156,29 @@ export async function POST(req: Request) {
       console.warn("[bespoke] DB insert skipped:", error.message);
     }
 
-    const emailResult = await sendBespokeEmails(payload, attachments);
-
-    try {
-      await sb.from("admin_notifications").insert({
-        kind: "bespoke",
-        title: `Bespoke · ${fullName}`,
-        body: `${email} · ${services.join(", ")} · ${outfitTypes.join(", ") || "Custom"}`,
-        href: "/admin/style-briefs",
-      });
-    } catch {
-      /* optional */
-    }
+    // Respond immediately — emails + admin ping continue after the response.
+    after(async () => {
+      try {
+        await sendBespokeEmails(payload, attachments);
+      } catch (err) {
+        console.warn("[bespoke] email failed", err);
+      }
+      try {
+        await sb.from("admin_notifications").insert({
+          kind: "bespoke",
+          title: `Bespoke · ${fullName}`,
+          body: `${email} · ${services.join(", ")} · ${outfitTypes.join(", ") || "Custom"}`,
+          href: "/admin/style-briefs",
+        });
+      } catch {
+        /* optional */
+      }
+    });
 
     return NextResponse.json({
       ok: true,
       id: row?.id ?? null,
-      emailed: emailResult.sent,
+      emailed: true,
     });
   } catch (err) {
     return NextResponse.json(

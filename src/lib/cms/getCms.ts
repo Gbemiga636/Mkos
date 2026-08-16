@@ -21,7 +21,7 @@ import {
   reviews as fallbackReviews,
   faqs as fallbackFaqs,
 } from "@/data/products";
-import { BRAND_NAME, normalizeBrandText } from "@/lib/brand";
+import { BRAND_NAME, FEATURED_FILM_SUBTITLE, normalizeBrandText } from "@/lib/brand";
 import { parseProductImages, normalizeFocus } from "@/lib/media/imageFocus";
 
 /** Accept string[] or { name, hex }[] from DB / seeds. */
@@ -173,7 +173,7 @@ function fallbackSnapshot(): CmsSnapshot {
       section: "featured_video",
       eyebrow: "",
       title: "MKoS in motion",
-      subtitle: "A quiet look at the house — then step into the Experience.",
+      subtitle: FEATURED_FILM_SUBTITLE,
       cta_label: "Enter the Experience",
       cta_href: "/experience",
       media_url: "/videos/mkos-in-motion.mp4",
@@ -479,13 +479,19 @@ async function loadCmsSnapshot(): Promise<CmsSnapshot> {
       supabase.from("newsletter_settings").select("*").eq("id", "main").maybeSingle(),
     ]);
 
-    // If core tables missing, fall back silently
-    if (productsRes.error || !productsRes.data?.length) {
-      console.warn("[cms] Using local fallback:", productsRes.error?.message ?? "no products");
-      return fallback;
+    // Prefer DB content whenever available. Only fall back products when the
+    // catalogue is empty — never discard site_content / settings / nav.
+    if (productsRes.error) {
+      console.warn("[cms] Products query failed:", productsRes.error.message);
+    }
+    if (!productsRes.error && !productsRes.data?.length) {
+      console.warn("[cms] No published products — using catalogue fallback only");
     }
 
     const content: Record<string, SiteContentBlock> = { ...fallback.content };
+    if (contentRes.error) {
+      console.warn("[cms] site_content query failed:", contentRes.error.message);
+    }
     for (const row of contentRes.data ?? []) {
       content[row.key] = {
         key: row.key,
@@ -509,7 +515,13 @@ async function loadCmsSnapshot(): Promise<CmsSnapshot> {
       (/Women\.\s*Men/i.test(featured.title || "") ||
         /three paths/i.test(featured.subtitle || ""))
     ) {
-      content.featured_collections = fallback.content.featured_collections;
+      content.featured_collections = {
+        ...fallback.content.featured_collections,
+        // Keep any media/extra the admin already set
+        media_url: featured.media_url || fallback.content.featured_collections.media_url,
+        media_type: featured.media_type || fallback.content.featured_collections.media_type,
+        extra: { ...fallback.content.featured_collections.extra, ...featured.extra },
+      };
     }
     if (content.campaign?.cta_href?.includes("collection=women")) {
       content.campaign = {
@@ -545,12 +557,20 @@ async function loadCmsSnapshot(): Promise<CmsSnapshot> {
       }
     }
 
-    // Do NOT overwrite admin CMS copy here — only fix broken/legacy media paths
+    // Soft fallback only when featured film has no usable media,
+    // and keep the house stitch subtitle if CMS still has the legacy line.
     if (content.featured_video) {
       const fv = content.featured_video;
-      if (!fv.media_url || /experience-3/i.test(fv.media_url)) {
+      if (!fv.media_url) {
         fv.media_url = "/videos/mkos-in-motion.mp4";
         fv.media_type = "video";
+      }
+      if (
+        !fv.subtitle ||
+        /quiet look at the house/i.test(fv.subtitle) ||
+        /step into the Experience/i.test(fv.subtitle)
+      ) {
+        fv.subtitle = FEATURED_FILM_SUBTITLE;
       }
     }
 
@@ -582,7 +602,10 @@ async function loadCmsSnapshot(): Promise<CmsSnapshot> {
         }
       : fallback.settings;
 
-    const products = productsRes.data.map((row) => mapProduct(row as Record<string, unknown>));
+    const products =
+      productsRes.data && productsRes.data.length
+        ? productsRes.data.map((row) => mapProduct(row as Record<string, unknown>))
+        : fallback.products;
 
     const categories: Category[] = (() => {
       const fromDb =
@@ -637,6 +660,7 @@ async function loadCmsSnapshot(): Promise<CmsSnapshot> {
     })();
 
     // Ensure collection cover images match an actual product in that collection
+    // (unless the collection already has a curated cover image from admin/CMS).
     const firstProductImageByCollection = new Map<string, string>();
     for (const p of products) {
       if (!firstProductImageByCollection.has(p.collection) && p.images?.[0]) {
@@ -644,16 +668,7 @@ async function loadCmsSnapshot(): Promise<CmsSnapshot> {
       }
     }
     collections = collections.map((c) => {
-      if (c.slug === "bespoke") {
-        return { ...c, image: "/images/collections/bespoke-cover.jpg" };
-      }
-      if (c.slug === "bridal") {
-        return {
-          ...c,
-          image: "/images/collections/bridal-cover.jpg",
-          imageFocus: c.imageFocus ?? normalizeFocus({ x: 50, y: 28 }),
-        };
-      }
+      if (c.image && !c.image.includes("placeholder")) return c;
       const img = firstProductImageByCollection.get(c.slug);
       return img ? { ...c, image: img } : c;
     });

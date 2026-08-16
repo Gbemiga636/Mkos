@@ -44,12 +44,13 @@ export function Button({
     size === "md" && "h-12 px-7 text-[11px]",
     size === "lg" && "h-14 px-9 text-xs",
     size === "xl" && "h-[4.25rem] px-10 text-[13px] tracking-[0.22em]",
-    variant === "primary" && "bg-mkos-ink text-white",
-    variant === "secondary" && "bg-white text-mkos-ink border border-mkos-border",
-    variant === "ghost" && "bg-transparent text-mkos-ink",
-    variant === "outline" && "bg-transparent text-white border border-white/30",
-    variant === "bag" && "w-full bg-black text-white border border-black",
-    variant === "checkout" && "bg-mkos-accent text-white",
+    // !text-* so unlayered `a { color: inherit }` can't wash primary buttons out
+    variant === "primary" && "bg-mkos-ink !text-white",
+    variant === "secondary" && "bg-white !text-mkos-ink border border-mkos-border",
+    variant === "ghost" && "bg-transparent !text-mkos-ink",
+    variant === "outline" && "bg-transparent !text-white border border-white/30",
+    variant === "bag" && "w-full bg-black !text-white border border-black",
+    variant === "checkout" && "bg-mkos-accent !text-white",
     disabled && "pointer-events-none opacity-40",
     className
   );

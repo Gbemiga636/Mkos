@@ -11,12 +11,10 @@ import { isTouchDevice } from "@/lib/video/autoplay";
 
 gsap.registerPlugin(ScrollTrigger);
 
-/** Hard-coded — not driven by CMS, so admin media edits elsewhere stay safe. */
-const CAMPAIGN_VIDEO = "/videos/style.mp4";
-
 export function CampaignSection() {
   const ref = useRef<HTMLElement>(null);
   const campaign = useContent("campaign");
+  const campaignVideo = campaign?.media_url || "/videos/style.mp4";
 
   useEffect(() => {
     const el = ref.current;
@@ -65,7 +63,7 @@ export function CampaignSection() {
       <div className="campaign-mask absolute inset-0 overflow-hidden" style={{ clipPath: "inset(12% 8% 12% 8%)" }}>
         <div className="campaign-video-frame absolute inset-[-12%]">
           <AutoplayVideo
-            src={CAMPAIGN_VIDEO}
+            src={campaignVideo}
             className="h-full w-full object-cover"
             loopEndOffsetSec={7}
           />

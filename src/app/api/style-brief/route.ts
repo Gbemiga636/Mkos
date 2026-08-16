@@ -1,10 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { createServiceClient } from "@/lib/supabase/client";
 import { sendStyleBriefEmails, type StyleBriefAttachment } from "@/lib/email/send";
 import type { StyleBriefPayload } from "@/lib/email/styleBriefEmails";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 const MAX_FILES = 5;
 const MAX_FILE_BYTES = 2.5 * 1024 * 1024;
@@ -142,23 +143,28 @@ export async function POST(req: Request) {
       console.warn("[style-brief] DB insert skipped:", error.message);
     }
 
-    const emailResult = await sendStyleBriefEmails(payload, attachments);
-
-    try {
-      await sb.from("admin_notifications").insert({
-        kind: "style_brief",
-        title: `Style brief · ${fullName}`,
-        body: `${email} · ${eventTypes.join(", ") || "Event"} · ${outfitTypes.join(", ") || "Outfit"}`,
-        href: "/admin/style-briefs",
-      });
-    } catch {
-      /* optional */
-    }
+    after(async () => {
+      try {
+        await sendStyleBriefEmails(payload, attachments);
+      } catch (err) {
+        console.warn("[style-brief] email failed", err);
+      }
+      try {
+        await sb.from("admin_notifications").insert({
+          kind: "style_brief",
+          title: `Style brief · ${fullName}`,
+          body: `${email} · ${eventTypes.join(", ") || "Event"} · ${outfitTypes.join(", ") || "Outfit"}`,
+          href: "/admin/style-briefs",
+        });
+      } catch {
+        /* optional */
+      }
+    });
 
     return NextResponse.json({
       ok: true,
       id: row?.id ?? null,
-      emailed: emailResult.sent,
+      emailed: true,
     });
   } catch (err) {
     return NextResponse.json(

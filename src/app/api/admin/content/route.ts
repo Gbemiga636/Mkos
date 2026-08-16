@@ -34,8 +34,14 @@ export async function PUT(req: Request) {
   };
   const { data, error } = await sb
     .from("site_content")
-    .update(patch)
-    .eq("key", key)
+    .upsert(
+      {
+        key,
+        section: body.section ?? key,
+        ...patch,
+      },
+      { onConflict: "key" }
+    )
     .select("*")
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

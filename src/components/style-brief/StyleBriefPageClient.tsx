@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import { BrandText } from "@/components/ui/BrandText";
@@ -149,6 +150,7 @@ function toggle(list: string[], value: string) {
 }
 
 export function StyleBriefPageClient() {
+  const router = useRouter();
   const [status, setStatus] = useState<"idle" | "loading" | "ok" | "err">("idle");
   const [msg, setMsg] = useState("");
   const [eventTypes, setEventTypes] = useState<string[]>([]);
@@ -162,7 +164,8 @@ export function StyleBriefPageClient() {
     e.preventDefault();
     setStatus("loading");
     setMsg("");
-    const fd = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const fd = new FormData(form);
     fd.set("eventTypes", JSON.stringify(eventTypes));
     fd.set("outfitTypes", JSON.stringify(outfitTypes));
     fd.set("measurementsOption", measurementsOption);
@@ -176,15 +179,12 @@ export function StyleBriefPageClient() {
       const res = await fetch("/api/style-brief", { method: "POST", body: fd });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Could not send");
-      setStatus("ok");
-      setMsg("Thank you — your Client Style Brief is with the house. We’ll be in touch.");
-      (e.target as HTMLFormElement).reset();
-      setEventTypes([]);
-      setOutfitTypes([]);
-      setMeasurementsOption("");
-      setContentPermission("");
-      setDeliveryMethod("");
-      setFiles(null);
+      const name = String(fd.get("fullName") || "").trim();
+      const qs = new URLSearchParams({
+        service: "Client Style Brief",
+        ...(name ? { name } : {}),
+      });
+      router.push(`/brief/success?${qs.toString()}`);
     } catch (err) {
       setStatus("err");
       setMsg(err instanceof Error ? err.message : "Something went wrong");
@@ -435,10 +435,8 @@ export function StyleBriefPageClient() {
             </div>
           </div>
 
-          {msg && (
-            <p className={cn("mt-10 text-sm", status === "ok" ? "text-mkos-ink" : "text-red-700")}>
-              {msg}
-            </p>
+          {msg && status === "err" && (
+            <p className="mt-10 text-sm text-red-700">{msg}</p>
           )}
 
           <div className="mt-10 flex flex-wrap gap-4">

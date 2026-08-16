@@ -1,10 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { createServiceClient } from "@/lib/supabase/client";
 import { sendBridalEmails } from "@/lib/email/send";
 import type { BridalBriefPayload } from "@/lib/email/bridalEmails";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 function clean(s: unknown) {
   return String(s ?? "").trim();
@@ -114,23 +115,28 @@ export async function POST(req: Request) {
       console.warn("[bridal] DB insert skipped:", error.message);
     }
 
-    const emailResult = await sendBridalEmails(payload);
-
-    try {
-      await sb.from("admin_notifications").insert({
-        kind: "bridal",
-        title: `Bridal · ${primaryContactName}`,
-        body: `${email} · ${stylingFor.join(", ") || "Bridal party"} · ${payload.weddingDate || "Date TBD"}`,
-        href: "/admin/style-briefs",
-      });
-    } catch {
-      /* optional */
-    }
+    after(async () => {
+      try {
+        await sendBridalEmails(payload);
+      } catch (err) {
+        console.warn("[bridal] email failed", err);
+      }
+      try {
+        await sb.from("admin_notifications").insert({
+          kind: "bridal",
+          title: `Bridal · ${primaryContactName}`,
+          body: `${email} · ${stylingFor.join(", ") || "Bridal party"} · ${payload.weddingDate || "Date TBD"}`,
+          href: "/admin/style-briefs",
+        });
+      } catch {
+        /* optional */
+      }
+    });
 
     return NextResponse.json({
       ok: true,
       id: row?.id ?? null,
-      emailed: emailResult.sent,
+      emailed: true,
     });
   } catch (err) {
     return NextResponse.json(

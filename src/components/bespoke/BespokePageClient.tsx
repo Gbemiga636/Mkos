@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import { BrandText } from "@/components/ui/BrandText";
@@ -8,6 +9,7 @@ import { AutoplayVideo } from "@/components/ui/AutoplayVideo";
 import { ScrollReveal } from "@/components/experience/ScrollReveal";
 import { EditableSection } from "@/components/cms/EditableSection";
 import { BespokeVideoCarousel } from "@/components/bespoke/BespokeVideoCarousel";
+import { scrollToElementSmooth } from "@/components/experience/SmoothScroll";
 import { cn } from "@/lib/utils";
 import { useContent } from "@/lib/cms/CmsProvider";
 
@@ -139,6 +141,7 @@ function TextArea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
 
 export function BespokePageClient() {
   const bespoke = useContent("bespoke_video");
+  const router = useRouter();
 
   const [step, setStep] = useState(0);
   const [eventTypes, setEventTypes] = useState<string[]>([]);
@@ -153,6 +156,17 @@ export function BespokePageClient() {
   const [message, setMessage] = useState("");
 
   const progress = useMemo(() => ((step + 1) / STEPS.length) * 100, [step]);
+  const formRef = useRef<HTMLFormElement>(null);
+  const stepMountedRef = useRef(false);
+
+  // Bring the top of the brief into view on every step change, not the page top.
+  useEffect(() => {
+    if (!stepMountedRef.current) {
+      stepMountedRef.current = true;
+      return;
+    }
+    scrollToElementSmooth(formRef.current);
+  }, [step]);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -182,18 +196,12 @@ export function BespokePageClient() {
       const res = await fetch("/api/bespoke", { method: "POST", body: fd });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Something went wrong");
-      setStatus("ok");
-      setMessage("Your Bespoke brief is with the house. We’ll be in touch soon.");
-      form.reset();
-      setEventTypes([]);
-      setOutfitTypes([]);
-      setServices([]);
-      setMeasurementsOption("");
-      setContentPermission("");
-      setDeliveryMethod("");
-      setConsultation("");
-      setFiles(null);
-      setStep(0);
+      const name = String(fd.get("fullName") || "").trim();
+      const qs = new URLSearchParams({
+        service: "Bespoke / Custom Wear",
+        ...(name ? { name } : {}),
+      });
+      router.push(`/brief/success?${qs.toString()}`);
     } catch (err) {
       setStatus("error");
       setMessage(err instanceof Error ? err.message : "Could not send your brief");
@@ -294,7 +302,11 @@ export function BespokePageClient() {
           </ScrollReveal>
         </aside>
 
-        <form onSubmit={onSubmit} className="border border-mkos-border bg-white p-6 sm:p-10">
+        <form
+          ref={formRef}
+          onSubmit={onSubmit}
+          className="scroll-mt-28 border border-mkos-border bg-white p-6 sm:p-10"
+        >
           <div className={step === 0 ? "space-y-6" : "hidden"}>
             <div>
               <FieldLabel>Full name</FieldLabel>
@@ -566,15 +578,8 @@ export function BespokePageClient() {
                   ? "Continue"
                   : "Send to the house"}
             </Button>
-            {message && (
-              <p
-                className={cn(
-                  "w-full text-sm",
-                  status === "ok" ? "text-mkos-accent" : "text-red-600"
-                )}
-              >
-                {message}
-              </p>
+            {message && status === "error" && (
+              <p className="w-full text-sm text-red-600">{message}</p>
             )}
           </div>
         </form>

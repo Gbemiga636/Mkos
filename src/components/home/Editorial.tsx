@@ -13,6 +13,8 @@ import {
 
 export function EditorialStory() {
   const editorial = useContent("editorial");
+  const philosophyTitle = editorial?.title || BRAND_PHILOSOPHY_TITLE;
+  const philosophyBody = editorial?.body || BRAND_PHILOSOPHY_BODY;
 
   return (
     <section className="relative overflow-hidden bg-white px-5 py-28 sm:px-8 lg:px-12">
@@ -20,17 +22,17 @@ export function EditorialStory() {
         <div className="mx-auto max-w-3xl text-center lg:mx-0 lg:text-left">
           <ScrollReveal y={24}>
             <p className="font-display text-[11px] tracking-[0.35em] text-mkos-muted uppercase">
-              Our Philosophy
+              {editorial?.eyebrow || "Our Philosophy"}
             </p>
           </ScrollReveal>
           <ScrollReveal y={32} delay={40}>
             <h2 className="mt-6 font-display text-3xl leading-[1.1] font-medium tracking-tight text-balance sm:text-4xl lg:text-5xl">
-              {BRAND_PHILOSOPHY_TITLE}
+              {philosophyTitle}
             </h2>
           </ScrollReveal>
           <ScrollReveal y={24} delay={100}>
             <p className="mt-6 text-base leading-relaxed text-mkos-muted sm:text-lg">
-              {BRAND_PHILOSOPHY_BODY}
+              {philosophyBody}
             </p>
           </ScrollReveal>
         </div>
@@ -51,14 +53,14 @@ export function EditorialStory() {
   );
 }
 
-const MOTION_VIDEO = "/videos/mkos-in-motion.mp4";
-
 export function FeaturedVideo() {
   const section = useContent("featured_video");
-  const src =
-    section?.media_url && /mkos-in-motion/i.test(section.media_url)
-      ? section.media_url
-      : MOTION_VIDEO;
+  const src = section?.media_url || "/videos/mkos-in-motion.mp4";
+  const subtitle =
+    section?.subtitle &&
+    !/quiet look at the house|step into the Experience/i.test(section.subtitle)
+      ? section.subtitle
+      : FEATURED_FILM_SUBTITLE;
 
   return (
     <section className="relative min-h-[88svh] overflow-hidden bg-mkos-ink text-white lg:min-h-[100svh]">
@@ -77,7 +79,7 @@ export function FeaturedVideo() {
             <BrandText>{section?.title ?? "MKoS in motion"}</BrandText>
           </h2>
           <p className="mt-5 max-w-xl text-sm leading-relaxed text-white/75 sm:text-base">
-            {FEATURED_FILM_SUBTITLE}
+            {subtitle}
           </p>
         </ScrollReveal>
       </div>

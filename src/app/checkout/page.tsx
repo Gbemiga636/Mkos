@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCartStore, cartItemKey } from "@/store/cart";
 import { Button } from "@/components/ui/Button";
@@ -16,14 +17,22 @@ import {
   deliveryMethodLabel,
   type DeliveryMethod,
 } from "@/lib/checkout/delivery";
+import {
+  DEFAULT_COUNTRY,
+  formatInternationalPhone,
+} from "@/lib/checkout/countries";
+import { saveCheckoutDraft, loadCheckoutDraft } from "@/lib/checkout/draft";
+import { CountrySelect, PhoneField } from "@/components/checkout/CountryFields";
 import { UsDutyNotice } from "@/components/shipping/UsDutyNotice";
+import { scrollToTopSmooth } from "@/components/experience/SmoothScroll";
 
 const steps = ["Delivery", "Review", "Pay"] as const;
 
-export default function CheckoutPage() {
+function CheckoutInner() {
   const items = useCartStore((s) => s.items);
   const formatPrice = useFormatPrice();
   const { user } = useAuth();
+  const searchParams = useSearchParams();
   const subtotal = items.reduce((n, i) => n + i.price * i.quantity, 0);
   // Product total only — delivery is quoted separately after checkout
   const total = subtotal;
@@ -38,14 +47,17 @@ export default function CheckoutPage() {
     first: "",
     last: "",
     phone: "",
+    phoneDial: DEFAULT_COUNTRY.dial,
+    phoneNational: "",
     deliveryMethod: "" as "" | DeliveryMethod,
     expectedDeliveryDate: "",
     address: "",
     city: "",
-    state: "Lagos",
+    state: "",
     zip: "",
     country: "Nigeria",
   });
+  const [restored, setRestored] = useState(false);
 
   const needsAddress =
     form.deliveryMethod === "home_delivery" || form.deliveryMethod === "international";
@@ -57,6 +69,38 @@ export default function CheckoutPage() {
       ),
     [items]
   );
+
+  useEffect(() => {
+    if (restored) return;
+    const draft = loadCheckoutDraft();
+    const resume = searchParams.get("resume") === "1";
+    if (draft) {
+      setForm({
+        email: draft.email || "",
+        first: draft.first || "",
+        last: draft.last || "",
+        phone: draft.phone || "",
+        phoneDial: draft.phoneDial || DEFAULT_COUNTRY.dial,
+        phoneNational: draft.phoneNational || "",
+        deliveryMethod: draft.deliveryMethod || "",
+        expectedDeliveryDate: draft.expectedDeliveryDate || "",
+        address: draft.address || "",
+        city: draft.city || "",
+        state: draft.state || "",
+        zip: draft.zip || "",
+        country: draft.country || "Nigeria",
+      });
+      if (resume) {
+        setStep(1);
+        setError("Your previous payment didn’t go through. Review your details and try again.");
+      }
+    }
+    setRestored(true);
+  }, [restored, searchParams]);
+
+  useEffect(() => {
+    scrollToTopSmooth();
+  }, [step]);
 
   if (items.length === 0) {
     return (
@@ -75,13 +119,23 @@ export default function CheckoutPage() {
       setError("One or more styles are price-on-request. Message the studio to complete this order.");
       return;
     }
+    const phone = formatInternationalPhone(form.phoneDial, form.phoneNational) || form.phone;
+    if (!phone) {
+      setError("Please enter a valid phone number with country code.");
+      return;
+    }
     setPlacing(true);
     try {
+      saveCheckoutDraft({
+        ...form,
+        phone,
+      });
       const res = await fetch("/api/checkout/flutterwave/initialize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
+          phone,
           userId: user?.id ?? null,
           items: items.map((i) => ({
             productId: i.productId,
@@ -119,7 +173,7 @@ export default function CheckoutPage() {
   }
 
   function validateDelivery() {
-    if (!form.email || !form.first || !form.last || !form.phone) {
+    if (!form.email || !form.first || !form.last || !form.phoneNational) {
       return "Please fill email, name, and phone.";
     }
     if (!form.deliveryMethod) {
@@ -211,18 +265,23 @@ export default function CheckoutPage() {
                             key={m.value}
                             type="button"
                             onClick={() => {
-                              setForm((f) => ({
-                                ...f,
-                                deliveryMethod: m.value,
-                                country:
-                                  m.value === "international" && f.country === "Nigeria"
-                                    ? ""
-                                    : m.value !== "international" && !f.country
-                                      ? "Nigeria"
-                                      : f.country || "Nigeria",
-                                state:
-                                  m.value === "home_delivery" && !f.state ? "Lagos" : f.state,
-                              }));
+                              setForm((f) => {
+                                let country = f.country;
+                                let phoneDial = f.phoneDial;
+                                if (m.value === "international" && f.country === "Nigeria") {
+                                  country = "";
+                                } else if (m.value !== "international" && !f.country) {
+                                  country = "Nigeria";
+                                  phoneDial = DEFAULT_COUNTRY.dial;
+                                }
+                                if (country === "Nigeria") phoneDial = DEFAULT_COUNTRY.dial;
+                                return {
+                                  ...f,
+                                  deliveryMethod: m.value,
+                                  country,
+                                  phoneDial,
+                                };
+                              });
                             }}
                             className={cn(
                               "border px-4 py-4 text-left transition-colors",
@@ -281,10 +340,28 @@ export default function CheckoutPage() {
                       value={form.last}
                       onChange={(v) => setForm({ ...form, last: v })}
                     />
-                    <Field
-                      label="WhatsApp / phone"
-                      value={form.phone}
-                      onChange={(v) => setForm({ ...form, phone: v })}
+                    <PhoneField
+                      dial={form.phoneDial}
+                      national={form.phoneNational}
+                      onDialChange={(dial, country) =>
+                        setForm({
+                          ...form,
+                          phoneDial: dial,
+                          phone: formatInternationalPhone(dial, form.phoneNational),
+                          // Keep shipping country in sync when dial code changes and country is empty
+                          country:
+                            !form.country && country
+                              ? country.name
+                              : form.country,
+                        })
+                      }
+                      onNationalChange={(national) =>
+                        setForm({
+                          ...form,
+                          phoneNational: national,
+                          phone: formatInternationalPhone(form.phoneDial, national),
+                        })
+                      }
                       className="sm:col-span-2"
                     />
                     <Field
@@ -317,6 +394,18 @@ export default function CheckoutPage() {
                         Delivery address
                       </p>
                       <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                        <CountrySelect
+                          value={form.country}
+                          onChange={(c) =>
+                            setForm({
+                              ...form,
+                              country: c.name,
+                              phoneDial: c.dial,
+                              phone: formatInternationalPhone(c.dial, form.phoneNational),
+                            })
+                          }
+                          className="sm:col-span-2"
+                        />
                         <Field
                           label="Street address"
                           value={form.address}
@@ -337,11 +426,7 @@ export default function CheckoutPage() {
                           label="ZIP / postal"
                           value={form.zip}
                           onChange={(v) => setForm({ ...form, zip: v })}
-                        />
-                        <Field
-                          label="Country"
-                          value={form.country}
-                          onChange={(v) => setForm({ ...form, country: v })}
+                          className="sm:col-span-2"
                         />
                       </div>
                     </div>
@@ -513,6 +598,20 @@ export default function CheckoutPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-mkos-warm">
+          <div className="h-10 w-10 animate-spin rounded-full border-2 border-mkos-ink/15 border-t-mkos-accent" />
+        </div>
+      }
+    >
+      <CheckoutInner />
+    </Suspense>
   );
 }
 

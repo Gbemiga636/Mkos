@@ -80,3 +80,19 @@ export function scrollToTopSmooth() {
   }
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
+
+/** Scroll a specific element into view, clearing the fixed header. */
+export function scrollToElementSmooth(target: HTMLElement | null, offset = 110) {
+  if (typeof window === "undefined" || !target) return;
+  const lenis = window.__mkosLenis;
+  if (lenis) {
+    lenis.scrollTo(target, {
+      offset: -offset,
+      duration: 1.1,
+      easing: (t) => 1 - Math.pow(1 - t, 3),
+    });
+    return;
+  }
+  const top = target.getBoundingClientRect().top + window.scrollY - offset;
+  window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+}
