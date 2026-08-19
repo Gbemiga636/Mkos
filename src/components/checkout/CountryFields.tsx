@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
-import { COUNTRIES, type CountryOption } from "@/lib/checkout/countries";
+import { COUNTRIES, formatInternationalPhone, type CountryOption } from "@/lib/checkout/countries";
 
 const fieldShell =
   "mt-2 h-12 w-full border border-mkos-border bg-mkos-warm/50 px-4 text-sm outline-none transition-shadow focus:border-mkos-accent focus:shadow-[0_0_0_3px_rgba(196,92,38,0.12)]";
@@ -113,12 +113,20 @@ export function PhoneField({
   onDialChange,
   onNationalChange,
   className,
+  label = "WhatsApp / phone",
+  required,
+  name,
+  variant = "checkout",
 }: {
   dial: string;
   national: string;
   onDialChange: (dial: string, country?: CountryOption) => void;
   onNationalChange: (national: string) => void;
   className?: string;
+  label?: string;
+  required?: boolean;
+  name?: string;
+  variant?: "checkout" | "underline";
 }) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
@@ -145,20 +153,32 @@ export function PhoneField({
   }, [q]);
 
   const selected = COUNTRIES.find((c) => c.dial === dial) || COUNTRIES[0]!;
+  const underline = variant === "underline";
+  const dialBtn = underline
+    ? "flex h-[46px] shrink-0 items-center gap-1 border-0 border-b border-mkos-border bg-transparent pr-3 text-sm outline-none focus:border-mkos-ink"
+    : "flex h-12 shrink-0 items-center gap-1 border border-r-0 border-mkos-border bg-mkos-warm/50 px-3 text-sm outline-none transition-shadow focus:border-mkos-accent focus:shadow-[0_0_0_3px_rgba(196,92,38,0.12)]";
+  const numberInput = underline
+    ? "h-[46px] w-full border-0 border-b border-mkos-border bg-transparent px-3 text-sm text-mkos-ink outline-none placeholder:text-mkos-muted/50 focus:border-mkos-ink"
+    : "h-12 w-full border border-mkos-border bg-mkos-warm/50 px-4 text-sm outline-none transition-shadow focus:border-mkos-accent focus:shadow-[0_0_0_3px_rgba(196,92,38,0.12)]";
 
   return (
-    <label className={cn("block", className)}>
-      <span className="font-display text-[10px] tracking-[0.2em] text-mkos-muted uppercase">
-        WhatsApp / phone
-      </span>
-      <div ref={rootRef} className="relative mt-2 flex">
+    <div className={cn("block", className)}>
+      {label ? (
+        <span className="font-display text-[10px] tracking-[0.2em] text-mkos-muted uppercase">
+          {label}
+        </span>
+      ) : null}
+      {name ? (
+        <input type="hidden" name={name} value={formatInternationalPhone(dial, national)} />
+      ) : null}
+      <div ref={rootRef} className={cn("relative flex", label ? "mt-2" : "")}>
         <button
           type="button"
           onClick={() => {
             setOpen((o) => !o);
             setQ("");
           }}
-          className="flex h-12 shrink-0 items-center gap-1 border border-r-0 border-mkos-border bg-mkos-warm/50 px-3 text-sm outline-none transition-shadow focus:border-mkos-accent focus:shadow-[0_0_0_3px_rgba(196,92,38,0.12)]"
+          className={dialBtn}
           aria-haspopup="listbox"
           aria-expanded={open}
           aria-label="Country dial code"
@@ -172,10 +192,11 @@ export function PhoneField({
           type="tel"
           inputMode="tel"
           autoComplete="tel-national"
+          required={required}
           value={national}
           onChange={(e) => onNationalChange(e.target.value.replace(/[^\d\s()-]/g, ""))}
           placeholder="Phone number"
-          className="h-12 w-full border border-mkos-border bg-mkos-warm/50 px-4 text-sm outline-none transition-shadow focus:border-mkos-accent focus:shadow-[0_0_0_3px_rgba(196,92,38,0.12)]"
+          className={numberInput}
         />
 
         {open ? (
@@ -213,6 +234,6 @@ export function PhoneField({
           </div>
         ) : null}
       </div>
-    </label>
+    </div>
   );
 }

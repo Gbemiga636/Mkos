@@ -102,3 +102,16 @@ export function formatInternationalPhone(dial: string, national: string) {
   if (n.startsWith(d)) return `+${n}`;
   return `+${d}${n}`;
 }
+
+/** Split a stored E.164-ish number into dial code + national digits. */
+export function parseInternationalPhone(value: string) {
+  let digits = String(value || "").replace(/\D/g, "");
+  if (!digits) return { dial: DEFAULT_COUNTRY.dial, national: "" };
+  const sorted = [...COUNTRIES].sort((a, b) => b.dial.length - a.dial.length);
+  for (const c of sorted) {
+    if (digits.startsWith(c.dial)) {
+      return { dial: c.dial, national: digits.slice(c.dial.length) };
+    }
+  }
+  return { dial: DEFAULT_COUNTRY.dial, national: digits };
+}

@@ -12,6 +12,8 @@ import { BespokeVideoCarousel } from "@/components/bespoke/BespokeVideoCarousel"
 import { scrollToElementSmooth } from "@/components/experience/SmoothScroll";
 import { cn } from "@/lib/utils";
 import { useContent } from "@/lib/cms/CmsProvider";
+import { PhoneField } from "@/components/checkout/CountryFields";
+import { DEFAULT_COUNTRY } from "@/lib/checkout/countries";
 
 const STEPS = [
   {
@@ -154,6 +156,8 @@ export function BespokePageClient() {
   const [files, setFiles] = useState<FileList | null>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "ok" | "error">("idle");
   const [message, setMessage] = useState("");
+  const [phoneDial, setPhoneDial] = useState(DEFAULT_COUNTRY.dial);
+  const [phoneNational, setPhoneNational] = useState("");
 
   const progress = useMemo(() => ((step + 1) / STEPS.length) * 100, [step]);
   const formRef = useRef<HTMLFormElement>(null);
@@ -315,7 +319,16 @@ export function BespokePageClient() {
             <div className="grid gap-6 sm:grid-cols-2">
               <div>
                 <FieldLabel>Phone</FieldLabel>
-                <TextInput name="phone" type="tel" required={step === 0} autoComplete="tel" />
+                <PhoneField
+                  variant="underline"
+                  label=""
+                  name="phone"
+                  required={step === 0}
+                  dial={phoneDial}
+                  national={phoneNational}
+                  onDialChange={(dial) => setPhoneDial(dial)}
+                  onNationalChange={setPhoneNational}
+                />
               </div>
               <div>
                 <FieldLabel>Email</FieldLabel>

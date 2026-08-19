@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCartStore, cartItemKey } from "@/store/cart";
 import { Button } from "@/components/ui/Button";
@@ -23,6 +23,7 @@ import {
 } from "@/lib/checkout/countries";
 import { saveCheckoutDraft, loadCheckoutDraft } from "@/lib/checkout/draft";
 import { CountrySelect, PhoneField } from "@/components/checkout/CountryFields";
+import { PaymentCard } from "@/components/checkout/PaymentCard";
 import { UsDutyNotice } from "@/components/shipping/UsDutyNotice";
 import { scrollToTopSmooth } from "@/components/experience/SmoothScroll";
 
@@ -33,6 +34,7 @@ function CheckoutInner() {
   const formatPrice = useFormatPrice();
   const { user } = useAuth();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const subtotal = items.reduce((n, i) => n + i.price * i.quantity, 0);
   // Product total only — delivery is quoted separately after checkout
   const total = subtotal;
@@ -58,6 +60,11 @@ function CheckoutInner() {
     country: "Nigeria",
   });
   const [restored, setRestored] = useState(false);
+  const [paySession, setPaySession] = useState<{
+    reference: string;
+    customerId: string;
+    amount: number;
+  } | null>(null);
 
   const needsAddress =
     form.deliveryMethod === "home_delivery" || form.deliveryMethod === "international";
@@ -91,8 +98,18 @@ function CheckoutInner() {
         country: draft.country || "Nigeria",
       });
       if (resume) {
-        setStep(1);
-        setError("Your previous payment didn’t go through. Review your details and try again.");
+        if (draft.reference && draft.customerId) {
+          setPaySession({
+            reference: draft.reference,
+            customerId: draft.customerId,
+            amount: draft.amountUsd || 0,
+          });
+          setStep(2);
+          setError("Your previous payment didn’t go through. You can pay again from here.");
+        } else {
+          setStep(1);
+          setError("Your previous payment didn’t go through. Review your details and try again.");
+        }
       }
     }
     setRestored(true);
@@ -113,7 +130,7 @@ function CheckoutInner() {
     );
   }
 
-  async function payWithFlutterwave() {
+  async function startPayment() {
     setError("");
     if (!hasPricedItems) {
       setError("One or more styles are price-on-request. Message the studio to complete this order.");
@@ -156,20 +173,29 @@ function CheckoutInner() {
         setError(data.error || "Could not start Flutterwave payment");
         return;
       }
-      if (!data.url) {
-        setError("Could not reach Flutterwave checkout. Please try again.");
+      if (!data.reference || !data.customerId) {
+        setError("Could not prepare Flutterwave payment. Please try again.");
         return;
       }
-      window.location.href = data.url as string;
+      const session = {
+        reference: String(data.reference),
+        customerId: String(data.customerId),
+        amount: Number(data.amount || total),
+      };
+      setPaySession(session);
+      saveCheckoutDraft({
+        ...form,
+        phone,
+        reference: session.reference,
+        customerId: session.customerId,
+        amountUsd: session.amount,
+      });
+      setStep(2);
     } catch {
       setError("Network error starting Flutterwave. Please try again.");
     } finally {
       setPlacing(false);
     }
-  }
-
-  async function pay() {
-    return payWithFlutterwave();
   }
 
   function validateDelivery() {
@@ -526,13 +552,41 @@ function CheckoutInner() {
                       size="lg"
                       variant="checkout"
                       disabled={placing}
-                      onClick={pay}
+                      onClick={startPayment}
                     >
                       {placing
                         ? "Preparing payment…"
-                        : `Pay with Flutterwave · ${formatPrice(total, { usd: subtotalUsd })}`}
+                        : `Continue to payment · ${formatPrice(total, { usd: subtotalUsd })}`}
                     </Button>
                   </div>
+                  {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+                </motion.div>
+              )}
+
+              {step === 2 && paySession && (
+                <motion.div
+                  key="pay"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                >
+                  <PaymentCard
+                    amountLabel={formatPrice(total, { usd: subtotalUsd })}
+                    reference={paySession.reference}
+                    customerId={paySession.customerId}
+                    onBack={() => {
+                      setStep(1);
+                      setError("");
+                    }}
+                    onError={setError}
+                    onPaid={(id) => {
+                      const q = new URLSearchParams({
+                        reference: paySession.reference,
+                      });
+                      if (id) q.set("chargeId", id);
+                      router.push(`/checkout/success?${q.toString()}`);
+                    }}
+                  />
                   {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
                 </motion.div>
               )}

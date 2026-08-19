@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
@@ -23,6 +24,7 @@ export default function ProductClient({ product: initial }: { product: Product }
 
   const [active, setActive] = useState(0);
   const [fullscreen, setFullscreen] = useState(false);
+  const [showFullPicture, setShowFullPicture] = useState(true);
   const [size, setSize] = useState(product.sizes[1] ?? product.sizes[0] ?? "");
   const [color, setColor] = useState("");
   const [qty, setQty] = useState(1);
@@ -77,6 +79,7 @@ export default function ProductClient({ product: initial }: { product: Product }
     setColor("");
     setPickError("");
     setActive(0);
+    setShowFullPicture(true);
   }, [product]);
 
   function canAddToBag() {
@@ -97,10 +100,15 @@ export default function ProductClient({ product: initial }: { product: Product }
     <div className="bg-white pt-24 pb-24">
       <div className="mx-auto grid max-w-[1600px] gap-10 px-5 lg:grid-cols-[1.15fr_0.85fr] lg:gap-16 lg:px-12">
         <div className="lg:sticky lg:top-28 lg:self-start">
-          <div className="relative aspect-[4/5] overflow-hidden bg-mkos-warm">
+          <div
+            className={cn(
+              "relative overflow-hidden bg-mkos-warm transition-[height] duration-500",
+              showFullPicture ? "h-[min(88vh,56rem)] w-full" : "aspect-[4/5]"
+            )}
+          >
             <AnimatePresence mode="wait">
               <motion.div
-                key={active}
+                key={`${active}-${showFullPicture ? "full" : "crop"}`}
                 initial={{ opacity: 0, scale: 1.04 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0 }}
@@ -113,12 +121,30 @@ export default function ProductClient({ product: initial }: { product: Product }
                   alt={product.name}
                   fill
                   priority
-                  className="object-cover"
+                  className={showFullPicture ? "object-contain p-3 sm:p-6" : "object-cover"}
                   sizes="(max-width: 1024px) 100vw, 55vw"
-                  style={{ objectPosition: objectPositionCss(product.imageFocus?.[active]) }}
+                  style={
+                    showFullPicture
+                      ? undefined
+                      : { objectPosition: objectPositionCss(product.imageFocus?.[active]) }
+                  }
                 />
               </motion.div>
             </AnimatePresence>
+          </div>
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => setShowFullPicture((v) => !v)}
+              className="border border-mkos-border bg-white px-4 py-2.5 font-display text-[10px] tracking-[0.2em] uppercase transition-colors hover:border-mkos-ink"
+            >
+              {showFullPicture ? "Fill frame" : "Show full picture"}
+            </button>
+            <p className="text-xs text-mkos-muted">
+              {showFullPicture
+                ? "The whole image is in view — nothing cropped."
+                : "Tap the photo to zoom, or show the full picture."}
+            </p>
           </div>
           <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
             {product.images.map((img, i) => (
@@ -369,9 +395,23 @@ export default function ProductClient({ product: initial }: { product: Product }
             {[product, ...fbt].map((p, i) => (
               <div key={p.id} className="flex items-center gap-4">
                 {i > 0 && <span className="text-2xl text-mkos-silver">+</span>}
-                <div className="relative h-36 w-28 overflow-hidden bg-mkos-warm">
-                  <Image src={p.images[0]} alt={p.name} fill className="object-cover" sizes="112px" />
-                </div>
+                <Link href={`/product/${p.slug}`} className="group block max-w-[9.5rem]">
+                  <div className="relative h-44 w-[7.5rem] overflow-hidden bg-mkos-warm">
+                    <Image
+                      src={p.images[0]}
+                      alt={p.name}
+                      fill
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      sizes="120px"
+                    />
+                  </div>
+                  <p className="mt-2 font-display text-sm leading-snug group-hover:underline">
+                    {p.name}
+                  </p>
+                  <p className="mt-0.5 font-display text-[10px] tracking-[0.16em] text-mkos-muted uppercase">
+                    View
+                  </p>
+                </Link>
               </div>
             ))}
           </div>

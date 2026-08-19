@@ -2,11 +2,11 @@ import { NextResponse } from "next/server";
 import { fulfillPaidOrder } from "@/lib/checkout/fulfill";
 import { createServiceClient } from "@/lib/supabase/client";
 import {
-  flutterwaveV3Succeeded,
-  flutterwaveV3Verify,
-  flutterwaveV3VerifyByReference,
-  type FlutterwaveV3Payment,
-} from "@/lib/flutterwaveV3";
+  flutterwaveGetCharge,
+  flutterwaveGetChargeByReference,
+  flutterwaveSucceeded,
+  type FlutterwaveCharge,
+} from "@/lib/flutterwave";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,26 +26,28 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const reference = String(body.reference || "").trim();
-    const transactionId = String(body.transactionId || body.transaction_id || "").trim();
-    if (!reference && !transactionId) {
+    const chargeId = String(
+      body.chargeId || body.transactionId || body.transaction_id || ""
+    ).trim();
+    if (!reference && !chargeId) {
       return NextResponse.json({ error: "reference required" }, { status: 400 });
     }
 
-    let payment: FlutterwaveV3Payment | null = null;
-    if (transactionId) {
+    let payment: FlutterwaveCharge | null = null;
+    if (chargeId) {
       try {
-        payment = await flutterwaveV3Verify(transactionId);
+        payment = await flutterwaveGetCharge(chargeId);
       } catch {
         /* fall back to reference lookup below */
       }
     }
     if (!payment && reference) {
-      payment = await flutterwaveV3VerifyByReference(reference);
+      payment = await flutterwaveGetChargeByReference(reference);
     }
 
     const status = payment?.status || "";
     const amount = payment?.amount;
-    const resolvedRef = payment?.tx_ref || reference;
+    const resolvedRef = payment?.reference || reference;
 
     if (!resolvedRef) {
       return NextResponse.json({ error: "Missing order reference" }, { status: 400 });
@@ -65,7 +67,7 @@ export async function POST(req: Request) {
       );
     }
 
-    if (!flutterwaveV3Succeeded(status) && pending.payment_status !== "paid") {
+    if (!flutterwaveSucceeded(status) && pending.payment_status !== "paid") {
       return NextResponse.json(
         { error: "Payment not completed yet", status: status || "pending" },
         { status: 402 }

@@ -16,6 +16,9 @@ export type CheckoutDraft = {
   state: string;
   zip: string;
   country: string;
+  reference?: string;
+  customerId?: string;
+  amountUsd?: number;
   savedAt: number;
 };
 

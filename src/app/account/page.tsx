@@ -14,6 +14,12 @@ import { getBrowserSupabase } from "@/lib/supabase/browser";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import type { Product } from "@/lib/cms/types";
+import { PhoneField } from "@/components/checkout/CountryFields";
+import {
+  DEFAULT_COUNTRY,
+  formatInternationalPhone,
+  parseInternationalPhone,
+} from "@/lib/checkout/countries";
 
 const tabs = ["Overview", "Orders", "Wishlist", "Addresses", "Settings", "For you"] as const;
 
@@ -55,7 +61,10 @@ export default function AccountPage() {
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [saving, setSaving] = useState(false);
   const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
+  const [phoneDial, setPhoneDial] = useState(DEFAULT_COUNTRY.dial);
+  const [phoneNational, setPhoneNational] = useState("");
+  const [addrPhoneDial, setAddrPhoneDial] = useState(DEFAULT_COUNTRY.dial);
+  const [addrPhoneNational, setAddrPhoneNational] = useState("");
   const [addrForm, setAddrForm] = useState({
     label: "Home",
     full_name: "",
@@ -91,7 +100,9 @@ export default function AccountPage() {
       return;
     }
     setName(profile?.full_name ?? "");
-    setPhone(profile?.phone ?? "");
+    const parsed = parseInternationalPhone(profile?.phone ?? "");
+    setPhoneDial(parsed.dial);
+    setPhoneNational(parsed.national);
     loadAccount();
   }, [user, loading, profile, openAuth, router, loadAccount]);
 
@@ -350,13 +361,14 @@ export default function AccountPage() {
                   await sb.from("addresses").insert({
                     user_id: user.id,
                     ...addrForm,
+                    phone: formatInternationalPhone(addrPhoneDial, addrPhoneNational) || null,
                     is_default: addresses.length === 0,
                   });
                   setSaving(false);
                   setAddrForm({
                     label: "Home",
                     full_name: profile?.full_name ?? "",
-                    phone: profile?.phone ?? "",
+                    phone: "",
                     line1: "",
                     line2: "",
                     city: "",
@@ -364,6 +376,8 @@ export default function AccountPage() {
                     postal_code: "",
                     country: "Nigeria",
                   });
+                  setAddrPhoneDial(DEFAULT_COUNTRY.dial);
+                  setAddrPhoneNational("");
                   loadAccount();
                 }}
               >
@@ -372,7 +386,6 @@ export default function AccountPage() {
                   [
                     ["label", "Label"],
                     ["full_name", "Full name"],
-                    ["phone", "Phone"],
                     ["line1", "Address line 1"],
                     ["line2", "Address line 2"],
                     ["city", "City"],
@@ -386,13 +399,20 @@ export default function AccountPage() {
                       {label}
                     </span>
                     <input
-                      required={key !== "line2" && key !== "state" && key !== "phone"}
+                      required={key !== "line2" && key !== "state"}
                       value={addrForm[key]}
                       onChange={(e) => setAddrForm({ ...addrForm, [key]: e.target.value })}
                       className="mt-2 h-11 w-full border border-mkos-border px-3 text-sm outline-none focus:shadow-[0_0_0_3px_rgba(91,33,182,0.12)]"
                     />
                   </label>
                 ))}
+                <PhoneField
+                  label="Phone"
+                  dial={addrPhoneDial}
+                  national={addrPhoneNational}
+                  onDialChange={(dial) => setAddrPhoneDial(dial)}
+                  onNationalChange={setAddrPhoneNational}
+                />
                 <Button type="submit" disabled={saving}>
                   {saving ? "Saving…" : "Save address"}
                 </Button>
@@ -406,7 +426,10 @@ export default function AccountPage() {
               onSubmit={async (e) => {
                 e.preventDefault();
                 setSaving(true);
-                await updateProfile({ full_name: name, phone });
+                await updateProfile({
+                  full_name: name,
+                  phone: formatInternationalPhone(phoneDial, phoneNational) || null,
+                });
                 setSaving(false);
               }}
             >
@@ -430,16 +453,13 @@ export default function AccountPage() {
                   className="mt-2 h-12 w-full border border-mkos-border bg-mkos-warm px-4 text-mkos-muted outline-none"
                 />
               </label>
-              <label className="block">
-                <span className="font-display text-[10px] tracking-[0.2em] uppercase text-mkos-muted">
-                  Phone
-                </span>
-                <input
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="mt-2 h-12 w-full border border-mkos-border px-4 outline-none focus:shadow-[0_0_0_3px_rgba(91,33,182,0.12)]"
-                />
-              </label>
+              <PhoneField
+                label="Phone"
+                dial={phoneDial}
+                national={phoneNational}
+                onDialChange={(dial) => setPhoneDial(dial)}
+                onNationalChange={setPhoneNational}
+              />
               <Button type="submit" disabled={saving}>
                 {saving ? "Saving…" : "Save changes"}
               </Button>

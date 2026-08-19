@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { randomBytes } from "crypto";
 import { createServiceClient } from "@/lib/supabase/client";
-import { siteUrl } from "@/lib/siteUrl";
 import { getNgnRates, convertFromNgn } from "@/lib/currency/rates";
 import type { CheckoutItem } from "@/lib/checkout/fulfill";
 import {
@@ -10,7 +9,8 @@ import {
   deliveryMethodLabel,
   isDeliveryMethod,
 } from "@/lib/checkout/delivery";
-import { flutterwaveV3Configured, flutterwaveV3Initialize } from "@/lib/flutterwaveV3";
+import { findCountryByName } from "@/lib/checkout/countries";
+import { flutterwaveConfigured, flutterwaveCreateCustomer } from "@/lib/flutterwave";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,11 +18,11 @@ export const maxDuration = 60;
 
 export async function POST(req: Request) {
   try {
-    if (!flutterwaveV3Configured()) {
+    if (!flutterwaveConfigured()) {
       return NextResponse.json(
         {
           error:
-            "Flutterwave is not configured yet. Add FLUTTERWAVE_SECRET_KEY to the server environment.",
+            "Flutterwave is not configured yet. Add FLUTTERWAVE_CLIENT_ID and FLUTTERWAVE_CLIENT_SECRET to the server environment.",
         },
         { status: 503 }
       );
@@ -135,18 +135,53 @@ export async function POST(req: Request) {
     const reference = `mkosfw${Date.now().toString(36)}${randomBytes(3).toString("hex")}`;
     const customerName = `${first} ${last}`.trim();
     const methodLabel = deliveryMethodLabel(deliveryMethod);
-    const notes = [
-      `Payment: Flutterwave (USD)`,
-      `Delivery method: ${methodLabel}`,
-      `Expected delivery date: ${expectedDeliveryDate}`,
-      DELIVERY_FEE_NOTE,
-      "U.S. orders may attract a 17% import duty collected by customs at delivery.",
-    ].join("\n");
 
     const shippingAddress =
       deliveryMethod === "pickup" ? STUDIO_PICKUP_ADDRESS : address;
     const shippingCity = deliveryMethod === "pickup" ? "Lagos" : city;
     const shippingCountry = deliveryMethod === "pickup" ? "Nigeria" : country;
+    const iso = findCountryByName(shippingCountry)?.code || "NG";
+    const phoneDial = String(body.phoneDial || "").replace(/\D/g, "");
+    let national = String(body.phoneNational || phone)
+      .replace(/\D/g, "")
+      .replace(/^0+/, "");
+    if (phoneDial && national.startsWith(phoneDial)) {
+      national = national.slice(phoneDial.length);
+    }
+    const countryCode = phoneDial || (iso === "NG" ? "234" : "");
+
+    const flwCustomer = await flutterwaveCreateCustomer({
+      email,
+      first,
+      last,
+      phone:
+        countryCode && national
+          ? { country_code: countryCode, number: national }
+          : undefined,
+      address: {
+        city: shippingCity,
+        country: iso,
+        line1: shippingAddress,
+        postal_code: zip,
+        state,
+      },
+    });
+    const customerId = flwCustomer.id;
+    if (!customerId) {
+      return NextResponse.json(
+        { error: "Could not create Flutterwave customer" },
+        { status: 502 }
+      );
+    }
+
+    const notes = [
+      `Payment: Flutterwave v4 (USD)`,
+      `FLW_CUSTOMER:${customerId}`,
+      `Delivery method: ${methodLabel}`,
+      `Expected delivery date: ${expectedDeliveryDate}`,
+      DELIVERY_FEE_NOTE,
+      "U.S. orders may attract a 17% import duty collected by customs at delivery.",
+    ].join("\n");
 
     const baseOrder = {
       user_id: userId,
@@ -246,23 +281,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: itemsErr.message }, { status: 500 });
     }
 
-    const { link } = await flutterwaveV3Initialize({
-      txRef: reference,
-      amount: totalUsd,
-      currency: "USD",
-      redirectUrl: `${siteUrl()}/checkout/success?reference=${encodeURIComponent(reference)}`,
-      customer: { email, name: customerName, phonenumber: phone },
-      title: "My Kind of Style",
-      meta: { order_id: order.id, reference },
-    });
-
     return NextResponse.json({
       ok: true,
       provider: "flutterwave",
       reference,
-      url: link,
-      payOnSite: false,
+      customerId,
+      payOnSite: true,
       amount: Number(totalUsd.toFixed(2)),
+      currency: "USD",
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Flutterwave checkout failed";

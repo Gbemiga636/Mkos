@@ -38,8 +38,11 @@ function SuccessInner() {
   const params = useSearchParams();
   const reference =
     params.get("reference") || params.get("tx_ref") || params.get("trxref") || "";
-  const transactionId =
-    params.get("transaction_id") || params.get("transactionId") || "";
+  const chargeId =
+    params.get("chargeId") ||
+    params.get("transaction_id") ||
+    params.get("transactionId") ||
+    "";
   const flwStatus = (params.get("status") || "").toLowerCase();
   const clearCart = useCartStore((s) => s.clear);
   const [status, setStatus] = useState<"loading" | "ok" | "error" | "cancelled">("loading");
@@ -63,7 +66,7 @@ function SuccessInner() {
       return;
     }
 
-    if (!reference && !transactionId) {
+    if (!reference && !chargeId) {
       setStatus("error");
       setMessage(
         "Missing payment reference. If you were charged, contact the studio with your bank receipt."
@@ -77,7 +80,7 @@ function SuccessInner() {
         const res = await fetch("/api/checkout/flutterwave/verify", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ transactionId, reference }),
+          body: JSON.stringify({ chargeId, transactionId: chargeId, reference }),
         });
         const data = await res.json();
         if (cancelled) return;
@@ -113,7 +116,7 @@ function SuccessInner() {
     return () => {
       cancelled = true;
     };
-  }, [reference, transactionId, flwStatus, clearCart]);
+  }, [reference, chargeId, flwStatus, clearCart]);
 
   useEffect(() => {
     if (!experienceOpen) return;
@@ -167,9 +170,8 @@ function SuccessInner() {
               </Button>
             </div>
             <p className="mx-auto mt-6 max-w-sm text-xs leading-relaxed text-mkos-muted">
-              Tip: Apple Pay only works on supported Apple devices with a card in Wallet, and must
-              be enabled on the Flutterwave account. Card, bank transfer and USSD still work from
-              the same Flutterwave page.
+              Tip: If a bank asks for 3-D Secure, PIN or OTP, complete that step on this page.
+              You can retry from checkout without re-entering delivery details.
             </p>
           </div>
         )}

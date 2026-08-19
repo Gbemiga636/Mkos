@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/Button";
 import { BrandText } from "@/components/ui/BrandText";
 import { ScrollReveal } from "@/components/experience/ScrollReveal";
 import { cn } from "@/lib/utils";
+import { PhoneField } from "@/components/checkout/CountryFields";
+import { DEFAULT_COUNTRY } from "@/lib/checkout/countries";
 
 const EVENT_TYPES = [
   "Wedding",
@@ -159,6 +161,8 @@ export function StyleBriefPageClient() {
   const [contentPermission, setContentPermission] = useState("");
   const [deliveryMethod, setDeliveryMethod] = useState("");
   const [files, setFiles] = useState<FileList | null>(null);
+  const [phoneDial, setPhoneDial] = useState(DEFAULT_COUNTRY.dial);
+  const [phoneNational, setPhoneNational] = useState("");
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -233,7 +237,16 @@ export function StyleBriefPageClient() {
             </div>
             <div>
               <FieldLabel>Phone number</FieldLabel>
-              <TextInput name="phone" type="tel" required autoComplete="tel" />
+              <PhoneField
+                variant="underline"
+                label=""
+                name="phone"
+                required
+                dial={phoneDial}
+                national={phoneNational}
+                onDialChange={(dial) => setPhoneDial(dial)}
+                onNationalChange={setPhoneNational}
+              />
             </div>
             <div>
               <FieldLabel>Email</FieldLabel>
