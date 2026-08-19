@@ -44,10 +44,11 @@ export async function flutterwaveEncryptSecret(plain: string, nonce: string, key
     throw new Error("Secure encryption is not available in this browser.");
   }
   const decoded = Uint8Array.from(atob(token), (c) => c.charCodeAt(0));
-  const keyBytes = new Uint8Array(decoded);
+  const keyBytes = new Uint8Array(decoded.buffer.slice(decoded.byteOffset, decoded.byteOffset + decoded.byteLength));
   const key = await subtle.importKey("raw", keyBytes, { name: "AES-GCM" }, false, ["encrypt"]);
-  const iv = new TextEncoder().encode(nonce);
-  const encrypted = await subtle.encrypt({ name: "AES-GCM", iv }, key, new TextEncoder().encode(plain));
+  const iv = new Uint8Array(new TextEncoder().encode(nonce));
+  const data = new Uint8Array(new TextEncoder().encode(plain));
+  const encrypted = await subtle.encrypt({ name: "AES-GCM", iv }, key, data);
   return toBase64(encrypted);
 }
 

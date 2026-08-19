@@ -7,6 +7,7 @@
 [build.environment]
   NODE_VERSION = "20"
   NEXT_TELEMETRY_DISABLED = "1"
+  NODE_OPTIONS = "--max-old-space-size=4096"
 
 # Long cache for immutable hashed assets (egress savings)
 [[headers]]

@@ -272,7 +272,10 @@ export async function POST(req: Request) {
 
     let { error: itemsErr } = await sb.from("order_items").insert(orderItemRows);
     if (itemsErr && /sizing_mode|schema cache/i.test(itemsErr.message)) {
-      const withoutMode = orderItemRows.map(({ sizing_mode: _m, ...rest }) => rest);
+      const withoutMode = orderItemRows.map(({ sizing_mode, ...rest }) => {
+        void sizing_mode;
+        return rest;
+      });
       ({ error: itemsErr } = await sb.from("order_items").insert(withoutMode));
     }
 
