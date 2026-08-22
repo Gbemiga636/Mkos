@@ -67,6 +67,7 @@ export function PaymentCard({
   amountLabel,
   reference,
   customerId,
+  customerName = "",
   onPaid,
   onError,
   onBack,
@@ -74,11 +75,13 @@ export function PaymentCard({
   amountLabel: string;
   reference: string;
   customerId: string;
+  customerName?: string;
   onPaid: (chargeId?: string) => void;
   onError: (message: string) => void;
   onBack: () => void;
 }) {
   const { settings } = useCms();
+  const [method, setMethod] = useState<"card" | "apple">("card");
   const [number, setNumber] = useState("");
   const [expiry, setExpiry] = useState("");
   const [cvv, setCvv] = useState("");
@@ -246,6 +249,38 @@ export function PaymentCard({
     }
   }
 
+  async function payApple() {
+    setLocalError("");
+    onError("");
+    setBusy(true);
+    try {
+      const data = await postCharge({
+        action: "applepay",
+        reference,
+        customerId,
+        customerName: customerName || cardName,
+        cardHolderName: customerName || cardName || "Customer",
+      });
+      if (data.succeeded) {
+        onPaid(data.chargeId);
+        return;
+      }
+      if (data.redirectUrl) {
+        window.location.href = data.redirectUrl;
+        return;
+      }
+      throw new Error(
+        "Apple Pay could not open. Use Safari on an Apple device with Apple Pay set up, or pay by card."
+      );
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Apple Pay failed";
+      setLocalError(message);
+      onError(message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <div>
       <div className="mb-8">
@@ -258,13 +293,47 @@ export function PaymentCard({
           priority
         />
       </div>
-      <h2 className="font-display text-2xl">Pay securely</h2>
+      <h2 className="font-display text-2xl">Pay</h2>
       <p className="mt-2 text-sm text-mkos-muted">
-        Card details are encrypted in your browser before they leave this page. You’ll pay{" "}
-        <span className="text-mkos-ink">{amountLabel}</span> now — delivery, if any, is quoted
-        separately.
+        Total due now: <span className="text-mkos-ink">{amountLabel}</span>
       </p>
 
+      {auth === "" && (
+        <div className="mt-6 grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setMethod("card");
+              setLocalError("");
+            }}
+            className={cn(
+              "border px-4 py-3 font-display text-[10px] tracking-[0.18em] uppercase transition-colors",
+              method === "card"
+                ? "border-mkos-ink bg-mkos-ink text-white"
+                : "border-mkos-border bg-white text-mkos-ink hover:border-mkos-ink/40"
+            )}
+          >
+            Card
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setMethod("apple");
+              setLocalError("");
+            }}
+            className={cn(
+              "border px-4 py-3 font-display text-[10px] tracking-[0.18em] uppercase transition-colors",
+              method === "apple"
+                ? "border-mkos-ink bg-mkos-ink text-white"
+                : "border-mkos-border bg-white text-mkos-ink hover:border-mkos-ink/40"
+            )}
+          >
+            Apple Pay
+          </button>
+        </div>
+      )}
+
+      {method === "card" && (
       <div className="mt-8 overflow-hidden bg-mkos-ink p-6 text-white shadow-lift sm:p-7">
         <div className="flex items-start justify-between gap-4">
           <Image
@@ -298,8 +367,29 @@ export function PaymentCard({
           </div>
         </div>
       </div>
+      )}
 
-      {auth === "" && (
+      {method === "apple" && auth === "" && (
+        <div className="mt-8 border border-mkos-border bg-mkos-warm/40 p-6">
+          <p className="font-display text-[10px] tracking-[0.22em] text-mkos-muted uppercase">
+            Apple Pay
+          </p>
+          <p className="mt-3 text-sm leading-relaxed text-mkos-ink/85">
+            You’ll be taken to Flutterwave’s Apple Pay sheet to confirm with Face ID, Touch ID, or
+            your device passcode. Works in Safari on Apple devices with a card in Wallet.
+          </p>
+          <Button
+            size="lg"
+            className="mt-6 w-full !bg-black !text-white"
+            disabled={busy}
+            onClick={payApple}
+          >
+            {busy ? "Opening Apple Pay…" : `Pay with Apple Pay · ${amountLabel}`}
+          </Button>
+        </div>
+      )}
+
+      {method === "card" && auth === "" && (
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
           <label className="sm:col-span-2">
             <span className="font-display text-[10px] tracking-[0.2em] text-mkos-muted uppercase">
@@ -403,9 +493,9 @@ export function PaymentCard({
         <Button variant="secondary" onClick={onBack} disabled={busy}>
           Back
         </Button>
-        {auth === "" && (
+        {method === "card" && auth === "" && (
           <Button size="lg" variant="checkout" disabled={busy} onClick={payCard}>
-            {busy ? "Encrypting & charging…" : `Pay ${amountLabel}`}
+            {busy ? "Paying…" : `Pay ${amountLabel}`}
           </Button>
         )}
         {auth === "pin" && (
@@ -419,9 +509,6 @@ export function PaymentCard({
           </Button>
         )}
       </div>
-      <p className={cn("mt-5 text-xs leading-relaxed text-mkos-muted")}>
-        Payments are processed by Flutterwave. Reference {reference}.
-      </p>
     </div>
   );
 }

@@ -356,7 +356,7 @@ export function StyleBriefPageClient() {
         <ScrollReveal y={20} className="mt-20">
           <SectionTitle n="06" title="Budget" />
           <FieldLabel>Your preferred budget range</FieldLabel>
-          <TextInput name="budget" placeholder="e.g. ₦250,000 – ₦400,000" />
+          <TextInput name="budget" />
         </ScrollReveal>
 
         <ScrollReveal y={20} className="mt-20">

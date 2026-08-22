@@ -141,7 +141,7 @@ function fallbackSnapshot(): CmsSnapshot {
       cta_href: "/#services",
       media_url: "/videos/hero-bg.mp4",
       media_type: "video",
-      extra: { secondary_cta_label: "Our story", secondary_cta_href: "/about" },
+      extra: {},
     },
     campaign: {
       key: "campaign",

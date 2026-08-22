@@ -536,13 +536,6 @@ function CheckoutInner() {
                       </li>
                     ))}
                   </ul>
-                  <div className="mt-6 border border-mkos-border bg-mkos-warm/50 p-4 text-sm text-mkos-muted">
-                    <p>
-                      You’ll pay securely with{" "}
-                      <strong className="text-mkos-ink">Flutterwave</strong> in USD. Delivery fees
-                      (if any) are quoted separately before dispatch.
-                    </p>
-                  </div>
                   <UsDutyNotice className="mt-4" />
                   <div className="mt-8 flex flex-wrap gap-3">
                     <Button variant="secondary" onClick={() => setStep(0)}>
@@ -574,6 +567,7 @@ function CheckoutInner() {
                     amountLabel={formatPrice(total, { usd: subtotalUsd })}
                     reference={paySession.reference}
                     customerId={paySession.customerId}
+                    customerName={`${form.first} ${form.last}`.trim()}
                     onBack={() => {
                       setStep(1);
                       setError("");

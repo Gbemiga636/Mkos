@@ -515,7 +515,7 @@ export function BespokePageClient() {
 
             <div>
               <FieldLabel>Budget</FieldLabel>
-              <TextInput name="budget" placeholder="e.g. ₦250,000 – ₦400,000" />
+              <TextInput name="budget" />
             </div>
 
             <div>

@@ -4,6 +4,7 @@ import { siteUrl } from "@/lib/siteUrl";
 import {
   flutterwaveAuthorizeCharge,
   flutterwaveConfigured,
+  flutterwaveCreateApplePayMethod,
   flutterwaveCreateCharge,
   flutterwaveCreatePaymentMethod,
   flutterwaveGetCharge,
@@ -90,21 +91,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Payment reference is required" }, { status: 400 });
     }
 
-    const card = body.card as EncryptedCard | undefined;
-    if (
-      !card?.nonce ||
-      !card.encrypted_card_number ||
-      !card.encrypted_expiry_month ||
-      !card.encrypted_expiry_year ||
-      !card.encrypted_cvv
-    ) {
-      return NextResponse.json({ error: "Encrypted card details are required" }, { status: 400 });
-    }
-
     const sb = createServiceClient();
     const { data: order } = await sb
       .from("orders")
-      .select("id, total, currency, payment_status, notes")
+      .select("id, total, currency, payment_status, notes, shipping_name")
       .eq("paystack_reference", reference)
       .maybeSingle();
 
@@ -132,6 +122,47 @@ export async function POST(req: Request) {
       );
     }
 
+    const redirectUrl = `${siteUrl()}/checkout/success?reference=${encodeURIComponent(reference)}`;
+    const meta = { order_id: order.id, reference };
+
+    if (action === "applepay") {
+      const holder =
+        String(body.cardHolderName || body.customerName || order.shipping_name || "").trim() ||
+        "Customer";
+      const { id: paymentMethodId } = await flutterwaveCreateApplePayMethod(holder);
+      const charge = await flutterwaveCreateCharge({
+        reference,
+        amount: Number(order.total),
+        currency: String(order.currency || "USD"),
+        customerId,
+        paymentMethodId,
+        redirectUrl,
+        meta,
+      });
+      const response = chargeResponse(charge);
+      if (!response.redirectUrl && !response.succeeded) {
+        return NextResponse.json(
+          {
+            error:
+              "Apple Pay could not start. Use Safari on an Apple device, or pay with card instead.",
+          },
+          { status: 502 }
+        );
+      }
+      return NextResponse.json(response);
+    }
+
+    const card = body.card as EncryptedCard | undefined;
+    if (
+      !card?.nonce ||
+      !card.encrypted_card_number ||
+      !card.encrypted_expiry_month ||
+      !card.encrypted_expiry_year ||
+      !card.encrypted_cvv
+    ) {
+      return NextResponse.json({ error: "Encrypted card details are required" }, { status: 400 });
+    }
+
     const { id: paymentMethodId } = await flutterwaveCreatePaymentMethod({
       nonce: String(card.nonce),
       encrypted_card_number: String(card.encrypted_card_number),
@@ -146,8 +177,8 @@ export async function POST(req: Request) {
       currency: String(order.currency || "USD"),
       customerId,
       paymentMethodId,
-      redirectUrl: `${siteUrl()}/checkout/success?reference=${encodeURIComponent(reference)}`,
-      meta: { order_id: order.id, reference },
+      redirectUrl,
+      meta,
     });
 
     return NextResponse.json(chargeResponse(charge));

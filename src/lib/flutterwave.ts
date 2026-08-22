@@ -216,6 +216,23 @@ export async function flutterwaveCreatePaymentMethod(card: EncryptedCard) {
   return { id };
 }
 
+/** Apple Pay payment method — Flutterwave then returns a redirect to their Apple Pay sheet. */
+export async function flutterwaveCreateApplePayMethod(cardHolderName: string) {
+  const name = cardHolderName.trim() || "Customer";
+  const { res, json } = await flwFetch<{ data?: { id?: string } }>("/payment-methods", {
+    method: "POST",
+    body: {
+      type: "applepay",
+      applepay: { card_holder_name: name },
+    },
+  });
+  const id = json.data?.id;
+  if (!res.ok || !id) {
+    throw new Error(flwError(json, res.status, "Could not start Apple Pay"));
+  }
+  return { id };
+}
+
 export type FlutterwaveNextAction = {
   type?: string;
   authorization?: { type?: string };

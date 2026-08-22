@@ -63,8 +63,6 @@ export function Hero() {
   const { typed, done: typedDone } = useTypewriter(fullTitle, ready, 58);
   const typedLines = useMemo(() => typed.split("\n"), [typed]);
 
-  const secondaryLabel = String(hero?.extra?.secondary_cta_label ?? "Watch campaign");
-  const secondaryHref = String(hero?.extra?.secondary_cta_href ?? "/about");
   const rawMedia = hero?.media_url ?? "/videos/hero-bg.mp4";
   // Guard: CMS sometimes stores an image on the hero slot — keep the video autoplay path.
   const videoSrc =
@@ -181,15 +179,6 @@ export function Hero() {
               cursor="EXPLORE"
             >
               Our services
-            </Button>
-            <Button
-              href={secondaryHref}
-              variant="ghost"
-              size="lg"
-              className="text-white hover:bg-white/10"
-              cursor="EXPLORE"
-            >
-              {secondaryLabel}
             </Button>
           </motion.div>
         </div>
