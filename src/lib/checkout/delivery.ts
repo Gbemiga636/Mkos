@@ -8,22 +8,21 @@ export const DELIVERY_METHODS: {
 }[] = [
   {
     value: "pickup",
-    label: "Pickup",
+    label: "Pick Up",
     short:
-      "Same-day pickup is subject to size availability. Please call us before placing your order to confirm that your size is available for same-day pickup.",
+      "Same-day pickup may be available depending on your size and item availability. Please contact us in advance to confirm.",
   },
   {
     value: "home_delivery",
-    label: "Home delivery",
-    note: "(Local Orders Only)",
+    label: "Home Delivery",
     short:
-      "You are responsible for your delivery fee. Delivery charges will be quoted based on your location.",
+      "Delivery fees are the responsibility of the customer and will be quoted based on your location before dispatch.",
   },
   {
     value: "international",
-    label: "International shipping",
+    label: "International Shipping",
     short:
-      "For international orders, please contact us if you have a preferred shipping or delivery option. We’ll be happy to assist.",
+      "For international orders, please contact us if you have a preferred shipping or delivery option. We’ll be happy to discuss available options with you.",
   },
 ];
 

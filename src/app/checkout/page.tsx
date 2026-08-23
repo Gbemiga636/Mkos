@@ -289,10 +289,22 @@ function CheckoutInner() {
                   exit={{ opacity: 0, x: -20 }}
                 >
                   <h2 className="font-display text-2xl">Delivery</h2>
-                  <p className="mt-2 text-sm text-mkos-muted">
-                    Product prices do not include delivery. Choose how you’d like to receive your
-                    order — we’ll confirm any delivery fee with you before dispatch.
+                  <p className="mt-2 text-sm leading-relaxed text-mkos-muted">
+                    Product prices do not include delivery.
                   </p>
+                  <p className="mt-2 text-sm leading-relaxed text-mkos-muted">
+                    Choose how you’d like to receive your order. We’ll confirm any applicable delivery
+                    fee with you before dispatch.
+                  </p>
+
+                  <div className="mt-6 border border-mkos-border bg-mkos-warm/60 p-4">
+                    <p className="font-display text-[10px] tracking-[0.2em] text-mkos-muted uppercase">
+                      Processing time
+                    </p>
+                    <p className="mt-2 text-sm leading-relaxed text-mkos-ink/85">
+                      Please allow 5–7 business days for your order to be processed before dispatch.
+                    </p>
+                  </div>
 
                   <div className="mt-8">
                     <p className="font-display text-[10px] tracking-[0.22em] text-mkos-muted uppercase">
@@ -356,13 +368,6 @@ function CheckoutInner() {
                         );
                       })}
                     </div>
-                  </div>
-
-                  <div className="mt-6 border border-mkos-border bg-mkos-warm/60 p-4 text-sm leading-relaxed text-mkos-ink/85">
-                    <p className="font-display text-[10px] tracking-[0.2em] text-mkos-muted uppercase">
-                      Please note
-                    </p>
-                    <p className="mt-2">{DELIVERY_FEE_NOTE}</p>
                   </div>
 
                   <div className="mt-8 grid gap-4 sm:grid-cols-2">
