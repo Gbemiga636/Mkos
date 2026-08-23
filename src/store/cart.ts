@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { Product } from "@/lib/cms/types";
+import { imageForColor } from "@/lib/product/colorImage";
 
 export type CartItem = {
   productId: string;
@@ -103,7 +104,7 @@ export function productToCartItem(
     name: product.name,
     price: product.price,
     priceUsd: product.priceUsd,
-    image: product.images[0],
+    image: imageForColor(product.images, product.colors, opts.color, product.slug).src || product.images[0],
     color: opts.color ?? "",
     size: opts.size,
     sizingMode:

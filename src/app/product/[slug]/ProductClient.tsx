@@ -13,6 +13,7 @@ import { useWishlistStore } from "@/store/wishlist";
 import { useUIStore } from "@/store/ui";
 import { useCms, useFormatPrice } from "@/lib/cms/CmsProvider";
 import { objectPositionCss } from "@/lib/media/imageFocus";
+import { imageForColor } from "@/lib/product/colorImage";
 import { ProductReviews } from "@/components/product/ProductReviews";
 import { cn } from "@/lib/utils";
 
@@ -212,6 +213,7 @@ export default function ProductClient({ product: initial }: { product: Product }
                     onClick={() => {
                       setColor(c.name);
                       setPickError("");
+                      setActive(imageForColor(product.images, colorOptions, c.name, product.slug).index);
                     }}
                     className={cn(
                       "min-w-12 border px-4 py-2 font-display text-sm transition-colors",

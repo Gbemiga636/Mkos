@@ -6,17 +6,24 @@ export const DELIVERY_METHODS: {
   note?: string;
   short: string;
 }[] = [
-  { value: "pickup", label: "Pickup", short: "Pickup at the Oniru studio" },
+  {
+    value: "pickup",
+    label: "Pickup",
+    short:
+      "Same-day pickup is subject to size availability. Please call us before placing your order to confirm that your size is available for same-day pickup.",
+  },
   {
     value: "home_delivery",
     label: "Home delivery",
     note: "(Local Orders Only)",
-    short: "Dispatch riders — fee quoted by location",
+    short:
+      "You are responsible for your delivery fee. Delivery charges will be quoted based on your location.",
   },
   {
     value: "international",
     label: "International shipping",
-    short: "Overseas — fee quoted before dispatch",
+    short:
+      "For international orders, please contact us if you have a preferred shipping or delivery option. We’ll be happy to assist.",
   },
 ];
 

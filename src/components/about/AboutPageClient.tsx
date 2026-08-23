@@ -329,7 +329,7 @@ export function AboutPageClient() {
                 Stay close to the next chapter.
               </h3>
               <p className="mt-3 max-w-md text-sm leading-relaxed text-mkos-muted">
-                Studio drops, fittings, and new collections — straight from Oniru to your inbox.
+                Straight from MKoS to your inbox.
               </p>
             </div>
             <EmailSubscribe buttonLabel="Join the list" source="about" />

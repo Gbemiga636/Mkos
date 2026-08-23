@@ -26,6 +26,7 @@ import { CountrySelect, PhoneField } from "@/components/checkout/CountryFields";
 import { PaymentCard } from "@/components/checkout/PaymentCard";
 import { UsDutyNotice } from "@/components/shipping/UsDutyNotice";
 import { scrollToTopSmooth } from "@/components/experience/SmoothScroll";
+import { isTodayOrEarlier, tomorrowIsoDate } from "@/lib/checkout/dates";
 
 const steps = ["Delivery", "Review", "Pay"] as const;
 
@@ -36,8 +37,6 @@ function CheckoutInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const subtotal = items.reduce((n, i) => n + i.price * i.quantity, 0);
-  // Product total only — delivery is quoted separately after checkout
-  const total = subtotal;
   const subtotalUsd = items.every((i) => i.priceUsd != null && i.priceUsd > 0)
     ? items.reduce((n, i) => n + (i.priceUsd ?? 0) * i.quantity, 0)
     : null;
@@ -65,6 +64,15 @@ function CheckoutInner() {
     customerId: string;
     amount: number;
   } | null>(null);
+  const [promoInput, setPromoInput] = useState("");
+  const [promo, setPromo] = useState<{ code: string; percent: number } | null>(null);
+  const [promoError, setPromoError] = useState("");
+  const [promoBusy, setPromoBusy] = useState(false);
+  const minDeliveryDate = tomorrowIsoDate();
+  const discountFactor = promo ? promo.percent / 100 : 0;
+  const total = subtotal * (1 - discountFactor);
+  const totalUsd =
+    subtotalUsd != null ? Number((subtotalUsd * (1 - discountFactor)).toFixed(2)) : null;
 
   const needsAddress =
     form.deliveryMethod === "home_delivery" || form.deliveryMethod === "international";
@@ -90,7 +98,10 @@ function CheckoutInner() {
         phoneDial: draft.phoneDial || DEFAULT_COUNTRY.dial,
         phoneNational: draft.phoneNational || "",
         deliveryMethod: draft.deliveryMethod || "",
-        expectedDeliveryDate: draft.expectedDeliveryDate || "",
+        expectedDeliveryDate:
+          draft.expectedDeliveryDate && !isTodayOrEarlier(draft.expectedDeliveryDate)
+            ? draft.expectedDeliveryDate
+            : "",
         address: draft.address || "",
         city: draft.city || "",
         state: draft.state || "",
@@ -154,6 +165,7 @@ function CheckoutInner() {
           ...form,
           phone,
           userId: user?.id ?? null,
+          promoCode: promo?.code || "",
           items: items.map((i) => ({
             productId: i.productId,
             slug: i.slug,
@@ -207,6 +219,9 @@ function CheckoutInner() {
     }
     if (!form.expectedDeliveryDate) {
       return "Please share your expected delivery / pickup date.";
+    }
+    if (isTodayOrEarlier(form.expectedDeliveryDate)) {
+      return "Please choose a date after today.";
     }
     if (needsAddress && (!form.address || !form.city || !form.country)) {
       return "Please complete your delivery address, city, and country.";
@@ -329,8 +344,8 @@ function CheckoutInner() {
                             </span>
                             <span
                               className={cn(
-                                "mt-1 block text-xs",
-                                active ? "text-white/70" : "text-mkos-muted"
+                                "mt-2 block text-xs leading-relaxed",
+                                active ? "text-white/75" : "text-mkos-muted"
                               )}
                             >
                               {m.short}
@@ -397,8 +412,12 @@ function CheckoutInner() {
                           : "Expected delivery date"
                       }
                       type="date"
+                      min={minDeliveryDate}
                       value={form.expectedDeliveryDate}
-                      onChange={(v) => setForm({ ...form, expectedDeliveryDate: v })}
+                      onChange={(v) => {
+                        if (v && isTodayOrEarlier(v)) return;
+                        setForm({ ...form, expectedDeliveryDate: v });
+                      }}
                       className="sm:col-span-2"
                     />
                   </div>
@@ -536,6 +555,73 @@ function CheckoutInner() {
                       </li>
                     ))}
                   </ul>
+                  <div className="mt-6 border border-mkos-border bg-mkos-warm/40 p-4">
+                    <p className="font-display text-[10px] tracking-[0.2em] text-mkos-muted uppercase">
+                      Discount code
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <input
+                        value={promoInput}
+                        onChange={(e) => {
+                          setPromoInput(e.target.value);
+                          setPromoError("");
+                        }}
+                        placeholder="Enter code"
+                        className="h-12 min-w-[10rem] flex-1 border border-mkos-border bg-white px-4 text-sm uppercase outline-none focus:border-mkos-accent"
+                      />
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        disabled={promoBusy}
+                        onClick={async () => {
+                          setPromoError("");
+                          if (!promoInput.trim()) {
+                            setPromoError("Enter a code");
+                            return;
+                          }
+                          setPromoBusy(true);
+                          try {
+                            const res = await fetch("/api/checkout/promo", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ code: promoInput }),
+                            });
+                            const data = await res.json();
+                            if (!res.ok) {
+                              setPromo(null);
+                              setPromoError(data.error || "That code isn’t valid");
+                              return;
+                            }
+                            setPromo({ code: data.code, percent: Number(data.percent) });
+                            setPromoInput(data.code);
+                          } catch {
+                            setPromoError("Could not check that code");
+                          } finally {
+                            setPromoBusy(false);
+                          }
+                        }}
+                      >
+                        {promoBusy ? "Checking…" : "Apply"}
+                      </Button>
+                    </div>
+                    {promo ? (
+                      <p className="mt-2 text-sm text-mkos-ink">
+                        {promo.code} applied — {promo.percent}% off
+                        {" · "}
+                        <button
+                          type="button"
+                          className="underline"
+                          onClick={() => {
+                            setPromo(null);
+                            setPromoInput("");
+                          }}
+                        >
+                          Remove
+                        </button>
+                      </p>
+                    ) : null}
+                    {promoError ? <p className="mt-2 text-sm text-red-600">{promoError}</p> : null}
+                  </div>
                   <UsDutyNotice className="mt-4" />
                   <div className="mt-8 flex flex-wrap gap-3">
                     <Button variant="secondary" onClick={() => setStep(0)}>
@@ -549,7 +635,7 @@ function CheckoutInner() {
                     >
                       {placing
                         ? "Preparing payment…"
-                        : `Continue to payment · ${formatPrice(total, { usd: subtotalUsd })}`}
+                        : `Continue to payment · ${formatPrice(total, { usd: totalUsd })}`}
                     </Button>
                   </div>
                   {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
@@ -564,7 +650,7 @@ function CheckoutInner() {
                   exit={{ opacity: 0, x: -20 }}
                 >
                   <PaymentCard
-                    amountLabel={formatPrice(total, { usd: subtotalUsd })}
+                    amountLabel={formatPrice(total, { usd: totalUsd })}
                     reference={paySession.reference}
                     customerId={paySession.customerId}
                     customerName={`${form.first} ${form.last}`.trim()}
@@ -624,6 +710,14 @@ function CheckoutInner() {
                   {formatPrice(subtotal, { usd: subtotalUsd })}
                 </span>
               </div>
+              {promo ? (
+                <div className="flex justify-between">
+                  <span className="text-mkos-muted">Discount ({promo.code})</span>
+                  <span className="tabular-nums">
+                    −{promo.percent}%
+                  </span>
+                </div>
+              ) : null}
               <div className="flex justify-between gap-4">
                 <span className="text-mkos-muted">Delivery</span>
                 <span className="max-w-[12rem] text-right text-xs leading-snug text-mkos-muted">
@@ -632,7 +726,7 @@ function CheckoutInner() {
               </div>
               <div className="flex justify-between pt-2 font-display text-lg">
                 <span>Total due now</span>
-                <span className="tabular-nums">{formatPrice(total, { usd: subtotalUsd })}</span>
+                <span className="tabular-nums">{formatPrice(total, { usd: totalUsd })}</span>
               </div>
             </div>
             <p className="mt-6 text-xs leading-relaxed text-mkos-muted">{DELIVERY_FEE_NOTE}</p>
@@ -669,12 +763,14 @@ function Field({
   onChange,
   className,
   type = "text",
+  min,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   className?: string;
   type?: string;
+  min?: string;
 }) {
   return (
     <label className={cn("block", className)}>
@@ -684,6 +780,7 @@ function Field({
       <input
         type={type}
         value={value}
+        min={min}
         onChange={(e) => onChange(e.target.value)}
         className="mt-2 h-12 w-full border border-mkos-border bg-mkos-warm/50 px-4 text-sm outline-none transition-shadow focus:border-mkos-accent focus:shadow-[0_0_0_3px_rgba(196,92,38,0.12)]"
       />
