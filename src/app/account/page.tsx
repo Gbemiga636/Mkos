@@ -214,7 +214,9 @@ export default function AccountPage() {
                         />
                       </div>
                       <p className="mt-3 font-display">{p.name}</p>
-                      <p className="text-sm text-mkos-muted">{formatPrice(p.price)}</p>
+                      <p className="text-sm text-mkos-muted">
+                        {formatPrice(p.price, { usd: p.priceUsd })}
+                      </p>
                     </Link>
                   ))}
                 </div>
@@ -287,7 +289,9 @@ export default function AccountPage() {
                           <Image src={p.images[0]} alt={p.name} fill className="object-cover" sizes="25vw" />
                         </div>
                         <p className="mt-3 font-display">{p.name}</p>
-                        <p className="text-sm text-mkos-muted">{formatPrice(p.price)}</p>
+                        <p className="text-sm text-mkos-muted">
+                        {formatPrice(p.price, { usd: p.priceUsd })}
+                      </p>
                       </Link>
                       <button
                         type="button"
@@ -485,7 +489,9 @@ export default function AccountPage() {
                       />
                     </div>
                     <p className="mt-3 font-display">{p.name}</p>
-                    <p className="text-sm text-mkos-muted">{formatPrice(p.price)}</p>
+                    <p className="text-sm text-mkos-muted">
+                      {formatPrice(p.price, { usd: p.priceUsd })}
+                    </p>
                   </Link>
                 ))}
               </div>

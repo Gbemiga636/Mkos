@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useUIStore } from "@/store/ui";
-import { useCms, useFormatPrice } from "@/lib/cms/CmsProvider";
+import { useCms, useFormatPrice, productPriceOpts } from "@/lib/cms/CmsProvider";
 
 const trending = ["Wool Coat", "Cashmere", "Silk", "White Shirt", "Leather Tote"];
 
@@ -171,7 +171,9 @@ export function SearchOverlay() {
                     </div>
                     <div>
                       <p className="font-display text-lg">{p.name}</p>
-                      <p className="mt-1 text-sm text-mkos-muted">{formatPrice(p.price)}</p>
+                      <p className="mt-1 text-sm text-mkos-muted">
+                        {formatPrice(p.price, productPriceOpts(p))}
+                      </p>
                     </div>
                   </Link>
                 ))}

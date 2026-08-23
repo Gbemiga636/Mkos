@@ -55,6 +55,7 @@ export function useFormatPrice() {
       if (usd == null) return "Price on request";
     }
 
+    // Admin USD is the source of truth for dollar display — never live FX.
     if (usd != null) {
       if (code === "USD") {
         return new Intl.NumberFormat(localeForCurrency("USD"), {
