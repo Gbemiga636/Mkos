@@ -325,10 +325,10 @@ function CheckoutInner() {
                               });
                             }}
                             className={cn(
-                              "border px-4 py-4 text-left transition-colors",
+                              "group border px-4 py-4 text-left transition-colors",
                               active
                                 ? "border-mkos-ink bg-mkos-ink text-white"
-                                : "border-mkos-border bg-mkos-warm/40 hover:border-mkos-ink/40"
+                                : "border-mkos-border bg-mkos-warm/40 hover:border-mkos-ink hover:bg-mkos-ink hover:text-white"
                             )}
                           >
                             <span className="font-display text-sm tracking-[0.08em] uppercase">
@@ -345,7 +345,9 @@ function CheckoutInner() {
                             <span
                               className={cn(
                                 "mt-2 block text-xs leading-relaxed",
-                                active ? "text-white/75" : "text-mkos-muted"
+                                active
+                                  ? "text-white/75"
+                                  : "text-mkos-muted group-hover:text-white/75"
                               )}
                             >
                               {m.short}
