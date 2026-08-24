@@ -5,7 +5,6 @@ export const metadata: Metadata = pageMetadata({
   title: "Privacy policy",
   description: "How MKoS collects and uses personal information.",
   path: "/privacy",
-  noIndex: true,
 });
 
 export default function PrivacyPage() {

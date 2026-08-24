@@ -5,7 +5,6 @@ export const metadata: Metadata = pageMetadata({
   title: "Terms & conditions",
   description: "Terms and conditions for shopping and commissioning with MKoS.",
   path: "/terms",
-  noIndex: true,
 });
 
 export default function TermsPage() {

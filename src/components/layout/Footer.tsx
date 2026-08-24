@@ -32,6 +32,9 @@ export function Footer() {
       links: [
         { href: "/#faq", label: "FAQ" },
         { href: "/shipping", label: "Shipping & returns" },
+        { href: "/refund", label: "Refund policy" },
+        { href: "/terms", label: "Terms & conditions" },
+        { href: "/privacy", label: "Privacy policy" },
         { href: WHATSAPP, label: "WhatsApp" },
         { href: "mailto:styleme@mykindofstyle.com", label: "Email" },
       ],
@@ -172,6 +175,17 @@ export function Footer() {
                 @mkosformen
               </a>
             </div>
+            <p className="flex flex-wrap justify-end gap-x-4 gap-y-1 text-xs text-mkos-muted">
+              <Link href="/terms" className="hover:text-mkos-ink">
+                Terms
+              </Link>
+              <Link href="/privacy" className="hover:text-mkos-ink">
+                Privacy
+              </Link>
+              <Link href="/refund" className="hover:text-mkos-ink">
+                Refunds
+              </Link>
+            </p>
             <p className="text-xs text-mkos-muted">
               © {new Date().getFullYear()} {settings.brand_name} · My Kind of Style. All rights
               reserved.
