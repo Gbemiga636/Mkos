@@ -108,10 +108,62 @@ export const revalidate = 300;
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const cms = await getCmsSnapshot();
+  const orgJsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": `${SITE_URL}/#organization`,
+        name: "MKoS",
+        alternateName: ["My Kind of Style", "MKoS"],
+        url: SITE_URL,
+        logo: absoluteUrl("/logo/mkos-logo.png"),
+        email: "styleme@mykindofstyle.com",
+        sameAs: [
+          "https://www.instagram.com/shopmykindofstyle",
+          "https://www.instagram.com/mkosformen",
+        ],
+      },
+      {
+        "@type": "ClothingStore",
+        "@id": `${SITE_URL}/#store`,
+        name: "MKoS",
+        url: SITE_URL,
+        image: absoluteUrl("/logo/mkos-logo.png"),
+        telephone: "+2348143173661",
+        email: "styleme@mykindofstyle.com",
+        address: {
+          "@type": "PostalAddress",
+          streetAddress: "1, Ade Adedeji Close, Ayo Babatunde Crescent",
+          addressLocality: "Oniru",
+          addressRegion: "Lagos",
+          addressCountry: "NG",
+        },
+        areaServed: ["NG", "US", "GB"],
+        priceRange: "$$",
+      },
+      {
+        "@type": "WebSite",
+        "@id": `${SITE_URL}/#website`,
+        url: SITE_URL,
+        name: SITE_NAME,
+        publisher: { "@id": `${SITE_URL}/#organization` },
+        potentialAction: {
+          "@type": "SearchAction",
+          target: `${SITE_URL}/shop?q={search_term_string}`,
+          "query-input": "required name=search_term_string",
+        },
+      },
+    ],
+  };
 
   return (
-    <html lang="en" className={`${spaceGrotesk.variable} ${inter.variable}`}>
+    <html lang="en-NG" className={`${spaceGrotesk.variable} ${inter.variable}`}>
       <body>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
+        />
         <GoogleAnalytics />
         <a
           href="#main"

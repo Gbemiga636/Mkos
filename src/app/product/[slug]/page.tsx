@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { products } from "@/data/products";
 import { getProductBySlug } from "@/lib/cms/getCms";
-import { pageMetadata } from "@/lib/seo";
+import { pageMetadata, productJsonLd } from "@/lib/seo";
 import ProductClient from "./ProductClient";
 import { notFound } from "next/navigation";
 
@@ -39,5 +39,23 @@ export default async function ProductPage({
   const { slug } = await params;
   const product = await getProductBySlug(slug);
   if (!product) notFound();
-  return <ProductClient product={product} />;
+  const jsonLd = productJsonLd({
+    name: product.name,
+    slug: product.slug,
+    tagline: product.tagline,
+    description: product.description,
+    images: product.images,
+    priceUsd: product.priceUsd,
+    price: product.price,
+    stock: product.stock,
+  });
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <ProductClient product={product} />
+    </>
+  );
 }
