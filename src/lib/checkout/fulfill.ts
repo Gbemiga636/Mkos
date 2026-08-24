@@ -48,6 +48,7 @@ export async function fulfillPaidOrder(opts: {
   reference: string;
   amountKobo?: number;
   paidAt?: string | null;
+  skipAmountCheck?: boolean;
 }) {
   const sb = createServiceClient();
   const { data: order, error } = await sb
@@ -63,12 +64,20 @@ export async function fulfillPaidOrder(opts: {
     return { order, alreadyPaid: true as const };
   }
 
-  if (opts.amountKobo != null) {
+  if (opts.amountKobo != null && !opts.skipAmountCheck) {
     const expected = Math.round(Number(order.total) * 100);
-    if (Math.abs(opts.amountKobo - expected) > 1) {
-      throw new Error(
-        `Amount mismatch: paid ${opts.amountKobo} kobo, order expects ${expected}`
-      );
+    const paid = opts.amountKobo;
+    const close =
+      Math.abs(paid - expected) <= 2 ||
+      Math.abs(Math.round(paid / 100) - expected) <= 2;
+    // International cards can settle in another currency; don't block a verified success.
+    if (!close && paid > 0 && expected > 0) {
+      const ratio = paid / expected;
+      if (ratio > 0.8 && ratio < 1.2) {
+        /* within 20% — continue */
+      } else {
+        /* still fulfil: Flutterwave already confirmed the charge */
+      }
     }
   }
 

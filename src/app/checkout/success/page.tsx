@@ -37,9 +37,15 @@ type OrderPayload = {
 function SuccessInner() {
   const params = useSearchParams();
   const reference =
-    params.get("reference") || params.get("tx_ref") || params.get("trxref") || "";
+    params.get("reference") ||
+    params.get("tx_ref") ||
+    params.get("txRef") ||
+    params.get("trxref") ||
+    "";
   const chargeId =
     params.get("chargeId") ||
+    params.get("charge_id") ||
+    params.get("id") ||
     params.get("transaction_id") ||
     params.get("transactionId") ||
     "";
@@ -76,35 +82,46 @@ function SuccessInner() {
 
     let cancelled = false;
     (async () => {
+      const payload = { chargeId, transactionId: chargeId, reference };
+      let lastError = "";
+      let lastStatus = 0;
       try {
-        const res = await fetch("/api/checkout/flutterwave/verify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ chargeId, transactionId: chargeId, reference }),
-        });
-        const data = await res.json();
-        if (cancelled) return;
-        if (!res.ok) {
-          // Treat "not completed" as a soft cancel so the customer can retry.
-          if (res.status === 402) {
-            setStatus("cancelled");
-            setMessage(
-              "Payment wasn’t completed. Your bag and details are still saved — you can try again."
-            );
+        for (let attempt = 0; attempt < 8; attempt++) {
+          if (cancelled) return;
+          if (attempt > 0) {
+            setMessage("Confirming your payment… this can take a few seconds after a bank check.");
+            await new Promise((r) => setTimeout(r, 2000));
+          }
+          const res = await fetch("/api/checkout/flutterwave/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          const data = await res.json();
+          if (cancelled) return;
+          lastStatus = res.status;
+          lastError = data.error || "";
+          if (res.ok) {
+            setOrder(data.order);
+            clearCart();
+            clearCheckoutDraft();
+            setStatus("ok");
+            setMessage("Payment confirmed.");
+            window.setTimeout(() => {
+              if (!cancelled) setExperienceOpen(true);
+            }, 700);
             return;
           }
-          setStatus("error");
-          setMessage(data.error || "We couldn’t confirm this payment yet.");
-          return;
+          if (res.status === 404) break;
         }
-        setOrder(data.order);
-        clearCart();
-        clearCheckoutDraft();
-        setStatus("ok");
-        setMessage("Payment confirmed.");
-        window.setTimeout(() => {
-          if (!cancelled) setExperienceOpen(true);
-        }, 700);
+        if (cancelled) return;
+        // Don't say "wasn't completed" after a debit — keep checking.
+        setStatus("error");
+        setMessage(
+          lastStatus === 402
+            ? "Your bank may have charged you. We’re still matching it to your order — wait a moment and refresh, or send the studio your payment reference."
+            : lastError || "We couldn’t confirm this payment yet."
+        );
       } catch {
         if (!cancelled) {
           setStatus("error");
@@ -193,6 +210,7 @@ function SuccessInner() {
               </p>
             )}
             <div className="mt-8 flex flex-wrap justify-center gap-3">
+              <Button onClick={() => window.location.reload()}>Check payment again</Button>
               <Button href="/checkout?resume=1">Try payment again</Button>
               <Button href="/about#contact" variant="secondary">
                 Contact studio

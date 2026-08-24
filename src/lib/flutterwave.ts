@@ -51,7 +51,15 @@ export function flutterwaveConfigured() {
 
 export function flutterwaveSucceeded(status?: string | null) {
   const s = String(status || "").toLowerCase();
-  return s === "succeeded" || s === "successful" || s === "completed";
+  return (
+    s === "succeeded" ||
+    s === "successful" ||
+    s === "success" ||
+    s === "completed" ||
+    s === "complete" ||
+    s === "paid" ||
+    s === "approved"
+  );
 }
 
 type TokenCache = { token: string; expiresAt: number };
@@ -323,33 +331,55 @@ export async function flutterwaveGetCharge(chargeId: string) {
   return json.data;
 }
 
-export async function flutterwaveGetChargeByReference(reference: string) {
-  const { res, json } = await flwFetch<{ data?: FlutterwaveCharge | FlutterwaveCharge[] }>(
-    `/charges?reference=${encodeURIComponent(reference)}`,
-    { method: "GET", idempotency: false }
-  );
-  if (!res.ok) return null;
-  const data = json.data;
-  if (Array.isArray(data)) {
-    return (
-      data.find((c) => flutterwaveSucceeded(c.status)) ||
-      data[0] ||
-      null
-    );
+function pickCharge(list: FlutterwaveCharge[]) {
+  return list.find((c) => flutterwaveSucceeded(c.status)) || list[0] || null;
+}
+
+function chargesFromListPayload(data: unknown): FlutterwaveCharge[] {
+  if (!data) return [];
+  if (Array.isArray(data)) return data;
+  if (typeof data !== "object") return [];
+  const obj = data as Record<string, unknown>;
+  if (Array.isArray(obj.items)) return obj.items as FlutterwaveCharge[];
+  if (Array.isArray(obj.data)) return obj.data as FlutterwaveCharge[];
+  if (typeof obj.id === "string" || typeof obj.status === "string") {
+    return [data as FlutterwaveCharge];
   }
-  if (data && typeof data === "object") return data;
+  return [];
+}
+
+export async function flutterwaveGetChargeByReference(reference: string) {
+  const paths = [
+    `/charges?reference=${encodeURIComponent(reference)}`,
+    `/charges?tx_ref=${encodeURIComponent(reference)}`,
+  ];
+  for (const path of paths) {
+    const { res, json } = await flwFetch<{ data?: unknown }>(path, {
+      method: "GET",
+      idempotency: false,
+    });
+    if (!res.ok) continue;
+    const found = pickCharge(chargesFromListPayload(json.data));
+    if (found) return found;
+  }
   return null;
 }
 
 export function flutterwaveWebhookValid(rawBody: string, signature: string | null, hmac: string | null) {
   const secret = flutterwaveWebhookSecret();
   if (!secret) return true;
-  if (hmac) {
-    const digest = createHmac("sha256", secret).update(rawBody).digest("base64");
-    return digest === hmac;
-  }
-  if (signature) return signature === secret;
-  return false;
+  const provided = (hmac || signature || "").trim();
+  if (!provided) return false;
+  if (provided === secret) return true;
+  const b64 = createHmac("sha256", secret).update(rawBody).digest("base64");
+  const hex = createHmac("sha256", secret).update(rawBody).digest("hex");
+  return provided === b64 || provided === hex;
+}
+
+export function isChargeFinishedEvent(type?: string | null) {
+  const t = String(type || "").toLowerCase();
+  if (!t.includes("charge")) return false;
+  return t.includes("complet") || t.includes("success") || t.includes("success");
 }
 
 export function randomNonce(length = 12) {

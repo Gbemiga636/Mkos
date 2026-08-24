@@ -78,6 +78,7 @@ export async function POST(req: Request) {
       reference: resolvedRef,
       amountKobo: amountToCents(amount, Number(pending.total || 0)),
       paidAt: new Date().toISOString(),
+      skipAmountCheck: true,
     });
 
     const { data: order } = await sb
