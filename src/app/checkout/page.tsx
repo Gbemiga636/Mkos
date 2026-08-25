@@ -10,6 +10,9 @@ import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { useFormatPrice } from "@/lib/cms/CmsProvider";
 import { useAuth } from "@/lib/auth/AuthProvider";
+import { useCurrency } from "@/components/currency/CurrencyProvider";
+import { applyPromoAmount } from "@/lib/checkout/promos";
+import { fractionDigitsFor, localeForCurrency } from "@/lib/currency/currencies";
 import {
   DELIVERY_FEE_NOTE,
   DELIVERY_METHODS,
@@ -33,6 +36,7 @@ const steps = ["Delivery", "Review", "Pay"] as const;
 function CheckoutInner() {
   const items = useCartStore((s) => s.items);
   const formatPrice = useFormatPrice();
+  const { currency, rates } = useCurrency();
   const { user } = useAuth();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -65,14 +69,40 @@ function CheckoutInner() {
     amount: number;
   } | null>(null);
   const [promoInput, setPromoInput] = useState("");
-  const [promo, setPromo] = useState<{ code: string; percent: number } | null>(null);
+  const [promo, setPromo] = useState<{
+    code: string;
+    amountOff: number;
+    minItems: number;
+  } | null>(null);
   const [promoError, setPromoError] = useState("");
   const [promoBusy, setPromoBusy] = useState(false);
   const minDeliveryDate = tomorrowIsoDate();
-  const discountFactor = promo ? promo.percent / 100 : 0;
-  const total = subtotal * (1 - discountFactor);
-  const totalUsd =
-    subtotalUsd != null ? Number((subtotalUsd * (1 - discountFactor)).toFixed(2)) : null;
+  const bagCount = items.reduce((n, i) => n + i.quantity, 0);
+  const promoOff = promo && bagCount >= promo.minItems ? promo.amountOff : 0;
+  const total = Math.max(0, subtotal - promoOff);
+  const totalUsd = subtotalUsd != null ? applyPromoAmount(subtotalUsd, promoOff) : null;
+
+  const shopperCode = (currency || "USD").toUpperCase();
+  const localSubtotal = useMemo(() => {
+    if (subtotalUsd != null && Number.isFinite(subtotalUsd)) {
+      if (shopperCode === "USD") return subtotalUsd;
+      if (shopperCode === "NGN") return subtotal;
+      const rateUsd = rates.USD;
+      const rateTarget = rates[shopperCode];
+      if (rateUsd && rateTarget && rateUsd > 0) return subtotalUsd * (rateTarget / rateUsd);
+    }
+    return subtotal;
+  }, [subtotal, subtotalUsd, shopperCode, rates]);
+  const localTotal = Math.max(0, localSubtotal - promoOff);
+
+  function formatShopperAmount(amount: number) {
+    return new Intl.NumberFormat(localeForCurrency(shopperCode), {
+      style: "currency",
+      currency: shopperCode,
+      maximumFractionDigits: fractionDigitsFor(shopperCode),
+      minimumFractionDigits: fractionDigitsFor(shopperCode) === 0 ? 0 : 2,
+    }).format(Math.max(0, amount));
+  }
 
   const needsAddress =
     form.deliveryMethod === "home_delivery" || form.deliveryMethod === "international";
@@ -129,6 +159,18 @@ function CheckoutInner() {
   useEffect(() => {
     scrollToTopSmooth();
   }, [step]);
+
+  useEffect(() => {
+    if (!promo) return;
+    if (bagCount < promo.minItems) {
+      setPromo(null);
+      setPromoError(
+        promo.minItems <= 1
+          ? "Add an item to your bag to use this code"
+          : `This code is for ${promo.minItems} or more items`
+      );
+    }
+  }, [bagCount, promo]);
 
   if (items.length === 0) {
     return (
@@ -591,7 +633,10 @@ function CheckoutInner() {
                             const res = await fetch("/api/checkout/promo", {
                               method: "POST",
                               headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({ code: promoInput }),
+                              body: JSON.stringify({
+                                code: promoInput,
+                                itemCount: bagCount,
+                              }),
                             });
                             const data = await res.json();
                             if (!res.ok) {
@@ -599,7 +644,11 @@ function CheckoutInner() {
                               setPromoError(data.error || "That code isn’t valid");
                               return;
                             }
-                            setPromo({ code: data.code, percent: Number(data.percent) });
+                            setPromo({
+                              code: data.code,
+                              amountOff: Number(data.amountOff),
+                              minItems: Number(data.minItems) || 1,
+                            });
                             setPromoInput(data.code);
                           } catch {
                             setPromoError("Could not check that code");
@@ -613,7 +662,7 @@ function CheckoutInner() {
                     </div>
                     {promo ? (
                       <p className="mt-2 text-sm text-mkos-ink">
-                        {promo.code} applied — {promo.percent}% off
+                        {promo.code} applied — {formatShopperAmount(promo.amountOff)} off
                         {" · "}
                         <button
                           type="button"
@@ -642,7 +691,7 @@ function CheckoutInner() {
                     >
                       {placing
                         ? "Preparing payment…"
-                        : `Continue to payment · ${formatPrice(total, { usd: totalUsd })}`}
+                        : `Continue to payment · ${formatShopperAmount(localTotal)}`}
                     </Button>
                   </div>
                   {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
@@ -657,7 +706,7 @@ function CheckoutInner() {
                   exit={{ opacity: 0, x: -20 }}
                 >
                   <PaymentCard
-                    amountLabel={formatPrice(total, { usd: totalUsd })}
+                    amountLabel={formatShopperAmount(localTotal)}
                     reference={paySession.reference}
                     customerId={paySession.customerId}
                     customerName={`${form.first} ${form.last}`.trim()}
@@ -714,12 +763,10 @@ function CheckoutInner() {
                   {formatPrice(subtotal, { usd: subtotalUsd })}
                 </span>
               </div>
-              {promo ? (
+              {promo && promoOff > 0 ? (
                 <div className="flex justify-between">
                   <span className="text-mkos-muted">Discount ({promo.code})</span>
-                  <span className="tabular-nums">
-                    −{promo.percent}%
-                  </span>
+                  <span className="tabular-nums">−{formatShopperAmount(promoOff)}</span>
                 </div>
               ) : null}
               <div className="flex justify-between gap-4">
@@ -730,7 +777,7 @@ function CheckoutInner() {
               </div>
               <div className="flex justify-between pt-2 font-display text-lg">
                 <span>Total due now</span>
-                <span className="tabular-nums">{formatPrice(total, { usd: totalUsd })}</span>
+                <span className="tabular-nums">{formatShopperAmount(localTotal)}</span>
               </div>
             </div>
             <p className="mt-6 text-xs leading-relaxed text-mkos-muted">{DELIVERY_FEE_NOTE}</p>

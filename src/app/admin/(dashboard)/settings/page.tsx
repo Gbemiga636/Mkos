@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from "react";
 
-type PromoRow = { code: string; percent: string };
+type PromoRow = { code: string; amountOff: string; minItems: string };
+
+const emptyPromo = (): PromoRow => ({ code: "", amountOff: "", minItems: "1" });
+const MIN_ITEM_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
 export default function SettingsPage() {
   const [form, setForm] = useState({
@@ -13,7 +16,7 @@ export default function SettingsPage() {
     instagram: "",
     whatsapp: "",
   });
-  const [promos, setPromos] = useState<PromoRow[]>([{ code: "", percent: "" }]);
+  const [promos, setPromos] = useState<PromoRow[]>([emptyPromo()]);
   const [status, setStatus] = useState("");
   const [promoStatus, setPromoStatus] = useState("");
 
@@ -37,9 +40,10 @@ export default function SettingsPage() {
       .then((d) => {
         if (Array.isArray(d.codes) && d.codes.length) {
           setPromos(
-            d.codes.map((c: { code: string; percent: number }) => ({
+            d.codes.map((c: { code: string; amountOff?: number; minItems?: number }) => ({
               code: c.code,
-              percent: String(c.percent),
+              amountOff: c.amountOff != null ? String(c.amountOff) : "",
+              minItems: String(c.minItems && c.minItems > 0 ? c.minItems : 1),
             }))
           );
         }
@@ -113,10 +117,11 @@ export default function SettingsPage() {
           const codes = promos
             .map((p) => ({
               code: p.code.trim(),
-              percent: Number(p.percent),
+              amountOff: Number(p.amountOff),
+              minItems: Math.max(1, Math.round(Number(p.minItems) || 1)),
               active: true,
             }))
-            .filter((p) => p.code && Number.isFinite(p.percent) && p.percent > 0);
+            .filter((p) => p.code && Number.isFinite(p.amountOff) && p.amountOff > 0);
           const res = await fetch("/api/admin/promos", {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -133,13 +138,14 @@ export default function SettingsPage() {
           </p>
           <h2 className="mt-1 font-display text-xl text-mkos-ink">Checkout promo</h2>
           <p className="mt-2 text-sm text-mkos-muted">
-            Shoppers enter the code at checkout. The percent off is taken from the amount due now
-            (product total in USD).
+            Enter the code and the amount to take off the total. That same number is subtracted in
+            every currency — 24 off is 24 whether the shopper is in USD, GBP, or anywhere else.
+            Set how many pieces must be in the bag before the code can be used.
           </p>
         </div>
         <div className="space-y-3">
           {promos.map((row, i) => (
-            <div key={i} className="grid grid-cols-[1fr_7rem_auto] gap-2">
+            <div key={i} className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_7rem_11rem_auto]">
               <input
                 value={row.code}
                 onChange={(e) =>
@@ -151,20 +157,37 @@ export default function SettingsPage() {
                 className="h-11 border border-mkos-border px-3 text-sm uppercase outline-none focus:border-mkos-accent"
               />
               <input
-                value={row.percent}
+                value={row.amountOff}
                 onChange={(e) =>
                   setPromos((rows) =>
-                    rows.map((r, idx) => (idx === i ? { ...r, percent: e.target.value } : r))
+                    rows.map((r, idx) => (idx === i ? { ...r, amountOff: e.target.value } : r))
                   )
                 }
-                placeholder="%"
+                placeholder="24 off"
                 inputMode="decimal"
                 className="h-11 border border-mkos-border px-3 text-sm outline-none focus:border-mkos-accent"
+                aria-label="Amount off"
               />
+              <select
+                value={row.minItems}
+                onChange={(e) =>
+                  setPromos((rows) =>
+                    rows.map((r, idx) => (idx === i ? { ...r, minItems: e.target.value } : r))
+                  )
+                }
+                className="h-11 border border-mkos-border bg-white px-2 text-sm outline-none focus:border-mkos-accent"
+                aria-label="Minimum items"
+              >
+                {MIN_ITEM_OPTIONS.map((n) => (
+                  <option key={n} value={String(n)}>
+                    {n === 1 ? "1 item" : `${n} items or more`}
+                  </option>
+                ))}
+              </select>
               <button
                 type="button"
                 onClick={() =>
-                  setPromos((rows) => (rows.length === 1 ? [{ code: "", percent: "" }] : rows.filter((_, idx) => idx !== i)))
+                  setPromos((rows) => (rows.length === 1 ? [emptyPromo()] : rows.filter((_, idx) => idx !== i)))
                 }
                 className="h-11 px-3 font-display text-[10px] tracking-[0.14em] text-mkos-muted uppercase"
               >
@@ -175,7 +198,7 @@ export default function SettingsPage() {
         </div>
         <button
           type="button"
-          onClick={() => setPromos((rows) => [...rows, { code: "", percent: "" }])}
+          onClick={() => setPromos((rows) => [...rows, emptyPromo()])}
           className="font-display text-[10px] tracking-[0.16em] text-mkos-ink uppercase"
         >
           + Add code

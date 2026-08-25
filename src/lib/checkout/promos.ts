@@ -2,7 +2,10 @@ import { createServiceClient } from "@/lib/supabase/client";
 
 export type PromoCode = {
   code: string;
-  percent: number;
+  /** Flat amount taken off the total — same figure in every currency. */
+  amountOff: number;
+  /** Cart must contain at least this many pieces (sum of quantities). */
+  minItems: number;
   active?: boolean;
 };
 
@@ -15,21 +18,28 @@ function cleanCode(value: string) {
     .replace(/\s+/g, "");
 }
 
+export function cartItemCount(items: { quantity?: number }[]) {
+  return items.reduce((n, i) => n + Math.max(0, Math.floor(Number(i.quantity) || 0)), 0);
+}
+
 export function normalizePromos(raw: unknown): PromoCode[] {
   if (!Array.isArray(raw)) return [];
   const out: PromoCode[] = [];
   const seen = new Set<string>();
   for (const row of raw) {
     if (!row || typeof row !== "object") continue;
-    const code = cleanCode(String((row as PromoCode).code || ""));
-    const percent = Number((row as PromoCode).percent);
-    if (!code || !Number.isFinite(percent) || percent <= 0 || percent > 90) continue;
+    const rec = row as Record<string, unknown>;
+    const code = cleanCode(String(rec.code || ""));
+    const amountOff = Number(rec.amountOff ?? rec.amountOff ?? rec.amount);
+    const minItems = Math.max(1, Math.round(Number(rec.minItems ?? rec.minItems) || 1));
+    if (!code || !Number.isFinite(amountOff) || amountOff <= 0) continue;
     if (seen.has(code)) continue;
     seen.add(code);
     out.push({
       code,
-      percent: Math.round(percent * 100) / 100,
-      active: (row as PromoCode).active !== false,
+      amountOff: Math.round(amountOff * 100) / 100,
+      minItems,
+      active: rec.active !== false,
     });
   }
   return out;
@@ -69,9 +79,9 @@ export function findPromo(codes: PromoCode[], code: string) {
   return codes.find((c) => c.active !== false && c.code === needle) || null;
 }
 
-export function applyPromoPercent(amount: number, percent: number) {
+export function applyPromoAmount(amount: number, amountOff: number) {
   if (!Number.isFinite(amount) || amount <= 0) return 0;
-  if (!Number.isFinite(percent) || percent <= 0) return Number(amount.toFixed(2));
-  const discount = amount * (percent / 100);
-  return Number(Math.max(0, amount - discount).toFixed(2));
+  if (!Number.isFinite(amountOff) || amountOff <= 0) return Number(amount.toFixed(2));
+  return Number(Math.max(0, amount - amountOff).toFixed(2));
 }
+

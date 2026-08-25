@@ -11,7 +11,12 @@ import {
 } from "@/lib/checkout/delivery";
 import { findCountryByName } from "@/lib/checkout/countries";
 import { isTodayOrEarlier } from "@/lib/checkout/dates";
-import { applyPromoPercent, findPromo, loadPromoCodes } from "@/lib/checkout/promos";
+import {
+  applyPromoAmount,
+  cartItemCount,
+  findPromo,
+  loadPromoCodes,
+} from "@/lib/checkout/promos";
 import { flutterwaveConfigured, flutterwaveCreateCustomer } from "@/lib/flutterwave";
 import { PAY_REF_COOKIE } from "@/lib/checkout/payRef";
 
@@ -141,9 +146,24 @@ export async function POST(req: Request) {
     if (promoCode && !promo) {
       return NextResponse.json({ error: "That discount code isn’t valid" }, { status: 400 });
     }
-    const totalUsd = promo ? applyPromoPercent(subtotalUsd, promo.percent) : subtotalUsd;
+    const itemCount = cartItemCount(items);
+    if (promo && itemCount < promo.minItems) {
+      return NextResponse.json(
+        {
+          error:
+            promo.minItems <= 1
+              ? "Add an item to your bag to use this code"
+              : `This code is for ${promo.minItems} or more items`,
+        },
+        { status: 400 }
+      );
+    }
+    const totalUsd = promo ? applyPromoAmount(subtotalUsd, promo.amountOff) : subtotalUsd;
     if (totalUsd <= 0) {
-      return NextResponse.json({ error: "Order total must be greater than zero" }, { status: 400 });
+      return NextResponse.json(
+        { error: "This discount is larger than the order total" },
+        { status: 400 }
+      );
     }
 
     const reference = `mkosfw${Date.now().toString(36)}${randomBytes(3).toString("hex")}`;
@@ -194,7 +214,7 @@ export async function POST(req: Request) {
       `Delivery method: ${methodLabel}`,
       `Expected delivery date: ${expectedDeliveryDate}`,
       promo
-        ? `Promo: ${promo.code} (${promo.percent}% off) — charged ${totalUsd.toFixed(2)} USD of ${subtotalUsd.toFixed(2)} USD`
+        ? `Promo: ${promo.code} (−${promo.amountOff} off, min ${promo.minItems} item${promo.minItems === 1 ? "" : "s"}) — charged ${totalUsd.toFixed(2)} USD of ${subtotalUsd.toFixed(2)} USD`
         : null,
       DELIVERY_FEE_NOTE,
       "U.S. orders may attract a 17% import duty collected by customs at delivery.",
