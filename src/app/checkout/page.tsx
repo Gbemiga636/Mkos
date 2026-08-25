@@ -667,11 +667,8 @@ function CheckoutInner() {
                     }}
                     onError={setError}
                     onPaid={(id) => {
-                      const q = new URLSearchParams({
-                        reference: paySession.reference,
-                      });
-                      if (id) q.set("chargeId", id);
-                      router.push(`/checkout/success?${q.toString()}`);
+                      const path = `/checkout/success/${encodeURIComponent(paySession.reference)}`;
+                      router.push(id ? `${path}?chargeId=${encodeURIComponent(id)}` : path);
                     }}
                   />
                   {error && <p className="mt-3 text-sm text-red-600">{error}</p>}

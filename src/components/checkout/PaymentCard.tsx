@@ -11,6 +11,7 @@ import {
   flutterwaveGenerateNonce,
   flutterwavePublicEncryptionKey,
 } from "@/lib/flutterwaveEncrypt";
+import { persistPayReference } from "@/lib/checkout/draft";
 
 type ChargeResult = {
   ok?: boolean;
@@ -116,6 +117,7 @@ export function PaymentCard({
       return;
     }
     if (data.redirectUrl) {
+      persistPayReference(reference, data.chargeId);
       window.location.href = data.redirectUrl;
       return;
     }
@@ -266,6 +268,7 @@ export function PaymentCard({
         return;
       }
       if (data.redirectUrl) {
+        persistPayReference(reference, data.chargeId);
         window.location.href = data.redirectUrl;
         return;
       }

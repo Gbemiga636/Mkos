@@ -24,6 +24,21 @@ function customerIdFromNotes(notes: string | null | undefined) {
   return m?.[1] || "";
 }
 
+async function stampChargeId(
+  sb: ReturnType<typeof createServiceClient>,
+  order: { id: string; notes?: string | null },
+  chargeId?: string
+) {
+  if (!chargeId) return;
+  const stamp = `FLW_CHARGE:${chargeId}`;
+  const notes = String(order.notes || "");
+  if (notes.includes(stamp)) return;
+  await sb
+    .from("orders")
+    .update({ notes: `${notes}\n${stamp}`.trim() })
+    .eq("id", order.id);
+}
+
 function chargeResponse(charge: FlutterwaveCharge) {
   const next = flutterwaveNextActionType(charge);
   return {
@@ -122,7 +137,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const redirectUrl = `${siteUrl()}/checkout/success?reference=${encodeURIComponent(reference)}`;
+    const redirectUrl = `${siteUrl()}/checkout/success/${encodeURIComponent(reference)}`;
     const meta = { order_id: order.id, reference };
 
     if (action === "applepay") {
@@ -139,6 +154,7 @@ export async function POST(req: Request) {
         redirectUrl,
         meta,
       });
+      await stampChargeId(sb, order, charge.id);
       const response = chargeResponse(charge);
       if (!response.redirectUrl && !response.succeeded) {
         return NextResponse.json(
@@ -181,6 +197,7 @@ export async function POST(req: Request) {
       meta,
     });
 
+    await stampChargeId(sb, order, charge.id);
     return NextResponse.json(chargeResponse(charge));
   } catch (err) {
     const message = err instanceof Error ? err.message : "Payment failed";

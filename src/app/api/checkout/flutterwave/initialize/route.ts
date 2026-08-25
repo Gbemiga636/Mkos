@@ -13,6 +13,7 @@ import { findCountryByName } from "@/lib/checkout/countries";
 import { isTodayOrEarlier } from "@/lib/checkout/dates";
 import { applyPromoPercent, findPromo, loadPromoCodes } from "@/lib/checkout/promos";
 import { flutterwaveConfigured, flutterwaveCreateCustomer } from "@/lib/flutterwave";
+import { PAY_REF_COOKIE } from "@/lib/checkout/payRef";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -300,7 +301,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: itemsErr.message }, { status: 500 });
     }
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       ok: true,
       provider: "flutterwave",
       reference,
@@ -309,6 +310,13 @@ export async function POST(req: Request) {
       amount: Number(totalUsd.toFixed(2)),
       currency: "USD",
     });
+    res.cookies.set(PAY_REF_COOKIE, reference, {
+      path: "/",
+      maxAge: 60 * 60 * 24,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+    });
+    return res;
   } catch (err) {
     const message = err instanceof Error ? err.message : "Flutterwave checkout failed";
     return NextResponse.json({ error: message }, { status: 500 });

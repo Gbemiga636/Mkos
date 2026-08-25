@@ -79,14 +79,25 @@ export async function sendOrderEmails(order: OrderEmailPayload) {
   const from = resendFrom();
   const customerHtml = customerOrderEmailHtml(order);
   const adminHtml = adminOrderEmailHtml(order);
+  const mailer = resend;
 
-  const results = (await Promise.allSettled([
-    resend.emails.send({
+  async function sendCustomer() {
+    return mailer.emails.send({
       from,
       to: order.email,
       subject: `Order confirmed · ${order.reference} · MKoS`,
       html: customerHtml,
-    }),
+    });
+  }
+
+  let customerSend = await sendCustomer();
+  if (customerSend.error) {
+    await new Promise((r) => setTimeout(r, 800));
+    customerSend = await sendCustomer();
+  }
+
+  const results = (await Promise.allSettled([
+    Promise.resolve(customerSend),
     ...orderNotifyEmails().map((to) =>
       resend.emails.send({
         from,

@@ -10,10 +10,4 @@ export function stripeConfigured() {
   return Boolean(process.env.STRIPE_SECRET_KEY?.trim());
 }
 
-export function siteUrl() {
-  return (
-    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
-    process.env.URL?.replace(/\/$/, "") ||
-    "http://localhost:3000"
-  );
-}
+export { siteUrl } from "@/lib/siteUrl";
