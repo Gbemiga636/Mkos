@@ -9,7 +9,7 @@ export const maxDuration = 60;
 
 const MAX_FILES = 5;
 const MAX_FILE_BYTES = 2.5 * 1024 * 1024;
-const ALLOWED_SERVICES = new Set(["Makeup", "Gele", "Outfit"]);
+const ALLOWED_SERVICES = new Set(["Makeup", "Gele", "Photoshoot", "Outfit", "N/A"]);
 
 function clean(s: unknown) {
   return String(s ?? "").trim();
@@ -89,7 +89,7 @@ export async function POST(req: Request) {
     }
     if (!services.length) {
       return NextResponse.json(
-        { error: "Select at least one atelier service (Makeup, Gele, or Outfit)" },
+        { error: "Select at least one atelier service, or N/A if none apply" },
         { status: 400 }
       );
     }

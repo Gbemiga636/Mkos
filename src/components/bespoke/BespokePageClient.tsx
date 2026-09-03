@@ -60,8 +60,8 @@ const OUTFIT_TYPES = [
   "Men’s Native Wear",
 ] as const;
 
-/** Full Glam services — Outfit replaced with Photoshoot */
-const ATELIER_SERVICES = ["Makeup", "Gele", "Photoshoot"] as const;
+/** Full Glam services — Outfit replaced with Photoshoot; N/A when none apply */
+const ATELIER_SERVICES = ["Makeup", "Gele", "Photoshoot", "N/A"] as const;
 
 const MEASUREMENT_OPTIONS = [
   { value: "attached", label: "My measurements are attached." },
@@ -394,14 +394,20 @@ export function BespokePageClient() {
 
             <div>
               <FieldLabel>Atelier services</FieldLabel>
-              <div className="grid gap-3 sm:grid-cols-3">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {ATELIER_SERVICES.map((s) => {
                   const on = services.includes(s);
                   return (
                     <button
                       key={s}
                       type="button"
-                      onClick={() => setServices((list) => toggle(list, s))}
+                      onClick={() =>
+                        setServices((list) => {
+                          if (s === "N/A") return list.includes("N/A") ? [] : ["N/A"];
+                          const withoutNa = list.filter((x) => x !== "N/A");
+                          return toggle(withoutNa, s);
+                        })
+                      }
                       className={cn(
                         "relative overflow-hidden border px-4 py-8 text-center transition-all",
                         on
@@ -416,7 +422,7 @@ export function BespokePageClient() {
                           on ? "text-white/60" : "text-mkos-muted"
                         )}
                       >
-                        {on ? "Selected" : "Add"}
+                        {on ? "Selected" : s === "N/A" ? "None" : "Add"}
                       </span>
                     </button>
                   );
