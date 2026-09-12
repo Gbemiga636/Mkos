@@ -15,16 +15,16 @@ import {
   Marquee,
 } from "@/components/home/MoreSections";
 import { EditableSection } from "@/components/cms/EditableSection";
-import { DEFAULT_DESCRIPTION, SITE_NAME, SITE_TAGLINE, pageMetadata } from "@/lib/seo";
+import { DEFAULT_DESCRIPTION, DEFAULT_TITLE, pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = {
   ...pageMetadata({
-    title: SITE_NAME,
+    title: "My Kind of Style",
     description: DEFAULT_DESCRIPTION,
     path: "/",
   }),
   title: {
-    absolute: `${SITE_NAME} — ${SITE_TAGLINE}`,
+    absolute: DEFAULT_TITLE,
   },
 };
 

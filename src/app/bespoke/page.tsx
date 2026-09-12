@@ -6,7 +6,7 @@ import { pageMetadata } from "@/lib/seo";
 export const metadata: Metadata = pageMetadata({
   title: "Bespoke & Custom Wear",
   description:
-    "Begin your MKoS bespoke atelier brief — share your event, silhouette, and services (makeup, gele, outfit). Custom fashion crafted in Oniru, Lagos.",
+    "Begin your My Kind of Style (MKoS) bespoke atelier brief — share your event, silhouette, and services (makeup, gele, photoshoot). Custom fashion crafted in Oniru, Lagos.",
   path: "/bespoke",
 });
 

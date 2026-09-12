@@ -3,13 +3,15 @@ import { getPublishedPosts } from "@/lib/blog";
 import { getCmsSnapshot } from "@/lib/cms/getCms";
 import { SITE_URL } from "@/lib/seo";
 
+/**
+ * Always return a valid sitemap — never throw. A 500 here blocks Google from
+ * discovering shop, product, and content URLs.
+ */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [posts, cms] = await Promise.all([getPublishedPosts(), getCmsSnapshot()]);
-
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: `${SITE_URL}/`, lastModified: new Date(), changeFrequency: "weekly", priority: 1 },
     { url: `${SITE_URL}/shop`, lastModified: new Date(), changeFrequency: "daily", priority: 0.9 },
-    { url: `${SITE_URL}/about`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.8 },
+    { url: `${SITE_URL}/about`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.9 },
     { url: `${SITE_URL}/bespoke`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.8 },
     { url: `${SITE_URL}/bridal`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.8 },
     { url: `${SITE_URL}/experience`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.8 },
@@ -21,19 +23,32 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/refund`, lastModified: new Date(), changeFrequency: "yearly", priority: 0.4 },
   ];
 
-  const productRoutes: MetadataRoute.Sitemap = cms.products.map((p) => ({
-    url: `${SITE_URL}/product/${p.slug}`,
-    lastModified: new Date(),
-    changeFrequency: "weekly",
-    priority: 0.7,
-  }));
+  let productRoutes: MetadataRoute.Sitemap = [];
+  let blogRoutes: MetadataRoute.Sitemap = [];
 
-  const blogRoutes: MetadataRoute.Sitemap = posts.map((p) => ({
-    url: `${SITE_URL}/blog/${p.slug}`,
-    lastModified: p.updated_at ? new Date(p.updated_at) : new Date(),
-    changeFrequency: "monthly",
-    priority: 0.55,
-  }));
+  try {
+    const cms = await getCmsSnapshot();
+    productRoutes = (cms.products || []).map((p) => ({
+      url: `${SITE_URL}/product/${p.slug}`,
+      lastModified: new Date(),
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    }));
+  } catch (err) {
+    console.warn("[sitemap] products unavailable:", err instanceof Error ? err.message : err);
+  }
+
+  try {
+    const posts = await getPublishedPosts();
+    blogRoutes = posts.map((p) => ({
+      url: `${SITE_URL}/blog/${p.slug}`,
+      lastModified: p.updated_at ? new Date(p.updated_at) : new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.55,
+    }));
+  } catch (err) {
+    console.warn("[sitemap] blog unavailable:", err instanceof Error ? err.message : err);
+  }
 
   return [...staticRoutes, ...productRoutes, ...blogRoutes];
 }

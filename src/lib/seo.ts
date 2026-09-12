@@ -3,11 +3,19 @@ import type { Metadata } from "next";
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "https://mykindofstyle.com";
 
+/** Short brand mark used in UI and compact titles */
 export const SITE_NAME = "MKoS";
+
+/** Full brand name — primary for Google brand search */
+export const SITE_FULL_NAME = "My Kind of Style";
+
 export const SITE_TAGLINE = "For Those Who Understand STYLE";
 
 export const DEFAULT_DESCRIPTION =
-  "MKoS (My Kind of Style) is a Nigerian contemporary fashion house creating timeless Ready-to-Wear, bespoke, and couture for women and men — crafted in Oniru, Lagos.";
+  "My Kind of Style (MKoS) is a Nigerian contemporary fashion house creating timeless Ready-to-Wear, bespoke, and couture for women and men — crafted in Oniru, Lagos. Shop My Kind of Style online.";
+
+/** Default browser / Google search result title */
+export const DEFAULT_TITLE = `My Kind of Style (MKoS) — ${SITE_TAGLINE}`;
 
 export function absoluteUrl(path = "/") {
   if (!path || path === "/") return SITE_URL;
@@ -40,7 +48,11 @@ export function productJsonLd(product: {
     description: product.tagline || product.description || product.name,
     image: images,
     sku: product.sku || product.slug,
-    brand: { "@type": "Brand", name: SITE_NAME },
+    brand: {
+      "@type": "Brand",
+      name: SITE_FULL_NAME,
+      alternateName: SITE_NAME,
+    },
     url,
     offers: {
       "@type": "Offer",
@@ -50,7 +62,7 @@ export function productJsonLd(product: {
       availability: inStock
         ? "https://schema.org/InStock"
         : "https://schema.org/OutOfStock",
-      seller: { "@type": "Organization", name: SITE_NAME },
+      seller: { "@type": "Organization", name: SITE_FULL_NAME },
     },
   };
 }
@@ -72,23 +84,26 @@ export function pageMetadata({
   const ogImages = (images?.length ? images : ["/logo/mkos-logo.png"]).map((src) =>
     src.startsWith("http") ? src : absoluteUrl(src)
   );
+  const fullTitle = title.includes("My Kind of Style")
+    ? title
+    : `${title} · My Kind of Style (MKoS)`;
 
   return {
     title,
     description,
     alternates: { canonical: url },
     openGraph: {
-      title: `${title} · ${SITE_NAME}`,
+      title: fullTitle,
       description,
       url,
-      siteName: SITE_NAME,
+      siteName: SITE_FULL_NAME,
       locale: "en_NG",
       type: "website",
       images: ogImages,
     },
     twitter: {
       card: "summary_large_image",
-      title: `${title} · ${SITE_NAME}`,
+      title: fullTitle,
       description,
       images: ogImages,
     },

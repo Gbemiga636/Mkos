@@ -4,7 +4,7 @@ import { pageMetadata } from "@/lib/seo";
 export const metadata: Metadata = pageMetadata({
   title: "Shop Ready-to-Wear",
   description:
-    "Shop MKoS Ready-to-Wear — women’s style, men’s style, and boubou collections. Timeless Nigerian contemporary fashion, crafted in Lagos.",
+    "Shop My Kind of Style (MKoS) Ready-to-Wear — women’s style, men’s style, and boubou collections. Timeless Nigerian contemporary fashion, crafted in Lagos.",
   path: "/shop",
 });
 
