@@ -12,6 +12,7 @@ import { useBusyStore } from "@/store/busy";
 const NAV = [
   { href: "/admin", label: "Overview" },
   { href: "/admin/analytics", label: "Analytics" },
+  { href: "/admin/reports", label: "Reports" },
   { href: "/admin/live", label: "Live" },
   { href: "/admin/products", label: "Products" },
   { href: "/admin/content", label: "Website" },
