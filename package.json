@@ -21,7 +21,7 @@
     "date-fns": "^4.4.0",
     "framer-motion": "^12.6.3",
     "gsap": "^3.12.7",
-    "html2canvas": "^1.4.1",
+    "html2canvas-pro": "^2.5.0",
     "jose": "^6.2.4",
     "jspdf": "^4.2.1",
     "lenis": "^1.2.3",
