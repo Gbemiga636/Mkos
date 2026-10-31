@@ -143,7 +143,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           height: 512,
         },
         image: absoluteUrl("/logo/mkos-logo.png"),
-        email: "styleme@mykindofstyle.com",
+        email: "mkosfashionhouse@gmail.com",
         sameAs: [
           "https://www.instagram.com/shopmykindofstyle",
           "https://www.instagram.com/mkosformen",
@@ -157,7 +157,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         url: SITE_URL,
         image: absoluteUrl("/logo/mkos-logo.png"),
         telephone: "+2348143173661",
-        email: "styleme@mykindofstyle.com",
+        email: "mkosfashionhouse@gmail.com",
         address: {
           "@type": "PostalAddress",
           streetAddress: "1, Ade Adedeji Close, Ayo Babatunde Crescent",

@@ -194,6 +194,9 @@ export default function ProductClient({ product: initial }: { product: Product }
               </p>
             )}
           </div>
+          <p className="mt-1 text-xs text-mkos-muted">
+            Shipment and delivery price is based on location.
+          </p>
           <p className="mt-2 text-sm text-mkos-muted">
             ★ {product.rating} · {product.reviews} reviews
           </p>

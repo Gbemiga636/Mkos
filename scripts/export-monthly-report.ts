@@ -313,7 +313,7 @@ async function main() {
   <section class="card">${sectionHead("11", "Goals")}${bullets(e.goals)}</section>
   ${e.notes ? `<section class="card">${sectionHead("12", "Notes")}<p class="prose muted">${esc(e.notes)}</p></section>` : ""}
   <div class="sign"><div>Prepared by · ${esc(e.preparedBy)}</div><div>Approved by</div></div>
-  <div class="closing"><div class="rule"></div><p>For Those Who Understand STYLE</p><p class="muted" style="font-size:8pt;margin-top:2mm">mykindofstyle.com · Oniru, Lagos · styleme@mykindofstyle.com</p></div>
+  <div class="closing"><div class="rule"></div><p>For Those Who Understand STYLE</p><p class="muted" style="font-size:8pt;margin-top:2mm">mykindofstyle.com · Oniru, Lagos · mkosfashionhouse@gmail.com</p></div>
   <div class="foot"><span>mykindofstyle.com</span><span>Page 5</span></div>
 </div>
 

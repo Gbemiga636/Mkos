@@ -48,7 +48,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="font-display text-2xl tracking-tight">Contact</h2>
             <p className="mt-3">
-              Questions about your data: styleme@mykindofstyle.com
+              Questions about your data: mkosfashionhouse@gmail.com
             </p>
           </section>
         </div>

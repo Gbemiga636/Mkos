@@ -49,7 +49,7 @@ export default function RefundPage() {
           <section>
             <h2 className="font-display text-2xl tracking-tight">How to request a refund</h2>
             <p className="mt-3">
-              Write to styleme@mykindofstyle.com or message us on WhatsApp with your order
+              Write to mkosfashionhouse@gmail.com or message us on WhatsApp with your order
               reference, within 7 days of delivery. Approved refunds are returned to the original
               payment method after inspection.
             </p>

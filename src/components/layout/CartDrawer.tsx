@@ -14,6 +14,7 @@ export function CartDrawer() {
   const items = useCartStore((s) => s.items);
   const updateQuantity = useCartStore((s) => s.updateQuantity);
   const removeItem = useCartStore((s) => s.removeItem);
+  const syncNairaPrices = useCartStore((s) => s.syncNairaPrices);
   const { products } = useCms();
   const formatPrice = useFormatPrice();
   const stylesCount = items.reduce((n, i) => n + i.quantity, 0);
@@ -29,6 +30,10 @@ export function CartDrawer() {
   useEffect(() => {
     spring.set(subtotalValue);
   }, [subtotalValue, spring]);
+
+  useEffect(() => {
+    syncNairaPrices(products);
+  }, [products, syncNairaPrices]);
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "";

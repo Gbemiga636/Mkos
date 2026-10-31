@@ -37,10 +37,6 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
   const [ratesSource, setRatesSource] = useState("loading");
 
   useEffect(() => {
-    if (currency === "NGN") setCurrency(DEFAULT_DISPLAY_CURRENCY);
-  }, [currency, setCurrency]);
-
-  useEffect(() => {
     let cancelled = false;
     (async () => {
       try {

@@ -29,6 +29,7 @@ type CartState = {
   removeItem: (key: string) => void;
   updateQuantity: (key: string, quantity: number) => void;
   clear: () => void;
+  syncNairaPrices: (catalogue: { id: string; price: number }[]) => void;
   itemCount: () => number;
   subtotal: () => number;
 };
@@ -78,6 +79,19 @@ export const useCartStore = create<CartState>()(
         });
       },
       clear: () => set({ items: [] }),
+      syncNairaPrices: (catalogue) => {
+        const byId = new Map(catalogue.map((p) => [p.id, p.price]));
+        let changed = false;
+        const items = get().items.map((i) => {
+          const live = byId.get(i.productId);
+          if (live != null && live > 0 && live !== i.price) {
+            changed = true;
+            return { ...i, price: live };
+          }
+          return i;
+        });
+        if (changed) set({ items });
+      },
       itemCount: () => get().items.reduce((n, i) => n + i.quantity, 0),
       subtotal: () => get().items.reduce((n, i) => n + i.price * i.quantity, 0),
     }),

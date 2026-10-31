@@ -201,7 +201,7 @@ export default function AdminProductsPage() {
         id: form.id || undefined,
         name: form.name,
         slug: form.slug || undefined,
-        price: 0,
+        price: Number(form.price) > 0 ? Math.round(Number(form.price)) : 0,
         priceUsd: Number(form.priceUsd) > 0 ? Number(form.priceUsd) : null,
         stock: Number(form.stock),
         tagline: form.tagline,

@@ -729,7 +729,7 @@ export function ReportsClient() {
                   For Those Who Understand STYLE
                 </p>
                 <p className="mt-2 text-xs text-mkos-muted">
-                  mykindofstyle.com · Oniru, Lagos · styleme@mykindofstyle.com
+                  mykindofstyle.com · Oniru, Lagos · mkosfashionhouse@gmail.com
                 </p>
               </footer>
             </div>

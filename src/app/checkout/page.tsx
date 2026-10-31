@@ -93,7 +93,8 @@ function CheckoutInner() {
     }
     return subtotal;
   }, [subtotal, subtotalUsd, shopperCode, rates]);
-  const localTotal = Math.max(0, localSubtotal - promoOff);
+  const promoScale = shopperCode === "NGN" && subtotalUsd ? subtotal / subtotalUsd : 1;
+  const localTotal = Math.max(0, localSubtotal - promoOff * promoScale);
 
   function formatShopperAmount(amount: number) {
     return new Intl.NumberFormat(localeForCurrency(shopperCode), {
@@ -662,7 +663,7 @@ function CheckoutInner() {
                     </div>
                     {promo ? (
                       <p className="mt-2 text-sm text-mkos-ink">
-                        {promo.code} applied — {formatShopperAmount(promo.amountOff)} off
+                        {promo.code} applied — {formatShopperAmount(promo.amountOff * promoScale)} off
                         {" · "}
                         <button
                           type="button"
@@ -766,7 +767,7 @@ function CheckoutInner() {
               {promo && promoOff > 0 ? (
                 <div className="flex justify-between">
                   <span className="text-mkos-muted">Discount ({promo.code})</span>
-                  <span className="tabular-nums">−{formatShopperAmount(promoOff)}</span>
+                  <span className="tabular-nums">−{formatShopperAmount(promoOff * promoScale)}</span>
                 </div>
               ) : null}
               <div className="flex justify-between gap-4">

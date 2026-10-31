@@ -396,8 +396,8 @@ export function BridalPageClient() {
                 </a>
               </p>
               <p>
-                <a href="mailto:styleme@mykindofstyle.com" className="hover:text-mkos-ink">
-                  styleme@mykindofstyle.com
+                <a href="mailto:mkosfashionhouse@gmail.com" className="hover:text-mkos-ink">
+                  mkosfashionhouse@gmail.com
                 </a>
               </p>
             </div>

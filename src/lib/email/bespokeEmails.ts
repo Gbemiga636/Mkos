@@ -94,6 +94,6 @@ export function clientBespokeEmailHtml(p: BespokeInquiryPayload) {
     "Your Bespoke brief is with the house",
     "Thank you for trusting MKoS with your custom piece. The studio has your brief and will reach out to you shortly to refine fittings, fabrics, and timing.",
     rows,
-    "Studio · Oniru, Lagos · WhatsApp 08143173661 · styleme@mykindofstyle.com"
+    "Studio · Oniru, Lagos · WhatsApp 08143173661 · mkosfashionhouse@gmail.com"
   );
 }

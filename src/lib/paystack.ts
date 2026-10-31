@@ -25,12 +25,12 @@ export function paystackPublicKey() {
 export function orderNotifyEmails(): string[] {
   const raw = (
     process.env.ORDER_NOTIFY_EMAIL ||
-    "styleme@mykindofstyle.com"
+    "mkosfashionhouse@gmail.com"
   )
     .split(",")
     .map((s) => s.trim().toLowerCase())
     .filter((s) => s.includes("@"));
-  return raw.length ? raw : ["styleme@mykindofstyle.com"];
+  return raw.length ? raw : ["mkosfashionhouse@gmail.com"];
 }
 
 export function orderNotifyEmail() {

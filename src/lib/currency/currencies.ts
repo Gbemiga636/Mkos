@@ -6,6 +6,7 @@ export const DEFAULT_DISPLAY_CURRENCY = "USD";
 
 export const WORLD_CURRENCIES: CurrencyOption[] = [
   { code: "USD", name: "US Dollar" },
+  { code: "NGN", name: "Nigerian Naira" },
   { code: "EUR", name: "Euro" },
   { code: "GBP", name: "British Pound" },
   { code: "CAD", name: "Canadian Dollar" },

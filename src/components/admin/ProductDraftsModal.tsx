@@ -125,7 +125,7 @@ export function ProductDraftsModal({
                   />
                 </label>
 
-                <label className="block sm:col-span-2">
+                <label className="block">
                   <span className="font-display text-[10px] tracking-[0.18em] text-mkos-muted uppercase">
                     Price ($ USD)
                   </span>
@@ -141,6 +141,24 @@ export function ProductDraftsModal({
                   />
                   <p className="mt-1.5 text-xs text-mkos-muted">
                     Catalogue and checkout are USD-only (Flutterwave).
+                  </p>
+                </label>
+
+                <label className="block">
+                  <span className="font-display text-[10px] tracking-[0.18em] text-mkos-muted uppercase">
+                    Price (₦ NGN)
+                  </span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={form.price === "0" ? "" : form.price}
+                    onChange={(e) => onChange(index, { price: e.target.value || "0" })}
+                    placeholder="e.g. 150000"
+                    className="mt-1.5 h-11 w-full border border-mkos-border bg-white px-3 text-sm outline-none"
+                  />
+                  <p className="mt-1.5 text-xs text-mkos-muted">
+                    Shown when shoppers choose NGN. Leave blank to convert from USD.
                   </p>
                 </label>
 

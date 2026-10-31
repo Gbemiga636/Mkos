@@ -56,7 +56,7 @@ loadEnv(".env");
 
 const key = process.env.RESEND_API_KEY;
 const from = process.env.RESEND_FROM_EMAIL || "MKoS <hello@mykindofstyle.com>";
-const recipients = ["styleme@mykindofstyle.com", "gboisholaja@gmail.com"];
+const recipients = ["mkosfashionhouse@gmail.com", "gboisholaja@gmail.com"];
 
 if (!key) {
   console.error("RESEND_API_KEY missing in .env.local");

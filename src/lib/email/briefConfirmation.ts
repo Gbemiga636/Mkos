@@ -73,7 +73,7 @@ export function clientBriefConfirmationHtml(opts: { name: string; service: strin
       </table>
     </div>
     <p style="margin:20px 0 0;text-align:center;color:#999;font-size:11px;letter-spacing:0.2em;">MKoS — My Kind of Style</p>
-    <p style="margin:10px 0 0;text-align:center;color:#999;font-size:11px;">Studio · Oniru, Lagos · styleme@mykindofstyle.com</p>
+    <p style="margin:10px 0 0;text-align:center;color:#999;font-size:11px;">Studio · Oniru, Lagos · mkosfashionhouse@gmail.com</p>
   </div>
 </body>
 </html>`;

@@ -108,10 +108,10 @@ function BriefSuccessInner() {
           <p className="mt-8 text-xs leading-relaxed text-mkos-muted">
             A confirmation is on its way to your inbox. Studio · Oniru, Lagos ·{" "}
             <a
-              href="mailto:styleme@mykindofstyle.com"
+              href="mailto:mkosfashionhouse@gmail.com"
               className="underline underline-offset-2 hover:text-mkos-ink"
             >
-              styleme@mykindofstyle.com
+              mkosfashionhouse@gmail.com
             </a>
           </p>
         </motion.div>
