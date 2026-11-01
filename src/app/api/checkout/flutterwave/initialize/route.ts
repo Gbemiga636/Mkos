@@ -18,6 +18,7 @@ import {
   loadPromoCodes,
 } from "@/lib/checkout/promos";
 import { flutterwaveConfigured, flutterwaveCreateCustomer } from "@/lib/flutterwave";
+import { isUsdOnlyProduct } from "@/lib/currency/currencies";
 import { PAY_REF_COOKIE } from "@/lib/checkout/payRef";
 
 export const runtime = "nodejs";
@@ -101,11 +102,12 @@ export async function POST(req: Request) {
     }
 
     const sb = createServiceClient();
+    const catalogue = new Map<string, { price: number; priceUsd: number }>();
     for (const item of items) {
       if (!item.productId) continue;
       const { data: prod } = await sb
         .from("products")
-        .select("id, name, stock, is_published")
+        .select("id, name, stock, is_published, price, price_usd")
         .eq("id", item.productId)
         .maybeSingle();
       if (!prod || prod.is_published === false) {
@@ -126,21 +128,40 @@ export async function POST(req: Request) {
           { status: 400 }
         );
       }
+      catalogue.set(prod.id, {
+        price: Number(prod.price) || 0,
+        priceUsd: Number(prod.price_usd) || 0,
+      });
     }
 
     const { rates } = await getNgnRates();
-    const lineUsd = items.map((item) => {
+    const lines = items.map((item) => {
+      const live = item.productId ? catalogue.get(item.productId) : undefined;
+      const unitNgn = live && live.price > 0 ? live.price : Number(item.price) || 0;
       const unitUsd =
-        item.priceUsd != null && Number(item.priceUsd) > 0
-          ? Number(item.priceUsd)
-          : convertFromNgn(Number(item.price), "USD", rates);
+        live && live.priceUsd > 0
+          ? live.priceUsd
+          : item.priceUsd != null && Number(item.priceUsd) > 0
+            ? Number(item.priceUsd)
+            : convertFromNgn(unitNgn, "USD", rates);
+      const qty = Number(item.quantity);
       return {
         ...item,
         unitUsd,
-        lineUsd: unitUsd * Number(item.quantity),
+        unitNgn,
+        lineUsd: unitUsd * qty,
+        lineNgn: unitNgn * qty,
       };
     });
-    const subtotalUsd = lineUsd.reduce((n, i) => n + i.lineUsd, 0);
+    const subtotalUsd = lines.reduce((n, i) => n + i.lineUsd, 0);
+    const subtotalNgn = lines.reduce((n, i) => n + i.lineNgn, 0);
+    const chargeCurrency =
+      String(body.currency || "").toUpperCase() === "NGN" &&
+      !items.some((i) => isUsdOnlyProduct(i.productId)) &&
+      lines.every((i) => i.unitNgn > 0)
+        ? "NGN"
+        : "USD";
+    const isNgn = chargeCurrency === "NGN";
     const promoCode = String(body.promoCode || "").trim();
     const promo = promoCode ? findPromo(await loadPromoCodes(), promoCode) : null;
     if (promoCode && !promo) {
@@ -159,7 +180,14 @@ export async function POST(req: Request) {
       );
     }
     const totalUsd = promo ? applyPromoAmount(subtotalUsd, promo.amountOff) : subtotalUsd;
-    if (totalUsd <= 0) {
+    // Promo amounts are set in USD; scale them to the bag's own Naira prices.
+    const promoOffNgn =
+      promo && subtotalUsd > 0 ? Math.round((promo.amountOff * subtotalNgn) / subtotalUsd) : 0;
+    const subtotal = isNgn ? Math.round(subtotalNgn) : Number(subtotalUsd.toFixed(2));
+    const total = isNgn
+      ? Math.max(0, Math.round(subtotalNgn) - promoOffNgn)
+      : Number(totalUsd.toFixed(2));
+    if (total <= 0) {
       return NextResponse.json(
         { error: "This discount is larger than the order total" },
         { status: 400 }
@@ -209,12 +237,12 @@ export async function POST(req: Request) {
     }
 
     const notes = [
-      `Payment: Flutterwave v4 (USD)`,
+      `Payment: Flutterwave v4 (${chargeCurrency})`,
       `FLW_CUSTOMER:${customerId}`,
       `Delivery method: ${methodLabel}`,
       `Expected delivery date: ${expectedDeliveryDate}`,
       promo
-        ? `Promo: ${promo.code} (−${promo.amountOff} off, min ${promo.minItems} item${promo.minItems === 1 ? "" : "s"}) — charged ${totalUsd.toFixed(2)} USD of ${subtotalUsd.toFixed(2)} USD`
+        ? `Promo: ${promo.code} (−${promo.amountOff} USD off, min ${promo.minItems} item${promo.minItems === 1 ? "" : "s"}) — charged ${total} ${chargeCurrency} of ${subtotal} ${chargeCurrency}`
         : null,
       DELIVERY_FEE_NOTE,
       "U.S. orders may attract a 17% import duty collected by customs at delivery.",
@@ -226,10 +254,10 @@ export async function POST(req: Request) {
       phone,
       status: "pending_payment",
       payment_status: "pending",
-      subtotal: Number(subtotalUsd.toFixed(2)),
+      subtotal,
       shipping: 0,
-      total: Number(totalUsd.toFixed(2)),
-      currency: "USD",
+      total,
+      currency: chargeCurrency,
       shipping_name: customerName,
       shipping_address: shippingAddress,
       shipping_city: shippingCity,
@@ -271,7 +299,7 @@ export async function POST(req: Request) {
         subtotal: baseOrder.subtotal,
         shipping: 0,
         total: baseOrder.total,
-        currency: "USD",
+        currency: chargeCurrency,
         shipping_name: customerName,
         shipping_address: shippingAddress,
         shipping_city: shippingCity,
@@ -294,12 +322,12 @@ export async function POST(req: Request) {
       );
     }
 
-    const orderItemRows = lineUsd.map((item) => ({
+    const orderItemRows = lines.map((item) => ({
       order_id: order!.id,
       product_id: item.productId,
       slug: item.slug,
       name: item.name,
-      price: Number(item.unitUsd.toFixed(2)),
+      price: isNgn ? Math.round(item.unitNgn) : Number(item.unitUsd.toFixed(2)),
       image: item.image,
       color: item.color,
       size: item.size,
@@ -327,8 +355,8 @@ export async function POST(req: Request) {
       reference,
       customerId,
       payOnSite: true,
-      amount: Number(totalUsd.toFixed(2)),
-      currency: "USD",
+      amount: total,
+      currency: chargeCurrency,
     });
     res.cookies.set(PAY_REF_COOKIE, reference, {
       path: "/",

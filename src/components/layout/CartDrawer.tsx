@@ -5,7 +5,8 @@ import Link from "next/link";
 import { AnimatePresence, motion, useSpring, useTransform } from "framer-motion";
 import { useEffect } from "react";
 import { useCartStore, cartItemKey } from "@/store/cart";
-import { useCms, useFormatPrice } from "@/lib/cms/CmsProvider";
+import { productPriceOpts, useCms, useFormatPrice } from "@/lib/cms/CmsProvider";
+import { isUsdOnlyProduct } from "@/lib/currency/currencies";
 import { Button } from "@/components/ui/Button";
 
 export function CartDrawer() {
@@ -22,9 +23,10 @@ export function CartDrawer() {
   const subtotalUsd = items.every((i) => i.priceUsd != null && i.priceUsd > 0)
     ? items.reduce((n, i) => n + (i.priceUsd ?? 0) * i.quantity, 0)
     : null;
+  const hasUsdOnly = items.some((i) => isUsdOnlyProduct(i.productId));
   const spring = useSpring(subtotalValue, { stiffness: 80, damping: 20 });
   const display = useTransform(spring, (v) =>
-    formatPrice(Math.round(v), { usd: subtotalUsd })
+    formatPrice(Math.round(v), { usd: subtotalUsd, usdOnly: hasUsdOnly })
   );
 
   useEffect(() => {
@@ -131,6 +133,7 @@ export function CartDrawer() {
                                     item.priceUsd != null
                                       ? item.priceUsd * item.quantity
                                       : null,
+                                  usdOnly: isUsdOnlyProduct(item.productId),
                                 })}
                               </p>
                             </div>
@@ -191,7 +194,7 @@ export function CartDrawer() {
                         <div>
                           <p className="font-display text-sm">{p.name}</p>
                           <p className="text-xs text-mkos-muted">
-                            {formatPrice(p.price, { usd: p.priceUsd })}
+                            {formatPrice(p.price, productPriceOpts(p))}
                           </p>
                         </div>
                       </Link>

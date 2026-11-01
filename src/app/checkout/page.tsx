@@ -12,7 +12,11 @@ import { useFormatPrice } from "@/lib/cms/CmsProvider";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useCurrency } from "@/components/currency/CurrencyProvider";
 import { applyPromoAmount } from "@/lib/checkout/promos";
-import { fractionDigitsFor, localeForCurrency } from "@/lib/currency/currencies";
+import {
+  fractionDigitsFor,
+  isUsdOnlyProduct,
+  localeForCurrency,
+} from "@/lib/currency/currencies";
 import {
   DELIVERY_FEE_NOTE,
   DELIVERY_METHODS,
@@ -67,6 +71,7 @@ function CheckoutInner() {
     reference: string;
     customerId: string;
     amount: number;
+    currency?: string;
   } | null>(null);
   const [promoInput, setPromoInput] = useState("");
   const [promo, setPromo] = useState<{
@@ -82,7 +87,9 @@ function CheckoutInner() {
   const total = Math.max(0, subtotal - promoOff);
   const totalUsd = subtotalUsd != null ? applyPromoAmount(subtotalUsd, promoOff) : null;
 
-  const shopperCode = (currency || "USD").toUpperCase();
+  const hasUsdOnly = items.some((i) => isUsdOnlyProduct(i.productId));
+  const shopperCode =
+    hasUsdOnly && subtotalUsd != null ? "USD" : (currency || "USD").toUpperCase();
   const localSubtotal = useMemo(() => {
     if (subtotalUsd != null && Number.isFinite(subtotalUsd)) {
       if (shopperCode === "USD") return subtotalUsd;
@@ -96,12 +103,12 @@ function CheckoutInner() {
   const promoScale = shopperCode === "NGN" && subtotalUsd ? subtotal / subtotalUsd : 1;
   const localTotal = Math.max(0, localSubtotal - promoOff * promoScale);
 
-  function formatShopperAmount(amount: number) {
-    return new Intl.NumberFormat(localeForCurrency(shopperCode), {
+  function formatShopperAmount(amount: number, code = shopperCode) {
+    return new Intl.NumberFormat(localeForCurrency(code), {
       style: "currency",
-      currency: shopperCode,
-      maximumFractionDigits: fractionDigitsFor(shopperCode),
-      minimumFractionDigits: fractionDigitsFor(shopperCode) === 0 ? 0 : 2,
+      currency: code,
+      maximumFractionDigits: fractionDigitsFor(code),
+      minimumFractionDigits: fractionDigitsFor(code) === 0 ? 0 : 2,
     }).format(Math.max(0, amount));
   }
 
@@ -145,6 +152,7 @@ function CheckoutInner() {
             reference: draft.reference,
             customerId: draft.customerId,
             amount: draft.amountUsd || 0,
+            currency: draft.amountCurrency,
           });
           setStep(2);
           setError("Your previous payment didn’t go through. You can pay again from here.");
@@ -209,6 +217,7 @@ function CheckoutInner() {
           phone,
           userId: user?.id ?? null,
           promoCode: promo?.code || "",
+          currency: shopperCode,
           items: items.map((i) => ({
             productId: i.productId,
             slug: i.slug,
@@ -236,6 +245,7 @@ function CheckoutInner() {
         reference: String(data.reference),
         customerId: String(data.customerId),
         amount: Number(data.amount || total),
+        currency: String(data.currency || "USD").toUpperCase(),
       };
       setPaySession(session);
       saveCheckoutDraft({
@@ -244,6 +254,7 @@ function CheckoutInner() {
         reference: session.reference,
         customerId: session.customerId,
         amountUsd: session.amount,
+        amountCurrency: session.currency,
       });
       setStep(2);
     } catch {
@@ -600,6 +611,7 @@ function CheckoutInner() {
                         <span className="tabular-nums">
                           {formatPrice(item.price * item.quantity, {
                             usd: item.priceUsd != null ? item.priceUsd * item.quantity : null,
+                            usdOnly: isUsdOnlyProduct(item.productId),
                           })}
                         </span>
                       </li>
@@ -707,7 +719,11 @@ function CheckoutInner() {
                   exit={{ opacity: 0, x: -20 }}
                 >
                   <PaymentCard
-                    amountLabel={formatShopperAmount(localTotal)}
+                    amountLabel={
+                      paySession.currency && paySession.amount > 0
+                        ? formatShopperAmount(paySession.amount, paySession.currency)
+                        : formatShopperAmount(localTotal)
+                    }
                     reference={paySession.reference}
                     customerId={paySession.customerId}
                     customerName={`${form.first} ${form.last}`.trim()}
@@ -752,6 +768,7 @@ function CheckoutInner() {
                   <p className="text-sm tabular-nums">
                     {formatPrice(item.price * item.quantity, {
                       usd: item.priceUsd != null ? item.priceUsd * item.quantity : null,
+                      usdOnly: isUsdOnlyProduct(item.productId),
                     })}
                   </p>
                 </li>
@@ -761,7 +778,7 @@ function CheckoutInner() {
               <div className="flex justify-between">
                 <span className="text-mkos-muted">Subtotal</span>
                 <span className="tabular-nums">
-                  {formatPrice(subtotal, { usd: subtotalUsd })}
+                  {formatPrice(subtotal, { usd: subtotalUsd, usdOnly: hasUsdOnly })}
                 </span>
               </div>
               {promo && promoOff > 0 ? (

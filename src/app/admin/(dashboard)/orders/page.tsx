@@ -54,7 +54,13 @@ export default async function OrdersPage() {
               {o.shipping_city ? <p>{o.shipping_city}</p> : null}
             </div>
             <span className="capitalize text-mkos-accent">{o.status}</span>
-            <span className="tabular-nums">{formatPrice(Number(o.total))}</span>
+            <span className="tabular-nums">
+              {formatPrice(
+                Number(o.total),
+                o.currency || "USD",
+                o.currency === "NGN" ? "en-NG" : "en-US"
+              )}
+            </span>
           </div>
         ))}
         {!orders?.length && (

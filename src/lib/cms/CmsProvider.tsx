@@ -6,6 +6,7 @@ import { formatPrice as formatPriceBase } from "@/lib/cms/types";
 import { useCurrency } from "@/components/currency/CurrencyProvider";
 import {
   fractionDigitsFor,
+  isUsdOnlyProduct,
   localeForCurrency,
 } from "@/lib/currency/currencies";
 
@@ -36,6 +37,8 @@ export function useCmsOptional() {
 export type FormatPriceOpts = {
   /** Explicit USD from admin — preferred when shopper currency is USD (or as USD base for FX). */
   usd?: number | null;
+  /** Show `usd` as dollars whatever currency the shopper picked. */
+  usdOnly?: boolean;
 };
 
 /**
@@ -48,8 +51,8 @@ export function useFormatPrice() {
   const { currency, rates, format } = useCurrency();
 
   return (priceNgn: number, opts?: FormatPriceOpts) => {
-    const code = (currency || "USD").toUpperCase();
     const usd = opts?.usd != null && Number(opts.usd) > 0 ? Number(opts.usd) : null;
+    const code = opts?.usdOnly && usd != null ? "USD" : (currency || "USD").toUpperCase();
 
     if (!priceNgn || priceNgn <= 0) {
       if (usd == null) return "Price on request";
@@ -99,6 +102,6 @@ export function useContent(key: string) {
 }
 
 /** Helper for product objects */
-export function productPriceOpts(product: { priceUsd?: number }) {
-  return { usd: product.priceUsd ?? null };
+export function productPriceOpts(product: { id?: string; priceUsd?: number }) {
+  return { usd: product.priceUsd ?? null, usdOnly: isUsdOnlyProduct(product.id) };
 }

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Product } from "@/lib/cms/types";
-import { useFormatPrice } from "@/lib/cms/CmsProvider";
+import { productPriceOpts, useFormatPrice } from "@/lib/cms/CmsProvider";
 import { useWishlistStore } from "@/store/wishlist";
 import { useCursorLabel } from "@/hooks/useCursorLabel";
 import { ScrollReveal } from "@/components/experience/ScrollReveal";
@@ -192,7 +192,7 @@ export function ProductCard({
             className="font-display text-sm tabular-nums"
             animate={{ y: hovered ? -2 : 0, color: hovered ? "#c45c26" : "#111111" }}
           >
-            {formatPrice(product.price, { usd: product.priceUsd })}
+            {formatPrice(product.price, productPriceOpts(product))}
           </motion.p>
         </div>
       </Link>

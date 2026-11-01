@@ -2,11 +2,22 @@
 export type CurrencyOption = { code: string; name: string };
 
 export const CATALOG_CURRENCY = "NGN";
-export const DEFAULT_DISPLAY_CURRENCY = "USD";
+export const DEFAULT_DISPLAY_CURRENCY = "NGN";
+
+/** Always priced in USD on the storefront, whatever currency the shopper picks. */
+const USD_ONLY_PRODUCT_IDS = new Set([
+  "mk-008", // Sheed Set
+  "mk-1785571196029-0-w4ovh", // Arike 2 piece
+  "mk-1785875672623-0-8nse8", // Omidan Boubou
+]);
+
+export function isUsdOnlyProduct(id: string | null | undefined) {
+  return !!id && USD_ONLY_PRODUCT_IDS.has(id);
+}
 
 export const WORLD_CURRENCIES: CurrencyOption[] = [
-  { code: "USD", name: "US Dollar" },
   { code: "NGN", name: "Nigerian Naira" },
+  { code: "USD", name: "US Dollar" },
   { code: "EUR", name: "Euro" },
   { code: "GBP", name: "British Pound" },
   { code: "CAD", name: "Canadian Dollar" },

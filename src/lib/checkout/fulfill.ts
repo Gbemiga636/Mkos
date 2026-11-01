@@ -2,6 +2,7 @@ import { createServiceClient } from "@/lib/supabase/client";
 import type { OrderEmailPayload } from "@/lib/email/orderEmails";
 import { sendOrderEmails } from "@/lib/email/send";
 import { revalidateStorefront } from "@/lib/cms/revalidate";
+import { formatPrice } from "@/lib/cms/types";
 
 export type CheckoutItem = {
   productId: string;
@@ -158,7 +159,7 @@ export async function fulfillPaidOrder(opts: {
     await sb.from("admin_notifications").insert({
       kind: "order",
       title: `Order paid · ${payload.reference}`,
-      body: `${payload.customerName} · ₦${payload.total.toLocaleString()} · ${payload.items.length} item(s)`,
+      body: `${payload.customerName} · ${formatPrice(payload.total, payload.currency, payload.currency === "NGN" ? "en-NG" : "en-US")} · ${payload.items.length} item(s)`,
     });
   } catch {
     /* optional */

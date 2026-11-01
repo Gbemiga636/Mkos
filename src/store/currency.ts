@@ -22,6 +22,10 @@ export const useCurrencyStore = create<CurrencyState>()(
         set({ currency: next });
       },
     }),
-    { name: "mkos-currency-v1" }
+    {
+      name: "mkos-currency-v1",
+      version: 2,
+      migrate: () => ({ currency: DEFAULT_DISPLAY_CURRENCY }) as CurrencyState,
+    }
   )
 );

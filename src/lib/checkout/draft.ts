@@ -20,7 +20,9 @@ export type CheckoutDraft = {
   reference?: string;
   customerId?: string;
   chargeId?: string;
+  /** Amount of the pending payment, in `amountCurrency` (USD for older drafts). */
   amountUsd?: number;
+  amountCurrency?: string;
   savedAt: number;
 };
 

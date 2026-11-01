@@ -11,7 +11,8 @@ import { Button } from "@/components/ui/Button";
 import { useCartStore, productToCartItem } from "@/store/cart";
 import { useWishlistStore } from "@/store/wishlist";
 import { useUIStore } from "@/store/ui";
-import { useCms, useFormatPrice } from "@/lib/cms/CmsProvider";
+import { productPriceOpts, useCms, useFormatPrice } from "@/lib/cms/CmsProvider";
+import { isUsdOnlyProduct } from "@/lib/currency/currencies";
 import { objectPositionCss } from "@/lib/media/imageFocus";
 import { imageForColor } from "@/lib/product/colorImage";
 import { ProductReviews } from "@/components/product/ProductReviews";
@@ -186,7 +187,7 @@ export default function ProductClient({ product: initial }: { product: Product }
           <p className="mt-2 text-mkos-muted">{product.tagline}</p>
           <div className="mt-5 flex items-baseline gap-3">
             <p className="font-display text-2xl tabular-nums">
-              {formatPrice(product.price, { usd: product.priceUsd })}
+              {formatPrice(product.price, productPriceOpts(product))}
             </p>
             {product.compareAt && (
               <p className="text-sm text-mkos-muted line-through">
@@ -428,6 +429,7 @@ export default function ProductClient({ product: initial }: { product: Product }
                   usd:
                     (product.priceUsd ?? 0) +
                       fbt.reduce((n, p) => n + (p.priceUsd ?? 0), 0) || null,
+                  usdOnly: [product, ...fbt].some((p) => isUsdOnlyProduct(p.id)),
                 }
               )}
             </p>

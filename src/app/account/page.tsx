@@ -9,7 +9,8 @@ import { useAuth } from "@/lib/auth/AuthProvider";
 import { useWishlistStore } from "@/store/wishlist";
 import { useUIStore } from "@/store/ui";
 import { useCartStore } from "@/store/cart";
-import { useCms, useFormatPrice } from "@/lib/cms/CmsProvider";
+import { productPriceOpts, useCms, useFormatPrice } from "@/lib/cms/CmsProvider";
+import { formatPrice as formatOrderAmount } from "@/lib/cms/types";
 import { getBrowserSupabase } from "@/lib/supabase/browser";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
@@ -41,6 +42,7 @@ type OrderRow = {
   id: string;
   status: string;
   total: number;
+  currency?: string | null;
   created_at: string;
   order_items?: { name: string; quantity: number; image: string | null }[];
 };
@@ -84,7 +86,7 @@ export default function AccountPage() {
       sb.from("addresses").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
       sb
         .from("orders")
-        .select("id,status,total,created_at,order_items(name,quantity,image)")
+        .select("id,status,total,currency,created_at,order_items(name,quantity,image)")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false }),
     ]);
@@ -215,7 +217,7 @@ export default function AccountPage() {
                       </div>
                       <p className="mt-3 font-display">{p.name}</p>
                       <p className="text-sm text-mkos-muted">
-                        {formatPrice(p.price, { usd: p.priceUsd })}
+                        {formatPrice(p.price, productPriceOpts(p))}
                       </p>
                     </Link>
                   ))}
@@ -269,7 +271,13 @@ export default function AccountPage() {
                       </p>
                     </div>
                     <p className="text-sm capitalize">{o.status}</p>
-                    <p className="font-display tabular-nums">{formatPrice(Number(o.total))}</p>
+                    <p className="font-display tabular-nums">
+                      {formatOrderAmount(
+                        Number(o.total),
+                        o.currency || "USD",
+                        o.currency === "NGN" ? "en-NG" : "en-US"
+                      )}
+                    </p>
                   </div>
                 ))
               )}
@@ -290,7 +298,7 @@ export default function AccountPage() {
                         </div>
                         <p className="mt-3 font-display">{p.name}</p>
                         <p className="text-sm text-mkos-muted">
-                        {formatPrice(p.price, { usd: p.priceUsd })}
+                        {formatPrice(p.price, productPriceOpts(p))}
                       </p>
                       </Link>
                       <button
@@ -490,7 +498,7 @@ export default function AccountPage() {
                     </div>
                     <p className="mt-3 font-display">{p.name}</p>
                     <p className="text-sm text-mkos-muted">
-                      {formatPrice(p.price, { usd: p.priceUsd })}
+                      {formatPrice(p.price, productPriceOpts(p))}
                     </p>
                   </Link>
                 ))}
